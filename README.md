@@ -66,6 +66,30 @@ DATABASE_URL='postgres://devcourse:devcourse-local@localhost:5432/devcourse?sslm
 
 Remove `--dry-run` after reviewing the output. Catalog imports are transactional and are not performed automatically when containers restart.
 
+### Demo catalog
+
+The repository includes 20 explicitly fictional programs for checking every supported language and the main price, support, and experience variants. Validate and preview the demo import with:
+
+```sh
+docker compose run --rm \
+  --volume "$PWD/data/demo-catalog.json:/data/demo-catalog.json:ro" \
+  api catalog validate /data/demo-catalog.json
+
+docker compose run --rm \
+  --volume "$PWD/data/demo-catalog.json:/data/demo-catalog.json:ro" \
+  api catalog import /data/demo-catalog.json --dry-run
+```
+
+After reviewing the dry-run output, import the records explicitly:
+
+```sh
+docker compose run --rm \
+  --volume "$PWD/data/demo-catalog.json:/data/demo-catalog.json:ro" \
+  api catalog import /data/demo-catalog.json
+```
+
+All demo records are marked with `demo: true`, use `example.com` URLs, and are never imported automatically during container startup.
+
 ## Local development
 
 The Go workspace points to the backend module, so run repository-root checks with the explicit module path:

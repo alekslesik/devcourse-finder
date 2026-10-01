@@ -19,6 +19,7 @@ jobs:
           cache-dependency-path: backend/go.sum
       - run: go test ./backend/...
       - run: go vet ./backend/...
+      - run: go run ./backend catalog validate ./data/demo-catalog.json
 
   frontend:
     runs-on: ubuntu-latest
