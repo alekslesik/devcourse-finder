@@ -23,6 +23,11 @@ MVP implementation is in progress. The repository currently contains:
 
 The catalog starts empty. Course records must be reviewed and imported explicitly; research data is not published automatically.
 
+## Project documentation
+
+- [Functional requirements](docs/functional-requirements.md)
+- [MVP completion specification](docs/mvp-completion-spec.md)
+
 ## Run with Docker
 
 Requirements: Docker Engine with Docker Compose v2.
