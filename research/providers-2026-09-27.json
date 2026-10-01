@@ -1,0 +1,521 @@
+{
+  "scope": "Русскоязычные предложения для российского рынка; не реестр юридически российских школ. Наличие направления не означает открытый набор. Stepik и авторские линейки пересекаются.",
+  "checked_at": "2026-09-27",
+  "providers": [
+    {
+      "id": 1,
+      "name": "Яндекс Практикум",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Платные профессии, повышение квалификации, бесплатные вводные курсы",
+      "confirmed_offer": "Go с нуля — 8 мес.; Python, Java, frontend — по 10 мес.; есть middle-программы и Node.js",
+      "caveat": "Разделять базовый, расширенный и продвинутый тарифы; цену проверять в конкретной карточке",
+      "source": "https://practicum.yandex.ru/catalog/programming/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "public_program_confirmed_terms_not_approved"
+    },
+    {
+      "id": 2,
+      "name": "Нетология",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Платные профессии и короткие вводные продукты",
+      "confirmed_offer": "Go с нуля и для ИТ-специалистов; Python; Java; frontend; fullstack",
+      "caveat": "У Go каталог и лендинг показывали разные сроки; Python по адресу /python — расширенный курс, а не короткий базовый",
+      "source": "https://netology.ru/navigation/veb-razrabotka/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "public_program_confirmed_terms_not_approved"
+    },
+    {
+      "id": 3,
+      "name": "Skillbox",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Видеокурсы с заданиями и сопровождением; профессии и отдельные навыки",
+      "confirmed_offer": "Go-разработчик, Python, Java, frontend и React",
+      "caveat": "Короткий курс языка и профессия — разные продукты; старые зарплатные цифры на лендинге не использовать",
+      "source": "https://skillbox.ru/faculty/backend-development/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "public_program_confirmed_terms_not_approved"
+    },
+    {
+      "id": 4,
+      "name": "Skillfactory",
+      "languages": [
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Профессии, отдельные курсы, бесплатные мини-курсы",
+      "confirmed_offer": "Подтверждён каталог программирования и Python-разработчик; отдельные Java/JS-тарифы требуют карточек",
+      "caveat": "На Python-странице описано объединение опыта Skillfactory и Skillbox: проверять совпадение продуктов и не удваивать предложение",
+      "source": "https://skillfactory.ru/courses/programmirovanie",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 5,
+      "name": "GeekBrains",
+      "languages": [
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Каталог профессий и курсов",
+      "confirmed_offer": "Разделы Python, Java, frontend; отдельная категория для начинающих",
+      "caveat": "Не переносить цены и сроки из старых обзоров; проверять конкретную программу и договор",
+      "source": "https://gb.ru/courses/programming",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 6,
+      "name": "Хекслет",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Профессии, навыки и бесплатные основы",
+      "confirmed_offer": "Go — 6 мес. для продвинутых; Python/Java/Node.js — 12 мес.; frontend — 10 мес.",
+      "caveat": "Цена «от 2 400 ₽» в каталоге не подтверждает полную цену профессии",
+      "source": "https://ru.hexlet.io/courses_programming",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 7,
+      "name": "OTUS",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Базовые и продвинутые программы, подготовительные видеокурсы",
+      "confirmed_offer": "Go Basic; Go/Python/Java/JS Professional; Spring; React и другие специализации",
+      "caveat": "Сверять вступительные требования и расписание; отдельный прайс различает полную цену и несколько скидок",
+      "source": "https://otus.ru/legal/prices/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 8,
+      "name": "Skypro",
+      "languages": [
+        "Python"
+      ],
+      "format": "Профессия с нуля",
+      "confirmed_offer": "Python-разработчик; на странице упомянуты подарочные основы вёрстки и JS",
+      "caveat": "Подарочный модуль JS не считать отдельной frontend-профессией; другие языки в этом проходе не подтверждены",
+      "source": "https://sky.pro/course/programming/python-web-course",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 9,
+      "name": "ProductStar",
+      "languages": [
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Профессии и короткие тематические курсы",
+      "confirmed_offer": "Python — 8 мес.; Java — 9 мес.; frontend — 8 мес.; есть Node.js и React",
+      "caveat": "В разных страницах каталога найдены разные скидки; общую стоимость нельзя брать из одного месячного платежа",
+      "source": "https://productstar.ru/catalog/programming/beginner?from=catalog",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 10,
+      "name": "Eduson Academy",
+      "languages": [
+        "Python",
+        "JavaScript"
+      ],
+      "format": "Профессии и бесплатные вводные продукты",
+      "confirmed_offer": "Python/Django — 8 мес.; frontend; fullstack Python",
+      "caveat": "Сравнивать конкретные программы; бесплатный вводный курс не равен профессии",
+      "source": "https://eduson.academy/python",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 11,
+      "name": "Бруноям",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Онлайн-профессии и отдельные навыки",
+      "confirmed_offer": "Go — 6 мес.; Python — 10; Java — 7; frontend — 8; JS — 4",
+      "caveat": "В каталоге есть полные цены «от»; ближайший старт и текущий тариф требуют перепроверки",
+      "source": "https://brunoyam.com/online-kursy",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 12,
+      "name": "Слёрм",
+      "languages": [
+        "Go"
+      ],
+      "format": "Прикладной видеокурс",
+      "confirmed_offer": "Разработка Go-сервиса; теория и практические задания; трёхдневное демо",
+      "caveat": "Рассматривать прежде всего для знакомых с разработкой; демо не является бесплатным полным курсом",
+      "source": "https://slurm.io/go",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 13,
+      "name": "PurpleSchool",
+      "languages": [
+        "Go",
+        "JavaScript"
+      ],
+      "format": "Отдельные видеокурсы и составные карьерные программы",
+      "confirmed_offer": "Основы Go, Go-backend; JavaScript, TypeScript, React, Node.js",
+      "caveat": "Проверять выбранный тариф и сопровождение; акция на открытой Go-странице датирована до дня проверки",
+      "source": "https://purpleschool.ru/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 14,
+      "name": "Balun.Courses",
+      "languages": [
+        "Go"
+      ],
+      "format": "Узкие программы для действующих разработчиков",
+      "confirmed_offer": "Глубокий Go; concurrency; подготовка к собеседованиям",
+      "caveat": "Не выдавать за обучение программированию с нуля; стоимость в извлечённом тексте не подтверждена",
+      "source": "https://balun.courses/courses/deep_go",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 15,
+      "name": "Kata Academy",
+      "languages": [
+        "Go",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Профессии и продвинутые программы",
+      "confirmed_offer": "Java, Go, frontend; отдельный Java middle→senior",
+      "caveat": "Есть гибридная оплата: аванс не равен полной стоимости; обещания результата проверять по договору",
+      "source": "https://kata.academy/courses",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 16,
+      "name": "JavaRush",
+      "languages": [
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Интерактивные курсы и программы с ментором",
+      "confirmed_offer": "Java-тренажёр; Python; frontend; Java/Python University",
+      "caveat": "Русскоязычная площадка: юридическую сторону и оплату из РФ проверять отдельно; подписку и University разделять",
+      "source": "https://javarush.com/courses",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 17,
+      "name": "TopJava",
+      "languages": [
+        "Java"
+      ],
+      "format": "Последовательность курсов и проектная стажировка",
+      "confirmed_offer": "StartJava, BaseJava, TopJava, MasterJava",
+      "caveat": "Стадии рассчитаны на разную подготовку; вступительный бесплатный урок не означает бесплатность всей линейки",
+      "source": "https://topjava.ru/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 18,
+      "name": "HTML Academy",
+      "languages": [
+        "JavaScript"
+      ],
+      "format": "Тренажёры, профессии, профессиональные модули",
+      "confirmed_offer": "JavaScript/React; Node.js REST API; Nest.js; отдельный lite-формат",
+      "caveat": "Подписка на тренажёры, lite и обучение с персональным наставником — разные предложения",
+      "source": "https://htmlacademy.ru/profession/react",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 19,
+      "name": "Result University",
+      "languages": [
+        "JavaScript"
+      ],
+      "format": "Программы frontend и отдельные навыки",
+      "confirmed_offer": "Junior/middle frontend; JavaScript/Git; TypeScript; Vue",
+      "caveat": "Часть найденных страниц давно индексировалась; свежий набор и цену основной программы нужно уточнить",
+      "source": "https://result.school/edu-about-program",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 20,
+      "name": "Специалист",
+      "languages": [
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Учебные модули и комплексные программы",
+      "confirmed_offer": "Python, Java, JavaScript; онлайн и очное обучение",
+      "caveat": "Сравнивать учебные часы и состав модулей, а не только календарную длительность",
+      "source": "https://www.specialist.ru/section/programming",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 21,
+      "name": "IBS Training Center",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Короткие профессиональные и корпоративные курсы",
+      "confirmed_offer": "Отдельные направления Go, Java/Spring, JS/TS/React/Node.js, Python",
+      "caveat": "Каталожная цена «от» относится к минимальному курсу направления, не к полной профессии",
+      "source": "https://ibs-training.ru/catalog/direction/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 22,
+      "name": "Академия Softline / Академия АйТи",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Модульное обучение с тренером",
+      "confirmed_offer": "Основы и системное программирование на Go; Python-разработчик; Java; JS",
+      "caveat": "Проверять расписание, уровень и конкретного поставщика курса; вендор и продавец могут отличаться",
+      "source": "https://edu.softline.com/api/print_schedule/print_schedule.php",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 23,
+      "name": "Синергия",
+      "languages": [
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Курсы и более длительные образовательные программы",
+      "confirmed_offer": "Каталог факультета содержит Python, Java и JavaScript",
+      "caveat": "Не смешивать короткие курсы, колледж и высшее образование; цену и учебный план конкретного курса уточнять",
+      "source": "https://synergy.ru/lp/programming/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 24,
+      "name": "Академия ТОП",
+      "languages": [
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Онлайн- и региональные программы для взрослых",
+      "confirmed_offer": "Python и Java — по 12 мес.; веб-разработка; в Python-программе есть JS/Django",
+      "caveat": "Филиал и формат влияют на предложение; отдельную полноценную JS-программу нужно проверять по учебному плану",
+      "source": "https://online.top-academy.ru/education/adults",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 25,
+      "name": "Stepik",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Маркетплейс бесплатных и платных авторских курсов",
+      "confirmed_offer": "Подтверждены отдельные Go/Python/Java-курсы; JS присутствует в каталоге",
+      "caveat": "Оценивать автора и конкретный курс: Stepik не проводит премодерацию всех курсов",
+      "source": "https://stepik.org/catalog?free=true",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 26,
+      "name": "Поколение Python / BEEGEEK",
+      "languages": [
+        "Python"
+      ],
+      "format": "Бесплатные основы и платные продолжения на Stepik",
+      "confirmed_offer": "Начинающий, продвинутый, профессиональный курс, ООП, алгоритмы",
+      "caveat": "Это авторская линейка внутри Stepik, а не дополнительный независимый маркетплейс; не удваивать записи",
+      "source": "https://pygen.ru/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 27,
+      "name": "Code Basics",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Бесплатный текстовый тренажёр",
+      "confirmed_offer": "Основы четырёх языков с упражнениями в браузере",
+      "caveat": "Не равен профессиональной программе с ревью проектов; Go-описание предполагает опыт, несмотря на общий ярлык «с нуля»",
+      "source": "https://code-basics.com/ru",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 28,
+      "name": "learn.javascript.ru",
+      "languages": [
+        "JavaScript"
+      ],
+      "format": "Бесплатный учебник и отдельные платные курсы",
+      "confirmed_offer": "Учебник JS; курс JavaScript/TypeScript/интерфейсы для программистов",
+      "caveat": "Учебник и занятия с преподавателем хранить отдельно; у продвинутого курса есть требования к опыту",
+      "source": "https://learn.javascript.ru/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 29,
+      "name": "METANIT",
+      "languages": [
+        "Go",
+        "Python",
+        "Java",
+        "JavaScript"
+      ],
+      "format": "Бесплатные руководства для самообучения",
+      "confirmed_offer": "Разделы по языкам, backend и frontend-технологиям",
+      "caveat": "Справочник и последовательность материалов, а не школа с персональным сопровождением",
+      "source": "https://metanit.com/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 30,
+      "name": "RS School",
+      "languages": [
+        "JavaScript"
+      ],
+      "format": "Бесплатное международное сообщество и обучение",
+      "confirmed_offer": "JS / Front-end; материалы, практика и участие сообщества",
+      "caveat": "Это не российская школа по юрисдикции; учитывать язык конкретного потока, расписание и этапы отбора",
+      "source": "https://rs.school/courses/javascript",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 31,
+      "name": "Т-Образование",
+      "languages": [
+        "Go"
+      ],
+      "format": "Бесплатный спецкурс с условиями допуска",
+      "confirmed_offer": "Golang для начинающих: опубликована программа, набор закрыт",
+      "caveat": "Нельзя показывать как доступный всем курс с немедленным стартом; учебный спецкурс не равен оплачиваемой стажировке",
+      "source": "https://education.tbank.ru/academy/golang/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 32,
+      "name": "Школа 21",
+      "languages": [
+        "Go",
+        "Python",
+        "Java"
+      ],
+      "format": "Бесплатный длительный путь с отбором",
+      "confirmed_offer": "В официальном описании есть Go, Python и Java; проектный формат «равный — равному»",
+      "caveat": "Не отдельный короткий онлайн-курс языка; сведения о конкретном кампусе и наборе требуют обновления",
+      "source": "https://21-school.ru/news/sber-zapustil-format-skoly-21-dlia-trudnodostupnyx-i-malonaselennyx-regionov",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    },
+    {
+      "id": 33,
+      "name": "Эльбрус Буткемп",
+      "languages": [
+        "JavaScript"
+      ],
+      "format": "Интенсивный fullstack-буткемп",
+      "confirmed_offer": "Текущий AI Engineer — fullstack JS; 3 мес. full-time либо 6 мес. part-time",
+      "caveat": "Есть вступительное интервью; цену уточняет куратор. Data Science на Python исключён из backend-каталога",
+      "source": "https://elbrusboot.camp/",
+      "checked_at": "2026-09-27",
+      "verification": "official_public_page_or_official_search_extract",
+      "affiliate_status": "not_verified"
+    }
+  ]
+}
