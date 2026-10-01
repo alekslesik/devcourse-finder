@@ -2,10 +2,12 @@ package store
 
 import (
 	"context"
-	"devcourse-finder/catalog"
 	_ "embed"
 	"encoding/json"
 	"fmt"
+
+	"devcourse-finder/catalog"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

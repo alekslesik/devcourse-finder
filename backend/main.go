@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"crypto/rand"
-	"devcourse-finder/catalog"
-	"devcourse-finder/store"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -15,6 +13,9 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"devcourse-finder/catalog"
+	"devcourse-finder/store"
 )
 
 func write(w http.ResponseWriter, status int, v any) {
@@ -187,7 +188,7 @@ func run() error {
 	mux.HandleFunc("GET /out/{id}", func(w http.ResponseWriter, r *http.Request) {
 		cs, e := db.Load(r.Context())
 		if e != nil {
-			http.Error(w, "Каталог недоступен", 503)
+			http.Error(w, "Каталог недоступен", http.StatusServiceUnavailable)
 			return
 		}
 		for _, c := range cs {
@@ -200,7 +201,7 @@ func run() error {
 					db.Event(ctx, newID(), "outbound", c.ID, c.Language, "", 0)
 					cancel()
 					w.Header().Set("Cache-Control", "no-store")
-					http.Redirect(w, r, o.URL, 302)
+					http.Redirect(w, r, o.URL, http.StatusFound)
 					return
 				}
 			}
