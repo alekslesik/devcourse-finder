@@ -1,0 +1,861 @@
+{
+  "approved_domains": [
+    "example.com"
+  ],
+  "courses": [
+    {
+      "id": "demo-go-1",
+      "slug": "demo-go-1",
+      "title": "Демо: Старт в Go",
+      "provider": "DevCourse Demo Academy",
+      "language": "go",
+      "direction": "basics",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "none"
+      ],
+      "goals": [
+        "try",
+        "job"
+      ],
+      "topics": [
+        "Синтаксис",
+        "Типы",
+        "Функции"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-go-1",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-go-1-standard",
+          "name": "Демонстрационный тариф",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 8,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-go-1/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-go-2",
+      "slug": "demo-go-2",
+      "title": "Демо: Backend на Go",
+      "provider": "DevCourse Demo Academy",
+      "language": "go",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "basics"
+      ],
+      "goals": [
+        "job"
+      ],
+      "topics": [
+        "HTTP",
+        "SQL",
+        "Тестирование"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-go-2",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-go-2-standard",
+          "name": "Демонстрационный тариф",
+          "price": 2990000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 10,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-go-2/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-go-3",
+      "slug": "demo-go-3",
+      "title": "Демо: Конкурентный Go",
+      "provider": "DevCourse Demo Academy",
+      "language": "go",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "projects",
+        "working"
+      ],
+      "goals": [
+        "deepen"
+      ],
+      "topics": [
+        "Горутины",
+        "Каналы",
+        "Профилирование"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-go-3",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-go-3-standard",
+          "name": "Демонстрационный тариф",
+          "price": 4590000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 6,
+          "weeks": 12,
+          "review": false,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-go-3/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-go-4",
+      "slug": "demo-go-4",
+      "title": "Демо: Веб-сервисы на Go",
+      "provider": "DevCourse Demo Academy",
+      "language": "go",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "switch",
+        "projects"
+      ],
+      "goals": [
+        "switch",
+        "job"
+      ],
+      "topics": [
+        "REST",
+        "PostgreSQL",
+        "Docker"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-go-4",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-go-4-standard",
+          "name": "Демонстрационный тариф",
+          "price": 3490000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 14,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-go-4/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-go-5",
+      "slug": "demo-go-5",
+      "title": "Демо: Архитектура Go-приложений",
+      "provider": "DevCourse Demo Academy",
+      "language": "go",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "working"
+      ],
+      "goals": [
+        "deepen"
+      ],
+      "topics": [
+        "Архитектура",
+        "Наблюдаемость",
+        "Нагрузка"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-go-5",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-go-5-standard",
+          "name": "Демонстрационный тариф",
+          "price": 5790000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 16,
+          "review": false,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-go-5/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-python-1",
+      "slug": "demo-python-1",
+      "title": "Демо: Старт в Python",
+      "provider": "DevCourse Demo Academy",
+      "language": "python",
+      "direction": "basics",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "none"
+      ],
+      "goals": [
+        "try",
+        "job"
+      ],
+      "topics": [
+        "Синтаксис",
+        "Коллекции",
+        "Функции"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-python-1",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-python-1-standard",
+          "name": "Демонстрационный тариф",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 8,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-python-1/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-python-2",
+      "slug": "demo-python-2",
+      "title": "Демо: Backend на Python",
+      "provider": "DevCourse Demo Academy",
+      "language": "python",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "basics"
+      ],
+      "goals": [
+        "job"
+      ],
+      "topics": [
+        "HTTP",
+        "SQL",
+        "Тестирование"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-python-2",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-python-2-standard",
+          "name": "Демонстрационный тариф",
+          "price": 3190000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 10,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-python-2/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-python-3",
+      "slug": "demo-python-3",
+      "title": "Демо: Автоматизация на Python",
+      "provider": "DevCourse Demo Academy",
+      "language": "python",
+      "direction": "automation",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "basics",
+        "projects"
+      ],
+      "goals": [
+        "job",
+        "deepen"
+      ],
+      "topics": [
+        "Скрипты",
+        "API",
+        "Файлы"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-python-3",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-python-3-standard",
+          "name": "Демонстрационный тариф",
+          "price": 1890000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 6,
+          "weeks": 12,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-python-3/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-python-4",
+      "slug": "demo-python-4",
+      "title": "Демо: Переход на Python",
+      "provider": "DevCourse Demo Academy",
+      "language": "python",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "switch",
+        "working"
+      ],
+      "goals": [
+        "switch"
+      ],
+      "topics": [
+        "Типизация",
+        "AsyncIO",
+        "PostgreSQL"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-python-4",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-python-4-standard",
+          "name": "Демонстрационный тариф",
+          "price": 3790000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 14,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-python-4/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-python-5",
+      "slug": "demo-python-5",
+      "title": "Демо: Архитектура Python-сервисов",
+      "provider": "DevCourse Demo Academy",
+      "language": "python",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "working"
+      ],
+      "goals": [
+        "deepen"
+      ],
+      "topics": [
+        "Архитектура",
+        "Очереди",
+        "Наблюдаемость"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-python-5",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-python-5-standard",
+          "name": "Демонстрационный тариф",
+          "price": 5990000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 16,
+          "review": false,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-python-5/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-java-1",
+      "slug": "demo-java-1",
+      "title": "Демо: Старт в Java",
+      "provider": "DevCourse Demo Academy",
+      "language": "java",
+      "direction": "basics",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "none"
+      ],
+      "goals": [
+        "try",
+        "job"
+      ],
+      "topics": [
+        "Синтаксис",
+        "ООП",
+        "Коллекции"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-java-1",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-java-1-standard",
+          "name": "Демонстрационный тариф",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 8,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-java-1/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-java-2",
+      "slug": "demo-java-2",
+      "title": "Демо: Backend на Java",
+      "provider": "DevCourse Demo Academy",
+      "language": "java",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "basics"
+      ],
+      "goals": [
+        "job"
+      ],
+      "topics": [
+        "Spring",
+        "SQL",
+        "Тестирование"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-java-2",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-java-2-standard",
+          "name": "Демонстрационный тариф",
+          "price": 3390000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 10,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-java-2/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-java-3",
+      "slug": "demo-java-3",
+      "title": "Демо: Java и Spring Boot",
+      "provider": "DevCourse Demo Academy",
+      "language": "java",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "projects"
+      ],
+      "goals": [
+        "job",
+        "deepen"
+      ],
+      "topics": [
+        "Spring Boot",
+        "REST",
+        "Security"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-java-3",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-java-3-standard",
+          "name": "Демонстрационный тариф",
+          "price": 4290000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 6,
+          "weeks": 12,
+          "review": false,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-java-3/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-java-4",
+      "slug": "demo-java-4",
+      "title": "Демо: Переход на Java",
+      "provider": "DevCourse Demo Academy",
+      "language": "java",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "switch",
+        "working"
+      ],
+      "goals": [
+        "switch"
+      ],
+      "topics": [
+        "JVM",
+        "Типизация",
+        "Многопоточность"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-java-4",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-java-4-standard",
+          "name": "Демонстрационный тариф",
+          "price": 3890000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 14,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-java-4/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-java-5",
+      "slug": "demo-java-5",
+      "title": "Демо: Архитектура Java-сервисов",
+      "provider": "DevCourse Demo Academy",
+      "language": "java",
+      "direction": "backend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "working"
+      ],
+      "goals": [
+        "deepen"
+      ],
+      "topics": [
+        "Архитектура",
+        "Kafka",
+        "Наблюдаемость"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-java-5",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-java-5-standard",
+          "name": "Демонстрационный тариф",
+          "price": 6290000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 16,
+          "review": false,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-java-5/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-javascript-1",
+      "slug": "demo-javascript-1",
+      "title": "Демо: Старт в JavaScript",
+      "provider": "DevCourse Demo Academy",
+      "language": "javascript",
+      "direction": "basics",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "none"
+      ],
+      "goals": [
+        "try",
+        "job"
+      ],
+      "topics": [
+        "Синтаксис",
+        "DOM",
+        "События"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-javascript-1",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-javascript-1-standard",
+          "name": "Демонстрационный тариф",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 8,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-javascript-1/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-javascript-2",
+      "slug": "demo-javascript-2",
+      "title": "Демо: Frontend на JavaScript",
+      "provider": "DevCourse Demo Academy",
+      "language": "javascript",
+      "direction": "frontend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "basics"
+      ],
+      "goals": [
+        "job"
+      ],
+      "topics": [
+        "HTML",
+        "CSS",
+        "JavaScript"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-javascript-2",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-javascript-2-standard",
+          "name": "Демонстрационный тариф",
+          "price": 2890000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 10,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-javascript-2/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-javascript-3",
+      "slug": "demo-javascript-3",
+      "title": "Демо: React-разработка",
+      "provider": "DevCourse Demo Academy",
+      "language": "javascript",
+      "direction": "frontend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "projects"
+      ],
+      "goals": [
+        "job",
+        "deepen"
+      ],
+      "topics": [
+        "React",
+        "TypeScript",
+        "Тестирование"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-javascript-3",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-javascript-3-standard",
+          "name": "Демонстрационный тариф",
+          "price": 4190000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 6,
+          "weeks": 12,
+          "review": false,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-javascript-3/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-javascript-4",
+      "slug": "demo-javascript-4",
+      "title": "Демо: Переход на Fullstack",
+      "provider": "DevCourse Demo Academy",
+      "language": "javascript",
+      "direction": "fullstack",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "switch",
+        "working"
+      ],
+      "goals": [
+        "switch"
+      ],
+      "topics": [
+        "Node.js",
+        "React",
+        "PostgreSQL"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-javascript-4",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-javascript-4-standard",
+          "name": "Демонстрационный тариф",
+          "price": 4690000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 8,
+          "weeks": 14,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://example.com/devcourse-demo/demo-javascript-4/enroll"
+        }
+      ],
+      "demo": true
+    },
+    {
+      "id": "demo-javascript-5",
+      "slug": "demo-javascript-5",
+      "title": "Демо: Архитектура frontend",
+      "provider": "DevCourse Demo Academy",
+      "language": "javascript",
+      "direction": "frontend",
+      "summary": "Вымышленная программа для проверки поиска, фильтров и сравнения DevCourse Finder.",
+      "audience": [
+        "working"
+      ],
+      "goals": [
+        "deepen"
+      ],
+      "topics": [
+        "Архитектура",
+        "Производительность",
+        "Доступность"
+      ],
+      "source": "https://example.com/devcourse-demo/demo-javascript-5",
+      "checked_at": "2026-09-25T12:00:00Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "demo-javascript-5-standard",
+          "name": "Демонстрационный тариф",
+          "price": 5890000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-09-25T12:00:00Z",
+          "valid_until": "2026-12-31T23:59:59Z",
+          "hours": 10,
+          "weeks": 16,
+          "review": false,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://example.com/devcourse-demo/demo-javascript-5/enroll"
+        }
+      ],
+      "demo": true
+    }
+  ]
+}

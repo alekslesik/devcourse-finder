@@ -1,0 +1,5 @@
+.git
+*.test
+coverage.*
+*.coverprofile
+profile.cov
