@@ -92,7 +92,7 @@ docker compose run --rm \
 
 All demo records are marked with `demo: true`, use `example.com` URLs, and are never imported automatically during container startup.
 
-Production catalog publication, verification, audit, and recovery steps are defined in the [catalog publication runbook](docs/catalog-operations.md). Production imports must set a stable `CATALOG_OPERATOR` identifier rather than using the local default.
+Production catalog publication, verification, audit, and recovery steps are defined in the [catalog publication runbook](docs/catalog-operations.md). Production imports must set a stable `CATALOG_OPERATOR` identifier rather than using the local default. Record every production run using the [publication record template](docs/catalog-publication-record.md) and keep the completed record with the release artifacts.
 
 ## Local development
 
