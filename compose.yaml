@@ -43,6 +43,7 @@ services:
       PGUSER: ${POSTGRES_USER:-devcourse}
       PGPASSWORD: ${POSTGRES_PASSWORD:-devcourse-local}
       PGSSLMODE: disable
+      CATALOG_OPERATOR: ${CATALOG_OPERATOR:-local-operator}
     depends_on:
       migrate:
         condition: service_completed_successfully

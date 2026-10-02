@@ -27,6 +27,7 @@ The catalog starts empty. Course records must be reviewed and imported explicitl
 
 - [Functional requirements](docs/functional-requirements.md)
 - [MVP completion specification](docs/mvp-completion-spec.md)
+- [Catalog publication runbook](docs/catalog-operations.md)
 
 ## Run with Docker
 
@@ -60,6 +61,7 @@ docker compose run --rm \
 Replace `catalog.json` with the path to the file being checked. Import supports a dry run before applying changes:
 
 ```sh
+CATALOG_OPERATOR="$USER" \
 DATABASE_URL='postgres://devcourse:devcourse-local@localhost:5432/devcourse?sslmode=disable' \
   go run ./backend catalog import ./catalog.json --dry-run
 ```
@@ -89,6 +91,8 @@ docker compose run --rm \
 ```
 
 All demo records are marked with `demo: true`, use `example.com` URLs, and are never imported automatically during container startup.
+
+Production catalog publication, verification, audit, and recovery steps are defined in the [catalog publication runbook](docs/catalog-operations.md). Production imports must set a stable `CATALOG_OPERATOR` identifier rather than using the local default.
 
 ## Local development
 
