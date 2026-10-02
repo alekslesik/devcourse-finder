@@ -150,7 +150,7 @@ func run() error {
 			return
 		}
 		for _, c := range cs {
-			if c.Slug == r.PathValue("slug") && c.Status != "draft" {
+			if c.Slug == r.PathValue("slug") && c.Status == "published" {
 				offers := []catalog.Result{}
 				for _, o := range c.Offers {
 					offers = append(offers, catalog.Result{Course: c, Offer: o, Price: catalog.EffectivePrice(o, time.Now())})
