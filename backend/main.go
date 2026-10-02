@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"devcourse-finder/catalog"
 	"devcourse-finder/store"
@@ -26,6 +27,13 @@ func write(w http.ResponseWriter, status int, v any) {
 }
 func fail(w http.ResponseWriter, status int, msg string) {
 	write(w, status, map[string]string{"error": msg})
+}
+func catalogOperator(raw string) (string, error) {
+	operator := strings.TrimSpace(raw)
+	if !utf8.ValidString(operator) || utf8.RuneCountInString(operator) < 1 || utf8.RuneCountInString(operator) > 100 {
+		return "", fmt.Errorf("CATALOG_OPERATOR must contain 1 to 100 characters")
+	}
+	return operator, nil
 }
 func main() {
 	if e := run(); e != nil {
@@ -61,6 +69,10 @@ func run() error {
 			if len(args) < 3 || args[1] != "import" {
 				return fmt.Errorf("usage: catalog validate|import file [--dry-run]")
 			}
+			operator, e := catalogOperator(os.Getenv("CATALOG_OPERATOR"))
+			if e != nil {
+				return e
+			}
 			f, e := os.Open(args[2])
 			if e != nil {
 				return e
@@ -70,7 +82,7 @@ func run() error {
 			if e != nil {
 				return e
 			}
-			return db.Import(ctx, d, os.Getenv("USER"), slices.Contains(args, "--dry-run"))
+			return db.Import(ctx, d, operator, slices.Contains(args, "--dry-run"))
 		case "report":
 			rows, e := db.Pool.Query(ctx, "SELECT day,kind,course_id,language,goal,count FROM daily_stats ORDER BY day DESC,kind")
 			if e != nil {

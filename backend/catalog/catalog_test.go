@@ -1,6 +1,8 @@
 package catalog
 
 import (
+	"os"
+	"slices"
 	"testing"
 	"time"
 )
@@ -78,5 +80,53 @@ func TestUnknownHoursAndStableOrder(t *testing.T) {
 	got = Search([]Course{c, a}, Filter{}, n)
 	if len(got) != 2 || got[0].Course.ID != "a" {
 		t.Fatal("unstable ordering")
+	}
+}
+
+func TestDemoCatalogIsValidAndRepresentative(t *testing.T) {
+	f, err := os.Open("../../data/demo-catalog.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	dataset, err := Decode(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(dataset.Courses) != 20 {
+		t.Fatalf("demo catalog has %d courses, want 20", len(dataset.Courses))
+	}
+
+	languages := map[string]int{}
+	hasFree, hasPaid := false, false
+	hasSelf, hasReview, hasMentor := false, false, false
+	hasBeginner, hasExperienced := false, false
+	for _, course := range dataset.Courses {
+		if !course.Demo {
+			t.Fatalf("course %q is not marked as demo", course.ID)
+		}
+		languages[course.Language]++
+		if slices.Contains(course.Audience, "none") {
+			hasBeginner = true
+		}
+		if slices.Contains(course.Audience, "working") {
+			hasExperienced = true
+		}
+		for _, offer := range course.Offers {
+			hasFree = hasFree || offer.Free
+			hasPaid = hasPaid || !offer.Free
+			hasReview = hasReview || offer.Review
+			hasMentor = hasMentor || offer.Mentor
+			hasSelf = hasSelf || (!offer.Review && !offer.Mentor)
+		}
+	}
+	for _, language := range []string{"go", "python", "java", "javascript"} {
+		if languages[language] != 5 {
+			t.Errorf("demo catalog has %d %s courses, want 5", languages[language], language)
+		}
+	}
+	if !hasFree || !hasPaid || !hasSelf || !hasReview || !hasMentor || !hasBeginner || !hasExperienced {
+		t.Fatal("demo catalog does not cover all required price, support, and experience variants")
 	}
 }
