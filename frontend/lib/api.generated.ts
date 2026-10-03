@@ -191,6 +191,11 @@ export interface components {
             id: string;
             /** @constant */
             unavailable: true;
+            /**
+             * @description Present when the tariff exists but enrollment is closed.
+             * @enum {string}
+             */
+            reason?: "closed";
         };
         Comparison: (components["schemas"]["Result"] | components["schemas"]["Unavailable"])[];
         CourseDetail: {
@@ -211,7 +216,7 @@ export interface components {
         Error: {
             error: string;
             /** @enum {string} */
-            code: "invalid_request" | "not_found" | "rate_limited" | "unavailable" | "internal_error";
+            code: "invalid_request" | "not_found" | "rate_limited" | "unavailable" | "internal_error" | "method_not_allowed";
             request_id: string;
         };
         Options: {
@@ -270,6 +275,15 @@ export interface operations {
             };
             /** @description Request failed */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HTTP method is not supported */
+            405: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -345,6 +359,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description HTTP method is not supported */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Request failed */
             503: {
                 headers: {
@@ -394,6 +417,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description HTTP method is not supported */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Request failed */
             503: {
                 headers: {
@@ -408,6 +440,7 @@ export interface operations {
     compareOffers: {
         parameters: {
             query: {
+                /** @description Comma-separated IDs; 1–3 distinct nonempty IDs. Duplicates are ignored while preserving the first occurrence order. */
                 offer_ids: string;
             };
             header?: never;
@@ -436,6 +469,15 @@ export interface operations {
             };
             /** @description Request failed */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HTTP method is not supported */
+            405: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -490,6 +532,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description HTTP method is not supported */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Request failed */
             503: {
                 headers: {
@@ -537,6 +588,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description HTTP method is not supported */
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Request failed */
             503: {
                 headers: {
@@ -570,6 +630,15 @@ export interface operations {
             };
             /** @description Request failed */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HTTP method is not supported */
+            405: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -619,6 +688,15 @@ export interface operations {
             };
             /** @description Request failed */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HTTP method is not supported */
+            405: {
                 headers: {
                     [name: string]: unknown;
                 };

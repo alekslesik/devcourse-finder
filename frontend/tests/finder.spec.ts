@@ -32,3 +32,17 @@ test('360px, keyboard controls and accessibility',async({page})=>{
  await page.goto('/courses');await page.getByRole('radio',{name:'Go',exact:true}).focus();await page.keyboard.press('Space');await expect(page.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
  await page.getByRole('button',{name:'Найти обучение'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/language=go/);
 });
+
+test('closed comparison tariff is retained without outbound action and invalid URL preserves selection',async({page})=>{
+ await page.goto('/compare?offers=demo-go-1-standard,closed-tariff,removed');
+ await expect(page.locator('thead th')).toHaveCount(4);
+ await expect(page.getByRole('columnheader',{name:'Набор закрыт — предложение недоступно'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Проверить условия'})).toHaveCount(1);
+ const selected=['demo-go-1-standard','closed-tariff','removed'];
+ await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);
+ await page.goto('/compare?offers=demo-go-1-standard,closed-tariff,removed,fourth');
+ await expect(page.getByText('Можно сравнить максимум три тарифа.')).toBeVisible();
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);
+ await page.goto('/compare?offers=closed-tariff');await page.getByRole('link',{name:'Удалить',exact:true}).focus();await page.keyboard.press('Enter');
+ await expect(page.getByText('Выберите от одного до трёх тарифов в каталоге.')).toBeVisible();
+});

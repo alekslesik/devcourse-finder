@@ -24,6 +24,7 @@ func Open(ctx context.Context, url string) (*DB, error) {
 	}
 	return &DB{p}, nil
 }
+func (d *DB) Ping(ctx context.Context) error    { return d.Pool.Ping(ctx) }
 func (d *DB) Migrate(ctx context.Context) error { _, e := d.Pool.Exec(ctx, Schema); return e }
 
 type Querier interface {
