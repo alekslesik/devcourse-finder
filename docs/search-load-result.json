@@ -1,0 +1,81 @@
+{
+  "timestamp_utc": "2026-10-03T09:09:24.767131+00:00",
+  "clients": 20,
+  "published_offers": 10000,
+  "queries": [
+    "",
+    "language=go",
+    "language=python&sort=price_asc",
+    "language=java&sort=price_desc",
+    "language=javascript&sort=duration",
+    "budget=free",
+    "budget=paid&include_free=true",
+    "support=review&hours=10",
+    "schedule=flexible&include_closed=true",
+    "language=go&direction=backend&goal=job&experience=basics&min=100000&max=10000000",
+    "page=20&page_size=48&sort=price_asc",
+    "language=go&max=1"
+  ],
+  "warmup": {
+    "duration_seconds": 60,
+    "elapsed_seconds": 60.16,
+    "successful_requests": 6323,
+    "failed_requests": 0,
+    "errors": {},
+    "requests_per_second": 105.1,
+    "p50_ms": 167.4101710004834,
+    "p95_ms": 374.93797300066944,
+    "p99_ms": 546.4162730004318,
+    "max_ms": 2275.0288560000627
+  },
+  "measurement": {
+    "duration_seconds": 300,
+    "elapsed_seconds": 300.149,
+    "successful_requests": 34266,
+    "failed_requests": 0,
+    "errors": {},
+    "requests_per_second": 114.16,
+    "p50_ms": 157.60185399994953,
+    "p95_ms": 340.23087399964425,
+    "p99_ms": 471.503988999757,
+    "max_ms": 990.869162999843
+  },
+  "target_p95_ms": 500,
+  "passed": true,
+  "method": "closed-loop, keep-alive, full response body; nearest-rank percentiles",
+  "stand": {
+    "type": "resource-limited containers on shared host",
+    "cpu_set": "0,1",
+    "total_memory_bytes": 4294967296,
+    "containers": [
+      {
+        "service": "api",
+        "image_id": "sha256:eb322594995f4a214c8621985db4bf353749520d7344acf88fa2d42035f14751",
+        "cpu_set": "0,1",
+        "memory_bytes": 1073741824,
+        "memory_plus_swap_bytes": 1073741824
+      },
+      {
+        "service": "db",
+        "image_id": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537",
+        "cpu_set": "0,1",
+        "memory_bytes": 3221225472,
+        "memory_plus_swap_bytes": 3221225472
+      }
+    ]
+  },
+  "base_commit": "6918593458680b990a0f6c080627d7459019415b",
+  "source_sha256": {
+    "backend/Dockerfile": "efabb6b92df569fdae41442004ff9951cf4cb6d6bffa37d5d0f3f9bc45f76d6b",
+    "backend/api.go": "f8fab46b5f555aa102ca6ff1971f3c128e6c5a83968bc7b1802f834fc50b14a8",
+    "backend/catalog/catalog.go": "0118042131b2a0a6d7b2f16aec58a04e1df7c0cec6bc88ec33d6554297dca23b",
+    "backend/catalog/filter.go": "9fa8b3e5b6101378bdb42f64f3cbe98e37f4001805b94240e21f8a08b346d7a1",
+    "backend/catalog/validation.go": "a45304534297186d6fc093db86b9b7fbab7baddd25924ae553771029d91bfa3b",
+    "backend/go.mod": "88b4fbb61a08873f28f99bfb7d428460a77174e972c82b5fd539f191a260b093",
+    "backend/go.sum": "4842f0f9335c64803268de9c709eed60e6e1c37c1c6f0ede568572a457bab914",
+    "backend/main.go": "0cc0bc24f6df351da8e973134b50a8c8dbcc214139946a0ef0a6e60740fa9966",
+    "backend/store/cached.go": "d22d436b3f2212e42c9d46804c12dc43bec659dfe59cb0f280f33095fc9999d3",
+    "backend/store/schema.sql": "d58f039db5b1549fc72193456848a2946c97e928f40b7c4088fdda452b94ef8b",
+    "backend/store/store.go": "59ee1af71b5ec42b9263b662e07a2df24a90c714683177811768a7e57b5565fa"
+  }
+}

@@ -140,7 +140,7 @@ func run() error {
 			}
 		}
 	}()
-	server := &http.Server{Addr: ":8080", Handler: newHandler(db), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Addr: ":8080", Handler: newHandler(store.NewCached(db)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		<-stop.Done()
 		c, done := context.WithTimeout(context.Background(), 5*time.Second)

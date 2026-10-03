@@ -102,7 +102,7 @@ func wireRequest(t *testing.T, client *http.Client, origin, method, path, body s
 }
 func TestHTTPWithPostgresAndFailedAnalytics(t *testing.T) {
 	db := postgresHTTPFixture(t)
-	server := httptest.NewServer(newHandler(db))
+	server := httptest.NewServer(newHandler(store.NewCached(db)))
 	defer server.Close()
 	client := &http.Client{Timeout: 3 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	contract := newResponseContract(t)
