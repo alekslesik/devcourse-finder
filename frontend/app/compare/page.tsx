@@ -1,0 +1,12 @@
+import type {Metadata} from 'next';
+import Selection from './selection';
+import {comparison} from '../../lib/api';
+import {price,checked} from '../../lib/catalog';
+export const dynamic='force-dynamic';
+export const metadata:Metadata={title:'Сравнение тарифов — DevCourse',description:'Сравнение условий выбранных тарифов обучения.',robots:{index:false,follow:true},alternates:{canonical:'/compare'}};
+export default async function ComparePage({searchParams}:{searchParams:Promise<{offers?:string|string[]}>}){
+ const raw=(await searchParams).offers;const ids=[...new Set((typeof raw==='string'?raw:'').split(',').filter(Boolean))];
+ if(!ids.length||ids.length>3)return <main className="document"><Selection ids={ids}/><h1>Сравнение тарифов</h1><p>{ids.length>3?'Можно сравнить максимум три тарифа.':'Выберите от одного до трёх тарифов в каталоге.'}</p><a href="/courses">Вернуться в каталог</a></main>;
+ const items=await comparison(ids);
+ return <main className="document"><a href="/courses">← Каталог</a><Selection ids={ids}/><h1>Сравнение тарифов</h1><p>Скопируйте адрес страницы, чтобы поделиться сравнением. На узком экране таблицу можно прокрутить горизонтально.</p><div className="tableWrap" role="region" aria-label="Сравнение тарифов, горизонтальная прокрутка" tabIndex={0}><table><thead><tr><th scope="col">Условия</th>{items.map((i,n)=><th scope="col" key={ids[n]}>{i.unavailable?'Предложение недоступно':<a href={'/courses/'+encodeURIComponent(i.course.slug)}>{i.course.title}</a>}</th>)}</tr></thead><tbody>{['Тариф','Полная стоимость','Длительность','Нагрузка','Проверка кода','Индивидуальные занятия','Набор','Дата проверки','Действия'].map((row,r)=><tr key={row}><th scope="row">{row}</th>{items.map((i,n)=><td key={ids[n]}>{r===8?<><a href={'/compare?offers='+ids.filter((_,j)=>j!==n).map(encodeURIComponent).join(',')}>Удалить</a>{!i.unavailable&&<p><a href={'/out/'+encodeURIComponent(i.offer.id)} target="_blank" rel="noopener noreferrer">Проверить условия ↗</a></p>}</>:i.unavailable?'Недоступно':r===0?i.offer.name:r===1?price(i):r===2?(i.offer.weeks===null?'Не указана':i.offer.weeks+' недель'):r===3?(i.offer.hours===null?'Не указана':i.offer.hours+' ч/нед.'):r===4?(i.offer.review?'Есть':'Нет'):r===5?(i.offer.mentor?'Есть':'Нет'):r===6?({open:'Открыт',continuous:'Постоянный',closed:'Закрыт',unknown:'Неизвестен'} as Record<string,string>)[i.offer.enrollment]:checked(i.course.checked_at)}</td>)}</tr>)}</tbody></table></div></main>;
+}

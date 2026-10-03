@@ -32,3 +32,10 @@ node_modules/
 .next/
 /out/
 *.tsbuildinfo
+
+# Browser test artifacts
+frontend/test-results/
+frontend/playwright-report/
+
+# Database backups
+backups/

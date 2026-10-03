@@ -27,6 +27,7 @@ The catalog starts empty. Course records must be reviewed and imported explicitl
 
 - [Functional requirements](docs/functional-requirements.md)
 - [MVP completion specification](docs/mvp-completion-spec.md)
+- [MVP status by requirement ID](docs/mvp-readiness.md)
 - [Catalog publication runbook](docs/catalog-operations.md)
 
 ## Run with Docker
@@ -108,8 +109,10 @@ Run the frontend checks from its directory:
 ```sh
 cd frontend
 npm ci
+npm run api:check
 npm run typecheck
 npm run build
+npm run test:routes
 ```
 
 The frontend proxies `/api/*` and `/out/*` to the API. Outside Docker, set `API_URL` when building the frontend if the API is not available at `http://api:8080`.
@@ -123,3 +126,23 @@ Run the same isolated Compose smoke test locally with:
 ```
 
 The test builds and starts the stack under a temporary Compose project, validates and imports the demo catalog, checks health, search, program and comparison endpoints, restarts the stack without deleting its database volume, verifies that the catalog remains available, and removes all temporary resources.
+
+## Public routes and contract
+
+The frontend exposes `/courses`, `/courses/{slug}`, `/compare?offers=...`, and `/about`. Course pages are rendered on the server; draft, archived, and unknown programs return 404. Comparison links restore up to three tariffs independently of local browser storage.
+
+The public contract is `docs/openapi.json` (OpenAPI 3.1). Run `npm run api:generate` from `frontend` after updating it; generated types are committed. CI validates the contract, verifies generated types, and applies a conservative compatibility gate against the target branch. The gate rejects schema and parameter changes requiring compatibility review. Route tests run against a fixture API and do not replace PostgreSQL integration or browser E2E tests.
+
+Set `SITE_URL` to the public origin for canonical links and the sitemap. Set `API_URL` for a backend outside the Compose network.
+
+## Browser verification
+
+From `frontend`, run `npm run build:test`, `npx playwright install --with-deps chromium`, then `npm run test:e2e`. The test build uses a local fixture API on port 8091. Tests cover search, empty results, server errors, permanent program URLs, comparison limits and shared links, external navigation, keyboard controls, 360 px layout, and serious/critical axe accessibility findings. Use `CHROMIUM_PATH` to select an already installed Chromium. A deployment build uses `npm run build` with its intended `API_URL`.
+
+PostgreSQL integration tests require `TEST_DATABASE_URL` pointing to a dedicated database ending in `_test`; tests clear that test database. CI supplies an isolated PostgreSQL service.
+
+## Production configuration and backups
+
+Use `docker compose -f compose.yaml -f compose.production.yaml up --build -d` with an explicit `POSTGRES_PASSWORD`, `CATALOG_OPERATOR`, and HTTPS `SITE_URL`. The API refuses the demo password in production; only the frontend publishes a port. Docker Compose 2.24+ is required. Configure TLS at the deployment ingress.
+
+Run `scripts/backup-database.sh` daily from cron as described in `docs/catalog-operations.md`. The script writes an atomic dump and retains seven days. A successful local restore test does not establish that production scheduling has been installed.

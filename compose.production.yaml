@@ -1,0 +1,18 @@
+# Requires Docker Compose 2.24+ for !reset.
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+  migrate:
+    environment:
+      APP_ENV: production
+      PGPASSWORD: ${POSTGRES_PASSWORD:?required}
+  api:
+    ports: !reset []
+    environment:
+      APP_ENV: production
+      PGPASSWORD: ${POSTGRES_PASSWORD:?required}
+      CATALOG_OPERATOR: ${CATALOG_OPERATOR:?Set a stable production operator}
+  frontend:
+    environment:
+      SITE_URL: ${SITE_URL:?Set the public HTTPS origin}

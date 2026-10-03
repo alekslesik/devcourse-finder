@@ -6,7 +6,12 @@
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build --webpack",
     "start": "next start --hostname 0.0.0.0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "api:generate": "openapi-typescript ../docs/openapi.json -o lib/api.generated.ts",
+    "api:check": "redocly lint ../docs/openapi.json --extends=minimal && npm run api:generate && git diff --exit-code -- lib/api.generated.ts",
+    "test:routes": "node --test scripts/routes.test.mjs",
+    "test:e2e": "playwright test",
+    "build:test": "API_URL=http://127.0.0.1:8091 next build --webpack"
   },
   "dependencies": {
     "next": "^16.0.0",
@@ -14,9 +19,13 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@redocly/cli": "^2.57.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/react-dom": "^19.0.0",
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.0"
   }
 }
