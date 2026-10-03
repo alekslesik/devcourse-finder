@@ -148,3 +148,7 @@ PostgreSQL integration tests require `TEST_DATABASE_URL` pointing to a dedicated
 Use `docker compose -f compose.yaml -f compose.production.yaml up --build -d` with an explicit `POSTGRES_PASSWORD`, `CATALOG_OPERATOR`, and HTTPS `SITE_URL`. The API refuses the demo password in production; only the frontend publishes a port. Docker Compose 2.24+ is required. Configure TLS at the deployment ingress.
 
 Run `scripts/backup-database.sh` daily from cron as described in `docs/catalog-operations.md`. The script writes an atomic dump and retains seven days. A successful local restore test does not establish that production scheduling has been installed.
+
+## Search performance
+
+Run `./scripts/load/run.sh` for the MVP-NFR-04 load measurement: 10,000 published synthetic offers, 20 clients, 60-second warmup and 300-second measurement on an API/PostgreSQL stand limited to two shared CPUs and 4 GiB total memory. The script removes its disposable database on exit. See [the load instructions](scripts/load/README.md) and [recorded performance results](docs/search-performance.md). The manual `Search load test` workflow repeats this measurement.

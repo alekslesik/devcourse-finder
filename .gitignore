@@ -39,3 +39,6 @@ frontend/playwright-report/
 
 # Database backups
 backups/
+
+.load-results/
+scripts/load/__pycache__/

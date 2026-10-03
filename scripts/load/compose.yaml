@@ -1,0 +1,37 @@
+# Both processes share two CPUs; combined memory limits are 4 GiB.
+services:
+  db:
+    image: postgres:17-alpine
+    cpuset: ${LOAD_CPUSET:-0,1}
+    mem_limit: 3g
+    memswap_limit: 3g
+    environment:
+      POSTGRES_DB: devcourse_load_test
+      POSTGRES_USER: devcourse
+      POSTGRES_PASSWORD: load-test-only
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U devcourse -d devcourse_load_test']
+      interval: 2s
+      retries: 30
+    volumes:
+      - load-db:/var/lib/postgresql/data
+  api:
+    image: devcourse-load-api
+    cpuset: ${LOAD_CPUSET:-0,1}
+    mem_limit: 1g
+    memswap_limit: 1g
+    environment:
+      PGHOST: db
+      PGDATABASE: devcourse_load_test
+      PGUSER: devcourse
+      PGPASSWORD: load-test-only
+      PGSSLMODE: disable
+      GOMAXPROCS: 2
+      CATALOG_OPERATOR: load-test
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:${LOAD_PORT:-18080}:8080'
+volumes:
+  load-db:
