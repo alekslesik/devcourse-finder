@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 test('search, empty results, reset and API error preserve the form',async({page})=>{
  await page.goto('/');await expect(page.getByRole('button',{name:'Найти обучение'})).toBeVisible();
  await page.getByRole('radio',{name:'Go',exact:true}).check();await page.getByLabel('Ваша цель').selectOption('try');await page.getByRole('button',{name:'Найти обучение'}).click();
- await expect(page).toHaveURL(/\/courses\?.*language=go/);await expect(page.locator('.card')).toHaveCount(5);
+ await expect(page).toHaveURL(/\/courses\?.*language=go/);await expect(page.locator('.card')).toHaveCount(1);
  await page.getByLabel('От, ₽', {exact:true}).fill('1');await page.getByLabel('До, ₽',{exact:true}).fill('1');await page.getByRole('button',{name:'Найти обучение'}).click();
  await expect(page.getByText('Подходящая программа ещё не нашлась')).toBeVisible();await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('1');
  await page.getByRole('button',{name:'Показать все программы'}).click();await expect(page.locator('.card')).toHaveCount(12);
@@ -16,7 +16,7 @@ test('three tariffs, fourth rejected, comparison URL in a fresh context and outb
  await expect(page.getByRole('status')).toContainText('уже 3 тарифа');await expect(checks.nth(3)).not.toBeChecked();await page.getByRole('button',{name:'Сравнить →'}).click();
  await expect(page).toHaveURL(/\/compare\?offers=/);await expect(page.locator('thead th')).toHaveCount(4);
  const context=await browser.newContext();const fresh=await context.newPage();await fresh.goto(page.url());await expect(fresh.locator('thead th')).toHaveCount(4);
- await context.route('https://example.com/**',route=>route.fulfill({body:'Provider website'}));const popupPromise=fresh.waitForEvent('popup');await fresh.getByRole('link',{name:'Проверить условия'}).first().click();const popup=await popupPromise;await expect(popup).toHaveURL('https://example.com/course');await context.close();
+ await context.route('https://example.com/**',route=>route.fulfill({body:'Provider website'}));const popupPromise=fresh.waitForEvent('popup');await fresh.getByRole('link',{name:'Проверить условия'}).first().click();const popup=await popupPromise;await expect(popup).toHaveURL(process.env.E2E_REAL_API==='1'?'https://example.com/devcourse-demo/demo-go-1/enroll':'https://example.com/course');await context.close();
 });
 test('course permanent URL and unknown comparison item',async({page})=>{
  await page.goto('/courses/demo-go-1');await expect(page.getByRole('heading',{level:1})).toContainText('Старт в Go');await page.getByRole('button',{name:'Добавить в сравнение'}).click();await expect(page).toHaveURL(/\/compare\?offers=/);

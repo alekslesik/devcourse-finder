@@ -152,3 +152,7 @@ Run `scripts/backup-database.sh` daily from cron as described in `docs/catalog-o
 ## Search performance
 
 Run `./scripts/load/run.sh` for the MVP-NFR-04 load measurement: 10,000 published synthetic offers, 20 clients, 60-second warmup and 300-second measurement on an API/PostgreSQL stand limited to two shared CPUs and 4 GiB total memory. The script removes its disposable database on exit. See [the load instructions](scripts/load/README.md) and [recorded performance results](docs/search-performance.md). The manual `Search load test` workflow repeats this measurement.
+
+## Browser acceptance with the real API
+
+Run `./scripts/e2e-real.sh` after installing frontend dependencies and Playwright Chromium. It builds production frontend/API images and uses a disposable PostgreSQL database, then checks all eight MVP-QA-02 scenarios plus real API outage/recovery and persisted analytics. See [the real-stack E2E instructions](scripts/e2e/README.md). The `real-e2e` CI job runs this suite for every PR.
