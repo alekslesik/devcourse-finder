@@ -100,9 +100,11 @@ Production catalog publication, verification, audit, and recovery steps are defi
 The Go workspace points to the backend module, so run repository-root checks with the explicit module path:
 
 ```sh
-go test ./backend/...
+go test -race ./backend/...
 go vet ./backend/...
 ```
+
+Backend HTTP tests use the same handler as the production server and validate JSON responses against `docs/openapi.json`. Set `TEST_DATABASE_URL` to a disposable PostgreSQL database whose name ends in `_test` to run database tests. HTTP integration tests create and drop their own isolated schema; store tests reset tables in the test database. These checks cover imported price updates, event deduplication, and outbound redirects when analytics writes fail.
 
 Run the frontend checks from its directory:
 
