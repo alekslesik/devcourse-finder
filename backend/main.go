@@ -6,8 +6,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"slices"
@@ -26,7 +27,11 @@ func write(w http.ResponseWriter, status int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 func fail(w http.ResponseWriter, status int, msg string) {
-	write(w, status, map[string]string{"error": msg})
+	code := map[int]string{400: "invalid_request", 404: "not_found", 429: "rate_limited", 503: "unavailable"}[status]
+	if code == "" {
+		code = "internal_error"
+	}
+	write(w, status, map[string]string{"error": msg, "code": code, "request_id": w.Header().Get("X-Request-ID")})
 }
 func catalogOperator(raw string) (string, error) {
 	operator := strings.TrimSpace(raw)
@@ -36,8 +41,9 @@ func catalogOperator(raw string) (string, error) {
 	return operator, nil
 }
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
 	if e := run(); e != nil {
-		log.Print(e)
+		slog.Error("command failed", "error", e.Error())
 		os.Exit(1)
 	}
 }
@@ -55,6 +61,21 @@ func run() error {
 			fmt.Printf("valid: %d courses\n", len(d.Courses))
 		}
 		return e
+	}
+	if os.Getenv("APP_ENV") == "production" {
+		password := os.Getenv("PGPASSWORD")
+		if raw := os.Getenv("DATABASE_URL"); raw != "" {
+			connection, err := url.Parse(raw)
+			if err != nil {
+				return fmt.Errorf("invalid database configuration")
+			}
+			if connection.User != nil {
+				password, _ = connection.User.Password()
+			}
+		}
+		if password == "" || password == "devcourse-local" {
+			return fmt.Errorf("production requires a database password different from the demo default")
+		}
 	}
 	db, e := store.Open(ctx, os.Getenv("DATABASE_URL"))
 	if e != nil {
@@ -126,7 +147,7 @@ func run() error {
 		}
 		cs, e := db.Load(r.Context())
 		if e != nil {
-			log.Print("catalog load failed")
+			slog.Error("catalog load failed", "request_id", w.Header().Get("X-Request-ID"))
 			fail(w, 503, "Каталог временно недоступен")
 			return
 		}
@@ -150,7 +171,7 @@ func run() error {
 			return
 		}
 		for _, c := range cs {
-			if c.Slug == r.PathValue("slug") && c.Status != "draft" {
+			if c.Slug == r.PathValue("slug") && c.Status == "published" {
 				offers := []catalog.Result{}
 				for _, o := range c.Offers {
 					offers = append(offers, catalog.Result{Course: c, Offer: o, Price: catalog.EffectivePrice(o, time.Now())})
@@ -200,7 +221,7 @@ func run() error {
 	mux.HandleFunc("GET /out/{id}", func(w http.ResponseWriter, r *http.Request) {
 		cs, e := db.Load(r.Context())
 		if e != nil {
-			http.Error(w, "Каталог недоступен", http.StatusServiceUnavailable)
+			fail(w, http.StatusServiceUnavailable, "Каталог недоступен")
 			return
 		}
 		for _, c := range cs {
@@ -218,7 +239,7 @@ func run() error {
 				}
 			}
 		}
-		http.Error(w, "Предложение недоступно", 404)
+		fail(w, 404, "Предложение недоступно")
 	})
 	tokens := make(chan struct{}, 100)
 	for i := 0; i < 100; i++ {
@@ -270,9 +291,12 @@ func run() error {
 		}
 	}()
 	server := &http.Server{Addr: ":8080", Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Request-ID", newID())
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
+		started := time.Now()
 		mux.ServeHTTP(w, r)
+		slog.Info("request completed", "request_id", w.Header().Get("X-Request-ID"), "method", r.Method, "duration_ms", time.Since(started).Milliseconds())
 	}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
 	stop, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
@@ -282,7 +306,7 @@ func run() error {
 		defer done()
 		server.Shutdown(c)
 	}()
-	log.Print("API listening on :8080")
+	slog.Info("API listening", "port", 8080)
 	e = server.ListenAndServe()
 	if e == http.ErrServerClosed {
 		return nil

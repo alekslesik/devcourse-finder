@@ -11,8 +11,24 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: devcourse_test
+          POSTGRES_USER: devcourse
+          POSTGRES_PASSWORD: integration-test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U devcourse -d devcourse_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://devcourse:integration-test@localhost:5432/devcourse_test?sslmode=disable
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
@@ -28,19 +44,32 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Check API compatibility
+        working-directory: .
+        env:
+          API_BASE_REF: ${{ github.base_ref || 'main' }}
+        run: python3 scripts/check-api-compatibility.py "origin/$API_BASE_REF"
+      - run: npm run api:check
       - run: npm run typecheck
-      - run: npm run build
+      - run: npm run build:test
+      - run: npm run test:routes
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
 
   containers:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - run: docker compose config --quiet
       - name: Run Compose smoke test
         run: ./scripts/compose-smoke.sh
