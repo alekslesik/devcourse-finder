@@ -3,3 +3,6 @@
 node_modules
 npm-debug.log*
 *.tsbuildinfo
+
+test-results
+playwright-report

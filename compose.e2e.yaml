@@ -1,0 +1,7 @@
+services:
+  migrate:
+    image: ${E2E_API_IMAGE:?required}
+  api:
+    image: ${E2E_API_IMAGE:?required}
+  frontend:
+    image: ${E2E_WEB_IMAGE:?required}

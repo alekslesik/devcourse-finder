@@ -74,3 +74,27 @@ jobs:
       - run: docker compose config --quiet
       - name: Run Compose smoke test
         run: ./scripts/compose-smoke.sh
+
+  real-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Browser acceptance with production frontend, Go API and PostgreSQL
+        run: ./scripts/e2e-real.sh
+      - name: Save browser failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-e2e-traces
+          path: frontend/test-results/
+          if-no-files-found: ignore
