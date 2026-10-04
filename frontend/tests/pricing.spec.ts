@@ -16,3 +16,20 @@ test('AC-02: Go switch search submits the full budget in kopecks and preserves r
  await expect(page.getByLabel('Текущий опыт')).toHaveValue('switch');
  await expect(page).toHaveURL(/max=3000000/);
 });
+
+for(const [kind,label] of [['from','Цена от · уточните у школы'],['unknown','Уточнить цену']] as const){
+ test(`AC-04: ${kind} price shows a qualification instead of an exact amount`,async({page})=>{
+  await page.route('**/api/v1/courses*',async route=>{
+   const response=await route.fetch();
+   const body=await response.json();
+   const item=body.items[0];
+   item.offer.price_kind=kind;
+   item.offer.price=kind==='from'?2000000:null;
+   item.effective_price=null;
+   await route.fulfill({json:{...body,items:[item],total:1}});
+  });
+  await page.goto('/courses');
+  await expect(page.locator('.card')).toHaveCount(1);
+  await expect(page.locator('.card .price')).toHaveText(label);
+ });
+}

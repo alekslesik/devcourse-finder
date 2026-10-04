@@ -124,3 +124,28 @@ func TestAcceptanceAC03OneTariffMustMeetBudgetAndReview(t *testing.T) {
 	}
 	acceptanceOffers(t, search("max=4000000&support=self"), "two-tariffs-full")
 }
+
+func TestAcceptanceAC04UnconfirmedPrices(t *testing.T) {
+	now := time.Now().UTC()
+	from := acceptanceCourse("starting-price", now)
+	from.Offers[0].PriceKind = "from"
+	unknown := acceptanceCourse("unknown-price", now)
+	unknown.Offers[0].PriceKind = "unknown"
+	unknown.Offers[0].Price = nil
+	known := acceptanceCourse("confirmed-price", now)
+	known.Offers[0].Price = value(int64(2500000))
+	search := acceptanceSearch(t, []catalog.Course{from, unknown, known})
+	for _, query := range []string{"max=3000000", "min=0", "min=1000000&max=3000000", "budget=paid&max=3000000"} {
+		acceptanceOffers(t, search(query), "confirmed-price-full")
+	}
+	results := search("sort=price_asc")
+	acceptanceOffers(t, results, "starting-price-full", "unknown-price-full", "confirmed-price-full")
+	if results[0].Offer.ID != "confirmed-price-full" {
+		t.Fatal("unconfirmed starting price sorted as a confirmed full price")
+	}
+	for _, result := range results[1:] {
+		if result.Price != nil || result.Offer.PriceKind == "exact" {
+			t.Fatalf("unconfirmed price represented as exact: %+v", result)
+		}
+	}
+}
