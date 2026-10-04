@@ -111,3 +111,32 @@ func TestAcceptanceAC13OfficialURLsAndUnaffectedOrdering(t *testing.T) {
 		t.Fatal("official URL fallback missing")
 	}
 }
+
+func TestAcceptanceAC14RepeatedCLIImportDoesNotDuplicate(t *testing.T) {
+	db := postgresHTTPFixture(t)
+	source := httpFixture()
+	file := cliFile(t, catalog.Dataset{Courses: source.courses, Domains: source.domains})
+	var previous string
+	for i := 0; i < 2; i++ {
+		result := cliProcess(t, db.Pool.Config().ConnString(), nil, "catalog", "import", file)
+		if result.exit != 0 {
+			t.Fatalf("CLI import failed: %s", result.stderr)
+		}
+		loaded, err := db.Load(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw, _ := json.Marshal(loaded)
+		if i > 0 && previous != string(raw) {
+			t.Fatal("repeated import changed catalog")
+		}
+		previous = string(raw)
+		var courses, offers int
+		if err := db.Pool.QueryRow(context.Background(), "SELECT (SELECT count(*) FROM courses),(SELECT count(*) FROM offers)").Scan(&courses, &offers); err != nil {
+			t.Fatal(err)
+		}
+		if courses != 3 || offers != 12 {
+			t.Fatalf("duplicate rows: %d courses, %d offers", courses, offers)
+		}
+	}
+}
