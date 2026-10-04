@@ -11,11 +11,11 @@ test('search, empty results, reset and API error preserve the form',async({page}
  await page.route('**/api/v1/courses*',route=>route.fulfill({status:503,json:{error:'unavailable'}}));await page.getByRole('radio',{name:'Python',exact:true}).check();await page.getByRole('button',{name:'Найти обучение'}).click();
  await expect(page.locator('main').getByRole('alert')).toContainText('Каталог временно недоступен');await expect(page.getByRole('radio',{name:'Python',exact:true})).toBeChecked();
 });
-test('three tariffs, fourth rejected, comparison URL in a fresh context and outbound',async({page,browser})=>{
+test('AC-10: three tariffs, fourth rejected, comparison URL in a fresh context and outbound',async({page,browser})=>{
  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
  const checks=page.getByLabel('Сравнить тариф');for(let i=0;i<3;i++)await checks.nth(i).check();await checks.nth(3).click();
- await expect(page.getByRole('status')).toContainText('уже 3 тарифа');await expect(checks.nth(3)).not.toBeChecked();await page.getByRole('button',{name:'Сравнить →'}).click();
- await expect(page).toHaveURL(/\/compare\?offers=/);await expect(page.locator('thead th')).toHaveCount(4);
+ await expect(page.getByRole('status')).toContainText('уже 3 тарифа');await expect(checks.nth(3)).not.toBeChecked();for(let i=0;i<3;i++)await expect(checks.nth(i)).toBeChecked();const selected=['demo-go-1-standard','demo-go-2-standard','demo-go-3-standard'];await page.getByRole('button',{name:'Сравнить →'}).click();
+ await expect(page).toHaveURL(/\/compare\?offers=/);expect(new URL(page.url()).searchParams.get('offers')?.split(',')).toEqual(selected);await expect(page.locator('thead th')).toHaveCount(4);
  const context=await browser.newContext();const fresh=await context.newPage();await fresh.goto(page.url());await expect(fresh.locator('thead th')).toHaveCount(4);
  await expectOutboundPopup(fresh,process.env.E2E_REAL_API==='1'?'https://example.com/devcourse-demo/demo-go-1/enroll':'https://example.com/course',()=>fresh.getByRole('link',{name:'Проверить условия'}).first().click());await context.close();
 });
