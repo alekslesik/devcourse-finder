@@ -1,0 +1,67 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"devcourse-finder/catalog"
+	"devcourse-finder/store"
+)
+
+func remainingHTTP(t *testing.T, courses []catalog.Course) (*store.DB, *httptest.Server) {
+	t.Helper()
+	db := postgresHTTPFixture(t)
+	if courses != nil {
+		if _, err := db.Pool.Exec(context.Background(), "TRUNCATE courses CASCADE"); err != nil {
+			t.Fatal(err)
+		}
+		publishRemaining(t, db, courses)
+	}
+	server := httptest.NewServer(newHandler(store.NewCached(db)))
+	t.Cleanup(server.Close)
+	return db, server
+}
+
+func publishRemaining(t *testing.T, db *store.DB, courses []catalog.Course) {
+	t.Helper()
+	raw, err := json.Marshal(catalog.Dataset{Courses: courses, Domains: []string{"example.com"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid, err := catalog.Decode(strings.NewReader(string(raw)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = db.Import(context.Background(), valid, "acceptance-test", false); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAcceptanceAC09URLUsesCurrentDatabase(t *testing.T) {
+	now := time.Now().UTC()
+	courses := []catalog.Course{acceptanceCourse("first", now), acceptanceCourse("second", now), acceptanceCourse("third", now)}
+	for i := range courses {
+		courses[i].Offers[0].Price = value(int64(i+1) * 1000000)
+	}
+	db, server := remainingHTTP(t, courses)
+	contract := newResponseContract(t)
+	client := &http.Client{Timeout: 3 * time.Second}
+	query := "/api/v1/courses?language=go&experience=switch&goal=switch&sort=price_asc&page=2&page_size=1"
+	check := func(want string) {
+		t.Helper()
+		body := contract.check(t, wireRequest(t, client, server.URL, "GET", query, ""), "/api/v1/courses", "GET", 200).(map[string]any)
+		items := body["items"].([]any)
+		if body["page"] != float64(2) || body["page_size"] != float64(1) || body["total"] != float64(3) || len(items) != 1 || items[0].(map[string]any)["course"].(map[string]any)["id"] != want {
+			t.Fatalf("URL did not restore current page/sort/filter: %+v", body)
+		}
+	}
+	check("second")
+	courses[1].Offers[0].Price = value(int64(5000000))
+	publishRemaining(t, db, courses)
+	check("third")
+}
