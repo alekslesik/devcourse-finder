@@ -17,6 +17,16 @@ type Dataset struct {
 	Courses []Course `json:"courses"`
 }
 
+// ValidationError carries a fixed validator rule and an input position. The CLI
+// logs these rather than Error(), which includes an untrusted course identifier.
+type ValidationError struct {
+	CourseID string
+	Index    int
+	Rule     string
+}
+
+func (e *ValidationError) Error() string { return fmt.Sprintf("course %q: %s", e.CourseID, e.Rule) }
+
 var idPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,99}$`)
 
 func SafeURL(raw string, domains []string) bool {
@@ -44,8 +54,8 @@ func Decode(r io.Reader) (Dataset, error) {
 	ids := map[string]bool{}
 	slugs := map[string]bool{}
 	offers := map[string]bool{}
-	for _, c := range d.Courses {
-		fail := func(s string) error { return fmt.Errorf("course %q: %s", c.ID, s) }
+	for index, c := range d.Courses {
+		fail := func(s string) error { return &ValidationError{CourseID: c.ID, Index: index, Rule: s} }
 		if !idPattern.MatchString(c.ID) || ids[c.ID] || !idPattern.MatchString(c.Slug) || slugs[c.Slug] {
 			return d, fail("invalid or duplicate id/slug")
 		}

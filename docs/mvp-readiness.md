@@ -1,6 +1,6 @@
 # Проверка готовности MVP — 04.10.2026
 
-Предыдущий блок слит в [PR #10](https://github.com/alekslesik/devcourse-finder/pull/10); [CI основного commit 30cea923](https://github.com/alekslesik/devcourse-finder/actions/runs/37109338705) прошёл. Блок MVP-WEB-03 / MVP-QA-01 слит в [PR #11](https://github.com/alekslesik/devcourse-finder/pull/11), CI прошёл. Блок MVP-NFR-04 слит в [PR #12](https://github.com/alekslesik/devcourse-finder/pull/12), CI прошёл. Блок MVP-QA-02 слит в [PR #13](https://github.com/alekslesik/devcourse-finder/pull/13), CI прошёл. Новый блок MVP-NFR-02 проверен локально и ожидает слияния. README сохраняет статус разработки: это не акт приёмки production.
+Предыдущий блок слит в [PR #10](https://github.com/alekslesik/devcourse-finder/pull/10); [CI основного commit 30cea923](https://github.com/alekslesik/devcourse-finder/actions/runs/37109338705) прошёл. Блок MVP-WEB-03 / MVP-QA-01 слит в [PR #11](https://github.com/alekslesik/devcourse-finder/pull/11), CI прошёл. Блок MVP-NFR-04 слит в [PR #12](https://github.com/alekslesik/devcourse-finder/pull/12), CI прошёл. Блок MVP-QA-02 слит в [PR #13](https://github.com/alekslesik/devcourse-finder/pull/13), CI прошёл. Блок MVP-NFR-02 слит в [PR #14](https://github.com/alekslesik/devcourse-finder/pull/14), CI прошёл. Новый блок MVP-API-03 проверен локально и ожидает слияния. README сохраняет статус разработки: это не акт приёмки production.
 
 ## Статус каждого пункта ТЗ
 
@@ -18,7 +18,7 @@
 | MVP-WEB-04 | Страница о сервисе | Проверено локально | `/about` содержит требуемые пояснения и способ сообщить об ошибке |
 | MVP-API-01 | OpenAPI | Проверено локально | Контракт валиден, проверка совместимости подключена; ответы общего production HTTP-handler проверяются по схемам ответов OpenAPI |
 | MVP-API-02 | Типы из контракта | Проверено локально | Типы сгенерированы из OpenAPI, TypeScript проходит |
-| MVP-API-03 | Ошибки и наблюдаемость | Частично | HTTP-ошибки, включая 404/405/429/503, проверены по OpenAPI; request_id и безопасные сообщения проверены. Проверка CLI-журнала при неуспешном импорте остаётся |
+| MVP-API-03 | Ошибки и наблюдаемость | Проверено локально | HTTP-ошибки/request_id проверены; CLI exit 1, JSON-диагностика, rollback и отсутствие секретов/URL проверены настоящими процессами с PostgreSQL |
 | MVP-NFR-01 | SEO | Проверено локально | HTML, canonical, sitemap и noindex сравнения проверены серверным тестом |
 | MVP-NFR-02 | Доступность | Проверено локально | Клавиатура и axe на основных страницах и диалоге прошли; Tab/Shift+Tab, изоляция фона, Escape/кнопка/фон, возврат фокуса, загрузка/ошибка и 360 px проверены с настоящим стеком |
 | MVP-NFR-03 | Экран 360 px | Проверено локально | Основные страницы проверены без горизонтальной прокрутки страницы |
@@ -34,6 +34,7 @@
 | Проверка | Результат |
 |---|---|
 | Нагрузочный замер поиска | Пройден: p95 340,2 мс, 34 266 успешных запросов, 0 ошибок |
+| CLI entry point + PostgreSQL 17 | Пройдены: rollback после частичной записи, валидация, отказ подключения, dry-run, успешное обновление цены и безопасные JSON-логи |
 | Go tests с race detector и vet | Пройдены; CI запускает `go test -race ./backend/...` |
 | HTTP и OpenAPI response contract | Пройдены: публичные маршруты, ошибки, лимиты, безопасный redirect и отказ/таймаут аналитики |
 | HTTP + PostgreSQL 17 | Пройдены в отдельной схеме: импорт и изменение цены, дедупликация событий, отказ SQL-записи аналитики и БД |
@@ -52,7 +53,6 @@
 
 ## Оставшаяся приёмка
 
-- Проверка диагностической записи CLI при неуспешном импорте.
 - Полная ручная приёмка AC-01—AC-20, включая быстрые конкурирующие поиски и все правила цен.
 - 20 проверенных реальных программ: демонстрационные записи не подходят для production.
 - Установка ежедневного резервного копирования и контроля его отказов на production.
