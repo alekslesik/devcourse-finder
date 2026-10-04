@@ -84,3 +84,17 @@ test('AC-09: clipboard refusal offers the current URL for manual copying',async(
  await expect(page.getByLabel('Ссылка на поиск',{exact:true})).toHaveValue(page.url());
  await expect(page.getByLabel('Ссылка на поиск',{exact:true})).toBeFocused();
 });
+
+for(const [enrollment,label] of [['closed','Набор закрыт'],['unknown','Набор неизвестен']]){
+ test(`AC-16: catalog card labels ${enrollment} enrollment explicitly`,async({page})=>{
+  await page.route('**/api/v1/courses?*',async route=>{
+   const response=await route.fetch();const body=await response.json();
+   body.items=body.items.slice(0,1);body.items[0].offer.enrollment=enrollment;body.total=1;
+   await route.fulfill({response,json:body});
+  });
+  await page.goto('/courses?include_closed=true');
+  await expect(page.locator('.card')).toHaveCount(1);
+  await expect(page.locator('.card').getByText(label,{exact:true})).toBeVisible();
+  await expect(page.getByLabel('Показать закрытый и неизвестный набор')).toBeChecked();
+ });
+}

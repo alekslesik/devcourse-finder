@@ -189,3 +189,23 @@ func TestAcceptanceAC15CLIImportRefreshesIndependentAPICaches(t *testing.T) {
 	}
 }
 
+func TestAcceptanceAC16ClosedAndUnknownEnrollmentRequireExplicitFilter(t *testing.T) {
+	for _, enrollment := range []string{"closed", "unknown"} {
+		t.Run(enrollment, func(t *testing.T) {
+			course := acceptanceCourse("enrollment-"+enrollment, time.Now().UTC())
+			course.Offers[0].Enrollment = enrollment
+			_, server := remainingHTTP(t, []catalog.Course{course})
+			client := &http.Client{Timeout: 3 * time.Second}
+			contract := newResponseContract(t)
+			body := contract.check(t, wireRequest(t, client, server.URL, "GET", "/api/v1/courses", ""), "/api/v1/courses", "GET", 200).(map[string]any)
+			if body["total"] != float64(0) {
+				t.Fatal("non-open enrollment shown by default")
+			}
+			body = contract.check(t, wireRequest(t, client, server.URL, "GET", "/api/v1/courses?include_closed=true", ""), "/api/v1/courses", "GET", 200).(map[string]any)
+			items := body["items"].([]any)
+			if len(items) != 1 || items[0].(map[string]any)["offer"].(map[string]any)["enrollment"] != enrollment {
+				t.Fatal("explicit filter lost enrollment status")
+			}
+		})
+	}
+}
