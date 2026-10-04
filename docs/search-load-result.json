@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-03T09:09:24.767131+00:00",
+  "timestamp_utc": "2026-10-04T21:37:17.123413+00:00",
   "clients": 20,
   "published_offers": 10000,
   "queries": [
@@ -18,27 +18,27 @@
   ],
   "warmup": {
     "duration_seconds": 60,
-    "elapsed_seconds": 60.16,
-    "successful_requests": 6323,
+    "elapsed_seconds": 60.2,
+    "successful_requests": 8034,
     "failed_requests": 0,
     "errors": {},
-    "requests_per_second": 105.1,
-    "p50_ms": 167.4101710004834,
-    "p95_ms": 374.93797300066944,
-    "p99_ms": 546.4162730004318,
-    "max_ms": 2275.0288560000627
+    "requests_per_second": 133.46,
+    "p50_ms": 136.48954999916896,
+    "p95_ms": 279.94784700058517,
+    "p99_ms": 390.9336420001637,
+    "max_ms": 1059.9184500006231
   },
   "measurement": {
     "duration_seconds": 300,
-    "elapsed_seconds": 300.149,
-    "successful_requests": 34266,
+    "elapsed_seconds": 300.198,
+    "successful_requests": 37883,
     "failed_requests": 0,
     "errors": {},
-    "requests_per_second": 114.16,
-    "p50_ms": 157.60185399994953,
-    "p95_ms": 340.23087399964425,
-    "p99_ms": 471.503988999757,
-    "max_ms": 990.869162999843
+    "requests_per_second": 126.19,
+    "p50_ms": 144.3117130002065,
+    "p95_ms": 298.72998100108816,
+    "p99_ms": 405.30933499940147,
+    "max_ms": 764.8790380007995
   },
   "target_p95_ms": 500,
   "passed": true,
@@ -50,7 +50,7 @@
     "containers": [
       {
         "service": "api",
-        "image_id": "sha256:eb322594995f4a214c8621985db4bf353749520d7344acf88fa2d42035f14751",
+        "image_id": "sha256:f46940d5284d416dd1f5e53d583a322f71799438e05f2b3533107beed769d881",
         "cpu_set": "0,1",
         "memory_bytes": 1073741824,
         "memory_plus_swap_bytes": 1073741824
@@ -64,16 +64,16 @@
       }
     ]
   },
-  "base_commit": "6918593458680b990a0f6c080627d7459019415b",
+  "base_commit": "08f1210dda7ee6089a52e97cb4d6a27ef3709d6f",
   "source_sha256": {
     "backend/Dockerfile": "efabb6b92df569fdae41442004ff9951cf4cb6d6bffa37d5d0f3f9bc45f76d6b",
     "backend/api.go": "f8fab46b5f555aa102ca6ff1971f3c128e6c5a83968bc7b1802f834fc50b14a8",
     "backend/catalog/catalog.go": "0118042131b2a0a6d7b2f16aec58a04e1df7c0cec6bc88ec33d6554297dca23b",
     "backend/catalog/filter.go": "9fa8b3e5b6101378bdb42f64f3cbe98e37f4001805b94240e21f8a08b346d7a1",
-    "backend/catalog/validation.go": "a45304534297186d6fc093db86b9b7fbab7baddd25924ae553771029d91bfa3b",
+    "backend/catalog/validation.go": "7c9958761013a1be0df9d12465ec408fc2a2cef9b89632587568d402fe4cb902",
     "backend/go.mod": "88b4fbb61a08873f28f99bfb7d428460a77174e972c82b5fd539f191a260b093",
     "backend/go.sum": "4842f0f9335c64803268de9c709eed60e6e1c37c1c6f0ede568572a457bab914",
-    "backend/main.go": "0cc0bc24f6df351da8e973134b50a8c8dbcc214139946a0ef0a6e60740fa9966",
+    "backend/main.go": "2e51c3caa1aac30ac43be7d21d4890445785050e80c20e9556fde317bfc6ffe0",
     "backend/store/cached.go": "d22d436b3f2212e42c9d46804c12dc43bec659dfe59cb0f280f33095fc9999d3",
     "backend/store/schema.sql": "d58f039db5b1549fc72193456848a2946c97e928f40b7c4088fdda452b94ef8b",
     "backend/store/store.go": "59ee1af71b5ec42b9263b662e07a2df24a90c714683177811768a7e57b5565fa"
