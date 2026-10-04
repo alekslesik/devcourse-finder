@@ -33,3 +33,24 @@ for(const [kind,label] of [['from','Цена от · уточните у шко�
   await expect(page.locator('.card .price')).toHaveText(label);
  });
 }
+
+for(const invalidity of ['stale','expired'] as const){
+ test(`AC-06: ${invalidity} exact amount is not displayed as a current price`,async({page})=>{
+  await page.route('**/api/v1/courses*',async route=>{
+   const response=await route.fetch();
+   const body=await response.json();
+   const item=body.items[0];
+   item.offer.price_kind='exact';
+   item.offer.price=2000000;
+   item.offer.price_checked_at=new Date(Date.now()-(invalidity==='stale'?31:0)*86400000).toISOString();
+   item.offer.valid_until=invalidity==='expired'?new Date(Date.now()-86400000).toISOString():null;
+   // Effective price is computed by Go. UI must respect its null result and
+   // never resurrect the original stored amount as a confirmed price.
+   item.effective_price=null;
+   await route.fulfill({json:{...body,items:[item],total:1}});
+  });
+  await page.goto('/courses');
+  await expect(page.locator('.card')).toHaveCount(1);
+  await expect(page.locator('.card .price')).toHaveText('Уточнить цену');
+ });
+}

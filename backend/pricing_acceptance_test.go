@@ -171,3 +171,58 @@ func TestAcceptanceAC05FreeMeansFullCourse(t *testing.T) {
 	acceptanceOffers(t, search("budget=paid&max=3000000"), "paid-with-free-intro-full")
 	acceptanceOffers(t, search("budget=paid&max=3000000&include_free=true"), "paid-with-free-intro-full", "full-free-course-full")
 }
+
+func TestAcceptanceAC06ExpiredAndStalePrices(t *testing.T) {
+	now := time.Now().UTC()
+	expired := acceptanceCourse("expired-only", now)
+	expired.Offers[0].Price = value(int64(1000000))
+	expired.Offers[0].ValidUntil = value(now.Add(-time.Hour))
+	stale := acceptanceCourse("stale-only", now)
+	stale.Offers[0].PriceCheckedAt = now.Add(-31 * 24 * time.Hour)
+	base := acceptanceCourse("current-base", now)
+	base.Offers[0].Price = value(int64(2500000))
+	discount := base.Offers[0]
+	discount.ID = "expired-discount"
+	discount.Price = value(int64(1000000))
+	discount.ValidUntil = value(now.Add(-time.Hour))
+	base.Offers = append(base.Offers, discount)
+	fresh := acceptanceCourse("checked-29-days", now)
+	fresh.Offers[0].PriceCheckedAt = now.Add(-29 * 24 * time.Hour)
+	search := acceptanceSearch(t, []catalog.Course{expired, stale, base, fresh})
+	results := search("max=3000000")
+	acceptanceOffers(t, results, "current-base-full", "checked-29-days-full")
+	acceptanceOffers(t, search("max=1500000"))
+	results = search("sort=price_asc")
+	acceptanceOffers(t, results, "current-base-full", "checked-29-days-full", "expired-only-full", "stale-only-full")
+	if results[0].Offer.ID != "checked-29-days-full" || results[1].Offer.ID != "current-base-full" {
+		t.Fatal("expired or stale amount sorted ahead of current prices")
+	}
+	for _, result := range results[2:] {
+		if result.Price != nil {
+			t.Fatalf("obsolete amount is still effective: %+v", result)
+		}
+	}
+}
+
+func TestAcceptanceAC06ExpiryIsAppliedToCachedReads(t *testing.T) {
+	now := time.Now().UTC()
+	course := acceptanceCourse("expiring-price", now)
+	deadline := now.Add(3 * time.Second)
+	course.Offers[0].ValidUntil = &deadline
+	search := acceptanceSearch(t, []catalog.Course{course})
+	acceptanceOffers(t, search("max=3000000"), "expiring-price-full")
+	// No reimport, cleanup job or catalog revision change occurs. The same cached
+	// snapshot must stop passing the budget when wall-clock validity expires.
+	for time.Now().Before(deadline.Add(3 * time.Second)) {
+		if results := search("max=3000000"); len(results) == 0 {
+			unrestricted := search("")
+			acceptanceOffers(t, unrestricted, "expiring-price-full")
+			if unrestricted[0].Price != nil {
+				t.Fatal("unrestricted search retained the expired amount")
+			}
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatal("cached catalog ignored price expiration")
+}
