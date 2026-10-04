@@ -226,3 +226,52 @@ func TestAcceptanceAC06ExpiryIsAppliedToCachedReads(t *testing.T) {
 	}
 	t.Fatal("cached catalog ignored price expiration")
 }
+
+func TestAcceptanceAC07ExplicitPrerequisites(t *testing.T) {
+	now := time.Now().UTC()
+	courses := []catalog.Course{}
+	for _, profile := range []string{"none", "basics", "projects", "working", "switch"} {
+		course := acceptanceCourse("for-"+profile, now)
+		course.Audience = []string{profile}
+		courses = append(courses, course)
+	}
+	multiple := acceptanceCourse("multiple-profiles", now)
+	multiple.Audience = []string{"basics", "projects"}
+	courses = append(courses, multiple)
+	python := acceptanceCourse("python-experienced", now)
+	python.Language = "python"
+	python.Audience = []string{"working"}
+	courses = append(courses, python)
+	search := acceptanceSearch(t, courses)
+	for _, profile := range []string{"none", "basics", "projects", "working", "switch"} {
+		want := []string{"for-" + profile + "-full"}
+		if profile == "basics" || profile == "projects" {
+			want = append(want, "multiple-profiles-full")
+		}
+		acceptanceOffers(t, search("language=go&goal=switch&max=3000000&experience="+profile), want...)
+	}
+	// Experience is an explicit compatibility set, not a numeric seniority ladder.
+	acceptanceOffers(t, search("experience=experienced&max=3000000"), "for-basics-full", "for-projects-full", "for-working-full", "for-switch-full", "multiple-profiles-full", "python-experienced-full")
+}
+
+func TestAcceptanceAC07UnknownPrerequisites(t *testing.T) {
+	db := postgresHTTPFixture(t)
+	// Simulate an old incomplete record. Current import validation requires an
+	// explicit audience, but reads must still exclude unknown prerequisites.
+	if _, err := db.Pool.Exec(context.Background(), "UPDATE courses SET audience='{}' WHERE id=$1", "go-course"); err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewServer(newHandler(store.NewCached(db)))
+	defer server.Close()
+	contract := newResponseContract(t)
+	for _, test := range []struct {
+		query string
+		total float64
+	}{{"language=go&max=3000000&experience=switch", 0}, {"language=go&max=3000000", 1}} {
+		response := wireRequest(t, &http.Client{Timeout: 3 * time.Second}, server.URL, "GET", "/api/v1/courses?"+test.query, "")
+		body := contract.check(t, response, "/api/v1/courses", "GET", 200).(map[string]any)
+		if body["total"] != test.total {
+			t.Fatalf("unknown prerequisites incorrectly matched %q: %+v", test.query, body)
+		}
+	}
+}

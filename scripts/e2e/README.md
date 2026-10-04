@@ -40,6 +40,12 @@ its AbortSignal; delaying the handoff after reading the real body models work
 already queued after transport, which abort alone cannot cancel. The cards,
 filters, URL, loading/error state and absence of stale search events are checked.
 
+Five pricing UI checks cover AC-02 budget conversion from rubles to kopecks and
+AC-04/AC-06 qualifications for unknown, starting, stale and expired prices.
+Controlled price responses verify that UI respects Go's `effective_price=null`.
+The full filtering acceptance AC-02—AC-07 runs separately in backend CI through
+the real HTTP handler, validated import and PostgreSQL, including cache expiry.
+
 `E2E_REAL_API=1` switches Playwright to this already-running stack; the default
 fixture mode starts its own servers and excludes real-stack-only tests. The
 CI job `real-e2e` runs the script on every PR and saves failure traces.
