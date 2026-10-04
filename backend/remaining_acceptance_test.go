@@ -140,3 +140,52 @@ func TestAcceptanceAC14RepeatedCLIImportDoesNotDuplicate(t *testing.T) {
 		}
 	}
 }
+
+func TestAcceptanceAC15CLIImportRefreshesIndependentAPICaches(t *testing.T) {
+	db, first := remainingHTTP(t, nil)
+	second := httptest.NewServer(newHandler(store.NewCached(db)))
+	defer second.Close()
+	client := &http.Client{Timeout: 3 * time.Second}
+	contract := newResponseContract(t)
+	search := func(origin string, want float64) {
+		t.Helper()
+		body := contract.check(t, wireRequest(t, client, origin, "GET", "/api/v1/courses?max=3000000", ""), "/api/v1/courses", "GET", 200).(map[string]any)
+		if body["total"] != want {
+			t.Fatalf("stale filter: %+v", body)
+		}
+	}
+	for _, server := range []*httptest.Server{first, second} {
+		search(server.URL, 1)
+	}
+	source := httpFixture()
+	source.courses[0].Offers[0].Price = value(int64(5000000))
+	started := time.Now()
+	result := cliProcess(t, db.Pool.Config().ConnString(), nil, "catalog", "import", cliFile(t, catalog.Dataset{Courses: source.courses, Domains: source.domains}))
+	if result.exit != 0 {
+		t.Fatal("CLI update failed")
+	}
+	for _, server := range []*httptest.Server{first, second} {
+		search(server.URL, 0)
+		detail := contract.check(t, wireRequest(t, client, server.URL, "GET", "/api/v1/courses/go-course", ""), "/api/v1/courses/{slug}", "GET", 200).(map[string]any)
+		found := false
+		for _, raw := range detail["offers"].([]any) {
+			offer := raw.(map[string]any)["offer"].(map[string]any)
+			if offer["id"] == "self" {
+				found = offer["price"] == float64(5000000)
+			}
+		}
+		if !found {
+			t.Fatal("detail retained stale price")
+		}
+		comparison := contract.check(t, wireRequest(t, client, server.URL, "GET", "/api/v1/compare?offer_ids=self", ""), "/api/v1/compare", "GET", 200).([]any)
+		if comparison[0].(map[string]any)["offer"].(map[string]any)["price"] != float64(5000000) {
+			t.Fatal("comparison retained stale price")
+		}
+	}
+	if elapsed := time.Since(started); elapsed > 60*time.Second {
+		t.Fatalf("publication took %s", elapsed)
+	} else {
+		t.Logf("both independent caches refreshed in %s", elapsed)
+	}
+}
+
