@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {expectOutboundPopup} from './outbound';
 const exec=promisify(execFile);
 const compose=async(...args:string[])=>{
  const project=process.env.COMPOSE_PROJECT_NAME;
@@ -29,7 +30,7 @@ test('real API outage preserves filters and retry recovers after restart',async(
  await expect(page.locator('main').getByRole('alert')).toHaveCount(0);
 });
 
-test('real database hides draft/archive and persists browser search and outbound events',async({page,context})=>{
+test('real database hides draft/archive and persists browser search and outbound events',async({page})=>{
  for(const slug of ['draft-course','archived-course','absent-course']){
   const response=await page.goto('/courses/'+slug);
   expect(response?.status()).toBe(404);
@@ -41,12 +42,7 @@ test('real database hides draft/archive and persists browser search and outbound
  await expect(page.locator('.card')).toHaveCount(1);
  await expect.poll(searchCount).toBeGreaterThan(searchesBefore);
  const outboundBefore=await outboundCount();
- await context.route('https://example.com/**',route=>route.fulfill({body:'Provider website'}));
  await page.getByRole('link',{name:'Подробнее'}).click();
- const popupPromise=page.waitForEvent('popup');
- await page.getByRole('link',{name:'На сайт курса'}).click();
- const popup=await popupPromise;
- await expect(popup).toHaveURL('https://example.com/devcourse-demo/demo-go-1/enroll');
+ await expectOutboundPopup(page,'https://example.com/devcourse-demo/demo-go-1/enroll',()=>page.getByRole('link',{name:'На сайт курса'}).click());
  await expect.poll(outboundCount).toBeGreaterThan(outboundBefore);
- await popup.close();
 });
