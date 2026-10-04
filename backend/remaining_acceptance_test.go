@@ -82,3 +82,32 @@ func TestAcceptanceAC12RedirectSurvivesAnalyticsFailureAndIgnoresURL(t *testing.
 	}
 	contract.check(t, wireRequest(t, client, server.URL, "POST", "/api/v1/events", `{"id":"ac12-event","kind":"view"}`), "/api/v1/events", "POST", 503)
 }
+
+func TestAcceptanceAC13OfficialURLsAndUnaffectedOrdering(t *testing.T) {
+	now := time.Now().UTC()
+	courses := []catalog.Course{acceptanceCourse("official-first", now), acceptanceCourse("official-second", now)}
+	courses[0].Offers[0].Price = value(int64(1000000))
+	courses[1].Offers[0].Price = value(int64(2000000))
+	_, server := remainingHTTP(t, courses)
+	client := &http.Client{Timeout: 3 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	contract := newResponseContract(t)
+	var first string
+	for _, suffix := range []string{"", "&affiliate=https://attacker.example&ref=paid&url=https://attacker.example"} {
+		body := contract.check(t, wireRequest(t, client, server.URL, "GET", "/api/v1/courses?sort=price_asc"+suffix, ""), "/api/v1/courses", "GET", 200).(map[string]any)
+		raw, _ := json.Marshal(body["items"])
+		if first == "" {
+			first = string(raw)
+		} else if first != string(raw) {
+			t.Fatal("referral parameters changed the search order or data")
+		}
+		items := body["items"].([]any)
+		if len(items) != 2 || items[0].(map[string]any)["course"].(map[string]any)["id"] != "official-first" {
+			t.Fatal("wrong organic order")
+		}
+	}
+	response := wireRequest(t, client, server.URL, "GET", "/out/"+courses[0].Offers[0].ID+"?affiliate=https://attacker.example", "")
+	contract.check(t, response, "/out/{offer_id}", "GET", 302)
+	if response.Header().Get("Location") != courses[0].Offers[0].URL {
+		t.Fatal("official URL fallback missing")
+	}
+}
