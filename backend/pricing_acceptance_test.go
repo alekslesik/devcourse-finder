@@ -102,3 +102,25 @@ func TestAcceptanceAC02GoSwitchBudget(t *testing.T) {
 	}
 	acceptanceOffers(t, search(query+"&min=3000000"), "budget-boundary-full")
 }
+
+func TestAcceptanceAC03OneTariffMustMeetBudgetAndReview(t *testing.T) {
+	now := time.Now().UTC()
+	course := acceptanceCourse("two-tariffs", now)
+	review := course.Offers[0]
+	review.ID = "human-review"
+	review.Name = "Human code review"
+	review.Price = value(int64(4000000))
+	review.Review = true
+	course.Offers = append(course.Offers, review)
+	search := acceptanceSearch(t, []catalog.Course{course})
+	acceptanceOffers(t, search("max=3000000&support=review"))
+	// Both positive controls are necessary: neither budget nor support may simply
+	// exclude the entire course. Raising the budget selects the actual review offer.
+	acceptanceOffers(t, search("max=3000000"), "two-tariffs-full")
+	results := search("max=4000000&support=review")
+	acceptanceOffers(t, results, "human-review")
+	if !results[0].Offer.Review || results[0].Price == nil || *results[0].Price != 4000000 {
+		t.Fatalf("price/support belong to different offers: %+v", results[0])
+	}
+	acceptanceOffers(t, search("max=4000000&support=self"), "two-tariffs-full")
+}
