@@ -41,9 +41,9 @@ func catalogOperator(raw string) (string, error) {
 	return operator, nil
 }
 func main() {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)).With("command", commandName(os.Args[1:]), "run_id", newID()))
 	if e := run(); e != nil {
-		slog.Error("command failed", "error", e.Error())
+		slog.LogAttrs(context.Background(), slog.LevelError, "command failed", commandErrorAttrs(e)...)
 		os.Exit(1)
 	}
 }
@@ -53,76 +53,91 @@ func run() error {
 	if len(args) > 0 && args[0] == "catalog" && len(args) >= 3 && args[1] == "validate" {
 		f, e := os.Open(args[2])
 		if e != nil {
-			return e
+			return commandFailure("read_catalog", "catalog_file_unavailable", "Cannot read catalog file", e)
 		}
 		defer f.Close()
 		d, e := catalog.Decode(f)
 		if e == nil {
 			fmt.Printf("valid: %d courses\n", len(d.Courses))
 		}
-		return e
+		if e != nil {
+			return commandFailure("validate_catalog", "invalid_catalog", "Catalog validation failed", e)
+		}
+		return nil
 	}
 	if os.Getenv("APP_ENV") == "production" {
 		password := os.Getenv("PGPASSWORD")
 		if raw := os.Getenv("DATABASE_URL"); raw != "" {
 			connection, err := url.Parse(raw)
 			if err != nil {
-				return fmt.Errorf("invalid database configuration")
+				return commandFailure("database_config", "invalid_database_configuration", "Invalid database configuration", err)
 			}
 			if connection.User != nil {
 				password, _ = connection.User.Password()
 			}
 		}
 		if password == "" || password == "devcourse-local" {
-			return fmt.Errorf("production requires a database password different from the demo default")
+			return commandFailure("database_config", "invalid_database_configuration", "Production requires a non-demo database password", nil)
 		}
 	}
 	db, e := store.Open(ctx, os.Getenv("DATABASE_URL"))
 	if e != nil {
-		return e
+		return commandFailure("database_config", "invalid_database_configuration", "Invalid database configuration", e)
 	}
 	defer db.Pool.Close()
 	if len(args) > 0 {
 		switch args[0] {
 		case "migrate":
-			return db.Migrate(ctx)
+			if err := db.Migrate(ctx); err != nil {
+				return commandFailure("migrate", "migration_failed", "Database migration failed", err)
+			}
+			return nil
 		case "catalog":
 			if len(args) < 3 || args[1] != "import" {
-				return fmt.Errorf("usage: catalog validate|import file [--dry-run]")
+				return commandFailure("arguments", "invalid_arguments", "Usage: catalog validate|import file [--dry-run]", nil)
 			}
 			operator, e := catalogOperator(os.Getenv("CATALOG_OPERATOR"))
 			if e != nil {
-				return e
+				return commandFailure("operator", "invalid_catalog_operator", "CATALOG_OPERATOR must contain 1 to 100 characters", e)
 			}
 			f, e := os.Open(args[2])
 			if e != nil {
-				return e
+				return commandFailure("read_catalog", "catalog_file_unavailable", "Cannot read catalog file", e)
 			}
 			defer f.Close()
 			d, e := catalog.Decode(f)
 			if e != nil {
-				return e
+				return commandFailure("validate_catalog", "invalid_catalog", "Catalog validation failed", e)
 			}
-			return db.Import(ctx, d, operator, slices.Contains(args, "--dry-run"))
+			dry := slices.Contains(args, "--dry-run")
+			started := time.Now()
+			if err := db.Import(ctx, d, operator, dry); err != nil {
+				return commandFailure("publish_catalog", "catalog_import_failed", "Catalog import did not complete", err)
+			}
+			slog.Info("catalog import completed", "courses", len(d.Courses), "dry_run", dry, "duration_ms", time.Since(started).Milliseconds())
+			return nil
 		case "report":
 			rows, e := db.Pool.Query(ctx, "SELECT day,kind,course_id,language,goal,count FROM daily_stats ORDER BY day DESC,kind")
 			if e != nil {
-				return e
+				return commandFailure("report", "report_failed", "Cannot read analytics report", e)
 			}
 			defer rows.Close()
 			for rows.Next() {
 				v, e := rows.Values()
 				if e != nil {
-					return e
+					return commandFailure("report", "report_failed", "Cannot read analytics report", e)
 				}
 				fmt.Println(v)
 			}
-			return rows.Err()
+			if err := rows.Err(); err != nil {
+				return commandFailure("report", "report_failed", "Cannot read analytics report", err)
+			}
+			return nil
 		case "cleanup":
 			db.Cleanup(ctx)
 			return nil
 		default:
-			return fmt.Errorf("unknown command")
+			return commandFailure("arguments", "invalid_arguments", "Unknown command", nil)
 		}
 	}
 	stop, cancel := signal.NotifyContext(ctx, os.Interrupt)
@@ -152,6 +167,6 @@ func run() error {
 	if e == http.ErrServerClosed {
 		return nil
 	}
-	return e
+	return commandFailure("serve", "server_failed", "HTTP server failed", e)
 }
 func newID() string { b := make([]byte, 16); rand.Read(b); return hex.EncodeToString(b) }

@@ -156,3 +156,7 @@ Run `./scripts/load/run.sh` for the MVP-NFR-04 load measurement: 10,000 publishe
 ## Browser acceptance with the real API
 
 Run `./scripts/e2e-real.sh` after installing frontend dependencies and Playwright Chromium. It builds production frontend/API images and uses a disposable PostgreSQL database, then checks all eight MVP-QA-02 scenarios plus real API outage/recovery and persisted analytics. See [the real-stack E2E instructions](scripts/e2e/README.md). The `real-e2e` CI job runs this suite for every PR.
+
+## Import diagnostics
+
+CLI failures exit with code 1 and write JSON diagnostics to stderr: command, run ID, stage and code, plus safe validation/SQL metadata. Tests invoke the production entry point in separate processes and confirm rollback and redaction with PostgreSQL. Raw driver/decoder errors and connection strings are omitted. See [the publication runbook](docs/catalog-operations.md) for interpreting the diagnostics.
