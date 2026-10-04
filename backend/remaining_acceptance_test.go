@@ -65,3 +65,20 @@ func TestAcceptanceAC09URLUsesCurrentDatabase(t *testing.T) {
 	publishRemaining(t, db, courses)
 	check("third")
 }
+
+func TestAcceptanceAC12RedirectSurvivesAnalyticsFailureAndIgnoresURL(t *testing.T) {
+	db, server := remainingHTTP(t, nil)
+	if _, err := db.Pool.Exec(context.Background(), "DROP TABLE events"); err != nil {
+		t.Fatal(err)
+	}
+	client := &http.Client{Timeout: 3 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	contract := newResponseContract(t)
+	for _, query := range []string{"", "?url=https://attacker.example", "?redirect=https://attacker.example&target=//attacker.example"} {
+		response := wireRequest(t, client, server.URL, "GET", "/out/self"+query, "")
+		contract.check(t, response, "/out/{offer_id}", "GET", 302)
+		if response.Header().Get("Location") != "https://example.com/self" {
+			t.Fatal("redirect did not use the approved official URL")
+		}
+	}
+	contract.check(t, wireRequest(t, client, server.URL, "POST", "/api/v1/events", `{"id":"ac12-event","kind":"view"}`), "/api/v1/events", "POST", 503)
+}
