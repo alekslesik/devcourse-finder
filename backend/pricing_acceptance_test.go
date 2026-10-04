@@ -149,3 +149,25 @@ func TestAcceptanceAC04UnconfirmedPrices(t *testing.T) {
 		}
 	}
 }
+
+func TestAcceptanceAC05FreeMeansFullCourse(t *testing.T) {
+	now := time.Now().UTC()
+	free := acceptanceCourse("full-free-course", now)
+	free.Offers[0].Free = true
+	free.Offers[0].Price = value(int64(0))
+	paid := acceptanceCourse("paid-with-free-intro", now)
+	paid.Summary = "First lesson is free; the full course is paid"
+	paid.Offers[0].Name = "Full course after a free introduction"
+	unconfirmed := acceptanceCourse("unconfirmed-free", now)
+	unconfirmed.Offers[0].Free = true
+	unconfirmed.Offers[0].Price = value(int64(0))
+	unconfirmed.Offers[0].PriceCheckedAt = now.Add(-31 * 24 * time.Hour)
+	search := acceptanceSearch(t, []catalog.Course{free, paid, unconfirmed})
+	results := search("budget=free")
+	acceptanceOffers(t, results, "full-free-course-full")
+	if !results[0].Offer.Free || results[0].Price == nil || *results[0].Price != 0 {
+		t.Fatal("free result lacks a confirmed zero full-course price")
+	}
+	acceptanceOffers(t, search("budget=paid&max=3000000"), "paid-with-free-intro-full")
+	acceptanceOffers(t, search("budget=paid&max=3000000&include_free=true"), "paid-with-free-intro-full", "full-free-course-full")
+}
