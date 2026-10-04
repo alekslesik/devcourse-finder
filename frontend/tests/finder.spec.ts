@@ -34,13 +34,14 @@ test('360px, keyboard controls and accessibility',async({page})=>{
  await page.getByRole('button',{name:'Найти обучение'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/language=go/);
 });
 
-test('closed comparison tariff is retained without outbound action and invalid URL preserves selection',async({page})=>{
+test('AC-11: shared comparison retains closed and removed tariffs in a fresh session',async({page,browser})=>{
  await page.goto('/compare?offers=demo-go-1-standard,closed-tariff,removed');
  await expect(page.locator('thead th')).toHaveCount(4);
  await expect(page.getByRole('columnheader',{name:'Набор закрыт — предложение недоступно'})).toBeVisible();
  await expect(page.getByRole('link',{name:'Проверить условия'})).toHaveCount(1);
  const selected=['demo-go-1-standard','closed-tariff','removed'];
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);
+ const fresh=await browser.newContext();try{const shared=await fresh.newPage();await shared.goto(page.url());await expect(shared.locator('thead th')).toHaveCount(4);await expect(shared.getByRole('columnheader',{name:'Набор закрыт — предложение недоступно'})).toBeVisible();await expect(shared.getByRole('columnheader',{name:'Предложение недоступно',exact:true})).toBeVisible();await expect(shared.getByRole('link',{name:'Проверить условия'})).toHaveCount(1);await expect.poll(()=>shared.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);}finally{await fresh.close()}
  await page.goto('/compare?offers=demo-go-1-standard,closed-tariff,removed,fourth');
  await expect(page.getByText('Можно сравнить максимум три тарифа.')).toBeVisible();
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);
