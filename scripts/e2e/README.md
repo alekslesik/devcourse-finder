@@ -22,11 +22,11 @@ The catalog preserves the demo data and uses current verification dates so
 budget tests do not expire over time. It adds closed, draft and archived records
 for availability tests. This dataset is synthetic and must never be published.
 
-The five shared test groups cover all eight required scenarios: anonymous home,
+The eight shared test groups cover all eight required scenarios: anonymous home,
 search with language/goal filters, empty results/reset, permanent course URL,
 three/four tariffs, comparison in a fresh session, provider redirect, and an
 understandable API error. Shared tests also check unavailable tariffs, keyboard,
-360 px and axe. Two additional real-stack groups stop/restart the actual API to
+360 px and axe, including modal focus, background isolation and focus restoration. Two additional real-stack groups stop/restart the actual API to
 check retained filters and retry, verify private/missing courses return 404,
 and query PostgreSQL to confirm new browser search and outbound events persist.
 Provider HTML is intercepted only after the real `/out` redirect. The real-outage
