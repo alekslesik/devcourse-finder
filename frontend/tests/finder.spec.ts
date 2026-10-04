@@ -23,15 +23,15 @@ test('course permanent URL and unknown comparison item',async({page})=>{
  await page.goto('/courses/demo-go-1');await expect(page.getByRole('heading',{level:1})).toContainText('Старт в Go');await page.getByRole('button',{name:'Добавить в сравнение'}).click();await expect(page).toHaveURL(/\/compare\?offers=/);
  await page.goto('/compare?offers=removed');await expect(page.getByRole('columnheader',{name:'Предложение недоступно'})).toBeVisible();await page.getByRole('link',{name:'Удалить'}).click();await expect(page.getByText('Выберите от одного до трёх тарифов')).toBeVisible();
 });
-test('360px, keyboard controls and accessibility',async({page})=>{
+test('AC-19: complete search and comparison by keyboard at 360px',async({page})=>{
  await page.setViewportSize({width:360,height:800});
  for(const path of ['/courses','/courses/demo-go-1','/compare?offers=demo-go-1-standard','/about']){
   await page.goto(path);if(path==='/courses')await expect(page.locator('.card')).toHaveCount(12);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(results.violations.filter(v=>v.impact==='critical'||v.impact==='serious').map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))).toEqual([]);
  }
- await page.goto('/courses');await page.getByRole('radio',{name:'Go',exact:true}).focus();await page.keyboard.press('Space');await expect(page.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
- await page.getByRole('button',{name:'Найти обучение'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/language=go/);
+ await page.evaluate(()=>localStorage.removeItem('devcourse-offers'));await page.goto('/courses');await page.getByRole('radio',{name:'Go',exact:true}).focus();await page.keyboard.press('Space');await expect(page.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
+ await page.getByRole('button',{name:'Найти обучение'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/language=go/);await expect(page.getByLabel('Сравнить тариф').first()).toBeVisible();await page.getByLabel('Сравнить тариф').first().focus();await page.keyboard.press('Space');await page.getByRole('button',{name:'Сравнить →'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/\/compare\?offers=/);await expect(page.locator('thead th')).toHaveCount(2);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);const table=page.getByRole('region',{name:'Сравнение тарифов, горизонтальная прокрутка'});await table.focus();await expect(table).toBeFocused();await page.keyboard.press('ArrowRight');await expect.poll(()=>table.evaluate(node=>node.scrollLeft)).toBeGreaterThan(0);
 });
 
 test('AC-11: shared comparison retains closed and removed tariffs in a fresh session',async({page,browser})=>{
