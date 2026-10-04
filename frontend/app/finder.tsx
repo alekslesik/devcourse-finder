@@ -19,7 +19,21 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  const [params,setParams]=useState<URLSearchParams|null>(null),[data,setData]=useState<Response|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
  const [selected,setSelected]=useState<string[]>([]),[compare,setCompare]=useState<ComparisonItem[]|null>(null),[compareOpen,setCompareOpen]=useState(false),[modalError,setModalError]=useState(''),[notice,setNotice]=useState('');
  useEffect(()=>{const read=()=>{const raw=new URLSearchParams(location.search),p=canonicalParams(raw),query=p.toString();if(raw.toString()!==query)history.replaceState(null,'',location.pathname+(query?'?'+query:''));setParams(p);setSelected((p.get('compare')||'').split(',').filter(Boolean).slice(0,3));setCompareOpen(p.has('compare'))};read();window.addEventListener('popstate',read);return()=>window.removeEventListener('popstate',read)},[]);
- useEffect(()=>{if(!params)return;const ctrl=new AbortController(),query=searchParams(params).toString();setLoading(true);setError('');fetch('/api/v1/courses'+(query?'?'+query:''),{signal:ctrl.signal}).then(async r=>{if(!r.ok)throw new Error(r.status===400?'Проверьте параметры поиска или сбросьте фильтры.':'Каталог временно недоступен. Попробуйте ещё раз.');return r.json()}).then((d:Response)=>{setData(d);event(d.total?'search':'empty',{language:params.get('language')||'',goal:params.get('goal')||'',total:d.total})}).catch(e=>{if(e.name!=='AbortError')setError(e.message)}).finally(()=>{if(!ctrl.signal.aborted)setLoading(false)});return()=>ctrl.abort()},[params,retry]);
+ useEffect(()=>{
+  if(!params)return;
+  const ctrl=new AbortController(),query=searchParams(params).toString();
+  setLoading(true);setError('');
+  fetch('/api/v1/courses'+(query?'?'+query:''),{signal:ctrl.signal}).then(async r=>{
+   if(!r.ok)throw new Error(r.status===400?'Проверьте параметры поиска или сбросьте фильтры.':'Каталог временно недоступен. Попробуйте ещё раз.');
+   return r.json();
+  }).then((d:Response)=>{
+   // Transport may already have completed when cleanup aborts this search.
+   // Ignore queued results and analytics as well as late failures.
+   if(ctrl.signal.aborted)return;
+   setData(d);event(d.total?'search':'empty',{language:params.get('language')||'',goal:params.get('goal')||'',total:d.total});
+  }).catch(e=>{if(!ctrl.signal.aborted&&e.name!=='AbortError')setError(e.message)}).finally(()=>{if(!ctrl.signal.aborted)setLoading(false)});
+  return()=>ctrl.abort();
+ },[params,retry]);
  useEffect(()=>{if(!compareOpen)return;const ctrl=new AbortController();setCompare(null);setModalError('');fetch('/api/v1/compare?offer_ids='+selected.join(','),{signal:ctrl.signal}).then(r=>{if(!r.ok)throw Error('Не удалось загрузить сравнение');return r.json()}).then(setCompare).catch(e=>{if(e.name!=='AbortError')setModalError(e.message)});return()=>ctrl.abort()},[compareOpen,selected]);
  function navigate(raw:URLSearchParams){const p=canonicalParams(raw),query=p.toString();history.pushState(null,'',resultsPath+(query?'?'+query:''));setParams(p)}
  function search(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget),p=new URLSearchParams();f.forEach((v,k)=>{if(v){p.set(k,k==='min'||k==='max'?String(Math.round(Number(v)*100)):String(v))}});navigate(p)}

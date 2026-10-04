@@ -22,16 +22,23 @@ The catalog preserves the demo data and uses current verification dates so
 budget tests do not expire over time. It adds closed, draft and archived records
 for availability tests. This dataset is synthetic and must never be published.
 
-The eight shared test groups cover all eight required scenarios: anonymous home,
+The original eight shared test groups cover all eight required scenarios: anonymous home,
 search with language/goal filters, empty results/reset, permanent course URL,
 three/four tariffs, comparison in a fresh session, provider redirect, and an
 understandable API error. Shared tests also check unavailable tariffs, keyboard,
 360 px and axe, including modal focus, background isolation and focus restoration. Two additional real-stack groups stop/restart the actual API to
 check retained filters and retry, verify private/missing courses return 404,
 and query PostgreSQL to confirm new browser search and outbound events persist.
-Provider HTML is intercepted only after the real `/out` redirect. The real-outage
+The provider stub checks the actual `/out` response (302 and exact Location), then directs the browser to a local page so redirect tests do not depend on external networking. The real-outage
 scenario uses no API interception; the shared controlled-error scenario remains
 for fixture testing.
+
+Three shared AC-17 regression cases submit Go then Python searches and release
+processing of the completed Go response only after Python results are visible.
+They cover success, an HTTP error and a processing failure. Native fetch keeps
+its AbortSignal; delaying the handoff after reading the real body models work
+already queued after transport, which abort alone cannot cancel. The cards,
+filters, URL, loading/error state and absence of stale search events are checked.
 
 `E2E_REAL_API=1` switches Playwright to this already-running stack; the default
 fixture mode starts its own servers and excludes real-stack-only tests. The
