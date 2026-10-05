@@ -6,3 +6,4 @@
 dialog.overlay{border:0;margin:0;width:100%;height:100%;max-width:none;max-height:none;color:inherit}
 dialog.overlay:not([open]){display:none}
 dialog.overlay::backdrop{background:transparent}
+.shareSearch{margin-bottom:12px;min-width:0}.shareSearch button{min-height:44px}.shareSearch p,.shareSearch label{font-size:12px}.shareSearch label{display:block}.shareSearch input{max-width:100%}

@@ -84,11 +84,22 @@ curl --fail --silent --show-error "$api_url/health/live" >/dev/null
 
 assert_catalog
 
+catalog_fingerprint() {
+  "${compose[@]}" exec -T db psql -U "${POSTGRES_USER:-devcourse}" -d "${POSTGRES_DB:-devcourse}" -tAc \
+    "SELECT md5(concat((SELECT jsonb_agg(to_jsonb(c) ORDER BY id) FROM courses c),(SELECT jsonb_agg(to_jsonb(o) ORDER BY id) FROM offers o),(SELECT jsonb_agg(to_jsonb(i) ORDER BY id) FROM imports i),(SELECT jsonb_agg(to_jsonb(s) ORDER BY key) FROM settings s)))"
+}
+before_restart="$(catalog_fingerprint)"
+
 # `down` removes containers and the network but deliberately retains the named
 # database volume. Starting the stack again must preserve the imported catalog.
 "${compose[@]}" down
 "${compose[@]}" up --detach --no-build
 wait_for_ready
 assert_catalog
+[[ "$(catalog_fingerprint)" == "$before_restart" ]] || { echo "Restart changed persisted catalog/audit/settings" >&2; exit 1; }
+for repetition in 1 2; do
+  "${compose[@]}" run --rm --no-deps api migrate
+  [[ "$(catalog_fingerprint)" == "$before_restart" ]] || { echo "Repeated migration changed persisted data" >&2; exit 1; }
+done
 
 echo "Compose smoke test passed"

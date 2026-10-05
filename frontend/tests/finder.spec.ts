@@ -11,11 +11,11 @@ test('search, empty results, reset and API error preserve the form',async({page}
  await page.route('**/api/v1/courses*',route=>route.fulfill({status:503,json:{error:'unavailable'}}));await page.getByRole('radio',{name:'Python',exact:true}).check();await page.getByRole('button',{name:'Найти обучение'}).click();
  await expect(page.locator('main').getByRole('alert')).toContainText('Каталог временно недоступен');await expect(page.getByRole('radio',{name:'Python',exact:true})).toBeChecked();
 });
-test('three tariffs, fourth rejected, comparison URL in a fresh context and outbound',async({page,browser})=>{
+test('AC-10: three tariffs, fourth rejected, comparison URL in a fresh context and outbound',async({page,browser})=>{
  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
  const checks=page.getByLabel('Сравнить тариф');for(let i=0;i<3;i++)await checks.nth(i).check();await checks.nth(3).click();
- await expect(page.getByRole('status')).toContainText('уже 3 тарифа');await expect(checks.nth(3)).not.toBeChecked();await page.getByRole('button',{name:'Сравнить →'}).click();
- await expect(page).toHaveURL(/\/compare\?offers=/);await expect(page.locator('thead th')).toHaveCount(4);
+ await expect(page.getByRole('status')).toContainText('уже 3 тарифа');await expect(checks.nth(3)).not.toBeChecked();for(let i=0;i<3;i++)await expect(checks.nth(i)).toBeChecked();const selected=['demo-go-1-standard','demo-go-2-standard','demo-go-3-standard'];await page.getByRole('button',{name:'Сравнить →'}).click();
+ await expect(page).toHaveURL(/\/compare\?offers=/);expect(new URL(page.url()).searchParams.get('offers')?.split(',')).toEqual(selected);await expect(page.locator('thead th')).toHaveCount(4);
  const context=await browser.newContext();const fresh=await context.newPage();await fresh.goto(page.url());await expect(fresh.locator('thead th')).toHaveCount(4);
  await expectOutboundPopup(fresh,process.env.E2E_REAL_API==='1'?'https://example.com/devcourse-demo/demo-go-1/enroll':'https://example.com/course',()=>fresh.getByRole('link',{name:'Проверить условия'}).first().click());await context.close();
 });
@@ -23,24 +23,25 @@ test('course permanent URL and unknown comparison item',async({page})=>{
  await page.goto('/courses/demo-go-1');await expect(page.getByRole('heading',{level:1})).toContainText('Старт в Go');await page.getByRole('button',{name:'Добавить в сравнение'}).click();await expect(page).toHaveURL(/\/compare\?offers=/);
  await page.goto('/compare?offers=removed');await expect(page.getByRole('columnheader',{name:'Предложение недоступно'})).toBeVisible();await page.getByRole('link',{name:'Удалить'}).click();await expect(page.getByText('Выберите от одного до трёх тарифов')).toBeVisible();
 });
-test('360px, keyboard controls and accessibility',async({page})=>{
+test('AC-19: complete search and comparison by keyboard at 360px',async({page})=>{
  await page.setViewportSize({width:360,height:800});
  for(const path of ['/courses','/courses/demo-go-1','/compare?offers=demo-go-1-standard','/about']){
   await page.goto(path);if(path==='/courses')await expect(page.locator('.card')).toHaveCount(12);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(results.violations.filter(v=>v.impact==='critical'||v.impact==='serious').map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))).toEqual([]);
  }
- await page.goto('/courses');await page.getByRole('radio',{name:'Go',exact:true}).focus();await page.keyboard.press('Space');await expect(page.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
- await page.getByRole('button',{name:'Найти обучение'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/language=go/);
+ await page.evaluate(()=>localStorage.removeItem('devcourse-offers'));await page.goto('/courses');await page.getByRole('radio',{name:'Go',exact:true}).focus();await page.keyboard.press('Space');await expect(page.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
+ await page.getByRole('button',{name:'Найти обучение'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/language=go/);await expect(page.getByLabel('Сравнить тариф').first()).toBeVisible();await page.getByLabel('Сравнить тариф').first().focus();await page.keyboard.press('Space');await page.getByRole('button',{name:'Сравнить →'}).focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/\/compare\?offers=/);await expect(page.locator('thead th')).toHaveCount(2);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);const table=page.getByRole('region',{name:'Сравнение тарифов, горизонтальная прокрутка'});await table.focus();await expect(table).toBeFocused();await page.keyboard.press('ArrowRight');await expect.poll(()=>table.evaluate(node=>node.scrollLeft)).toBeGreaterThan(0);
 });
 
-test('closed comparison tariff is retained without outbound action and invalid URL preserves selection',async({page})=>{
+test('AC-11: shared comparison retains closed and removed tariffs in a fresh session',async({page,browser})=>{
  await page.goto('/compare?offers=demo-go-1-standard,closed-tariff,removed');
  await expect(page.locator('thead th')).toHaveCount(4);
  await expect(page.getByRole('columnheader',{name:'Набор закрыт — предложение недоступно'})).toBeVisible();
  await expect(page.getByRole('link',{name:'Проверить условия'})).toHaveCount(1);
  const selected=['demo-go-1-standard','closed-tariff','removed'];
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);
+ const fresh=await browser.newContext();try{const shared=await fresh.newPage();await shared.goto(page.url());await expect(shared.locator('thead th')).toHaveCount(4);await expect(shared.getByRole('columnheader',{name:'Набор закрыт — предложение недоступно'})).toBeVisible();await expect(shared.getByRole('columnheader',{name:'Предложение недоступно',exact:true})).toBeVisible();await expect(shared.getByRole('link',{name:'Проверить условия'})).toHaveCount(1);await expect.poll(()=>shared.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);}finally{await fresh.close()}
  await page.goto('/compare?offers=demo-go-1-standard,closed-tariff,removed,fourth');
  await expect(page.getByText('Можно сравнить максимум три тарифа.')).toBeVisible();
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('devcourse-offers')||'[]'))).toEqual(selected);
