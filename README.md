@@ -14,7 +14,7 @@ No registration or payment required. Choose a course and enroll on the providerâ
 
 ## Status
 
-MVP implementation is in progress. The repository currently contains:
+All 20 functional acceptance criteria have passed and are merged. Production publication is pending. The repository contains:
 
 - a Go REST API with course filtering, comparison, catalog import, and PostgreSQL storage;
 - a Next.js interface for search, course details, and comparison;
@@ -29,6 +29,7 @@ The catalog starts empty. Course records must be reviewed and imported explicitl
 - [MVP completion specification](docs/mvp-completion-spec.md)
 - [MVP status by requirement ID](docs/mvp-readiness.md)
 - [Catalog publication runbook](docs/catalog-operations.md)
+- [20 real programs, reviewed sources and explicit publication](docs/real-catalog.md)
 
 ## Run with Docker
 
@@ -94,6 +95,12 @@ docker compose run --rm \
 All demo records are marked with `demo: true`, use `example.com` URLs, and are never imported automatically during container startup.
 
 Production catalog publication, verification, audit, and recovery steps are defined in the [catalog publication runbook](docs/catalog-operations.md). Production imports must set a stable `CATALOG_OPERATOR` identifier rather than using the local default. Record every production run using the [publication record template](docs/catalog-publication-record.md) and keep the completed record with the release artifacts.
+
+## Real catalog
+
+`data/real-catalog.json` contains 20 real programs (five per language), 24 offers and no demo records. It is prepared for operator review and explicit publication; it is not imported automatically. Individual source checks and limitations are documented in [real-catalog.md](docs/real-catalog.md). Unknown full prices and enrollment remain explicitly unknown; free introductory modules are not labeled as free professions.
+
+Follow the publication runbook with `CATALOG_FILE="$PWD/data/real-catalog.json"`: recheck sources, back up the database, review the dry run, import explicitly and verify the result. Existing demo records are not deleted by this import and require separately reviewed archival. The production host, daily backup schedule and final release verification still need to be configured.
 
 ## Local development
 

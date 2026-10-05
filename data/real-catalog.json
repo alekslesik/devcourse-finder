@@ -1,0 +1,962 @@
+{
+  "approved_domains": [
+    "code-basics.com",
+    "learn.javascript.ru",
+    "otus.ru",
+    "practicum.yandex.ru",
+    "ru.hexlet.io",
+    "start.practicum.yandex",
+    "stepik.org"
+  ],
+  "courses": [
+    {
+      "id": "yandex-go-basic",
+      "slug": "yandex-go-basic",
+      "title": "Go-разработчик с нуля",
+      "provider": "Яндекс Практикум",
+      "language": "go",
+      "direction": "backend",
+      "summary": "Профессия с нуля: Go, базы данных, HTTP и проекты с ревью. Платная основная программа; бесплатна только вводная часть.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "job",
+        "switch"
+      ],
+      "topics": [
+        "Go",
+        "HTTP",
+        "PostgreSQL",
+        "Тестирование"
+      ],
+      "source": "https://practicum.yandex.ru/go-developer-basic/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-go-basic-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "unknown",
+          "url": "https://practicum.yandex.ru/go-developer-basic/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "yandex-go-advanced",
+      "slug": "yandex-go-advanced",
+      "title": "Продвинутый Go-разработчик",
+      "provider": "Яндекс Практикум",
+      "language": "go",
+      "direction": "backend",
+      "summary": "Продвинутая разработка на Go: HTTP-сервисы, конкурентность и прикладные проекты. Требуется опыт программирования; вводные уроки не равны всей программе.",
+      "audience": [
+        "working",
+        "switch"
+      ],
+      "goals": [
+        "deepen",
+        "switch"
+      ],
+      "topics": [
+        "Конкурентность",
+        "HTTP",
+        "gRPC",
+        "Тестирование"
+      ],
+      "source": "https://practicum.yandex.ru/go-advanced/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-go-advanced-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": true,
+          "schedule": "scheduled",
+          "enrollment": "unknown",
+          "url": "https://practicum.yandex.ru/go-advanced/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "otus-go-basic",
+      "slug": "otus-go-basic",
+      "title": "Go-разработчик. Базовый уровень",
+      "provider": "OTUS",
+      "language": "go",
+      "direction": "backend",
+      "summary": "Основы Go и разработка REST-сервиса с тестами и PostgreSQL. Вебинары, домашние задания и обратная связь преподавателей.",
+      "audience": [
+        "none",
+        "basics",
+        "switch"
+      ],
+      "goals": [
+        "job",
+        "switch"
+      ],
+      "topics": [
+        "Go",
+        "REST",
+        "PostgreSQL",
+        "Тестирование"
+      ],
+      "source": "https://otus.ru/lessons/go-basic/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "otus-go-basic-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://otus.ru/lessons/go-basic/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "stepik-golang",
+      "slug": "stepik-golang",
+      "title": "Программирование на Golang",
+      "provider": "Stepik",
+      "language": "go",
+      "direction": "basics",
+      "summary": "Теория Go и задачи с автоматической проверкой: циклы, срезы, горутины и JSON. Нужны основы программирования на любом языке.",
+      "audience": [
+        "basics",
+        "projects",
+        "working",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "Go",
+        "Срезы",
+        "Горутины",
+        "JSON"
+      ],
+      "source": "https://stepik.org/course/54403/promo",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "stepik-golang-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://stepik.org/course/54403/promo"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "codebasics-go",
+      "slug": "codebasics-go",
+      "title": "Курс Golang",
+      "provider": "Code Basics (Хекслет)",
+      "language": "go",
+      "direction": "basics",
+      "summary": "Бесплатные текстовые уроки и браузерный тренажёр по основам Go для знающих хотя бы один язык программирования.",
+      "audience": [
+        "basics",
+        "projects",
+        "working",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "Go",
+        "Структуры",
+        "Методы",
+        "Коллекции"
+      ],
+      "source": "https://code-basics.com/ru/languages/go",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "codebasics-go-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://code-basics.com/ru/languages/go"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "yandex-python",
+      "slug": "yandex-python",
+      "title": "Python-разработчик",
+      "provider": "Яндекс Практикум",
+      "language": "python",
+      "direction": "backend",
+      "summary": "Обучение бэкенд-разработке с нуля: Python, Django, базы данных и проекты с ревью. Основная программа платная.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "job",
+        "switch"
+      ],
+      "topics": [
+        "Python",
+        "Django",
+        "SQL",
+        "API"
+      ],
+      "source": "https://practicum.yandex.ru/backend-developer/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-python-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "open",
+          "url": "https://practicum.yandex.ru/backend-developer/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "yandex-python-middle",
+      "slug": "yandex-python-middle",
+      "title": "Мидл Python-разработчик",
+      "provider": "Яндекс Практикум",
+      "language": "python",
+      "direction": "backend",
+      "summary": "Программа для разработчиков с коммерческим опытом: Python, асинхронность, Django и архитектура сервисов.",
+      "audience": [
+        "working",
+        "switch"
+      ],
+      "goals": [
+        "deepen",
+        "switch"
+      ],
+      "topics": [
+        "Python",
+        "asyncio",
+        "Django",
+        "PostgreSQL"
+      ],
+      "source": "https://practicum.yandex.ru/middle-python/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-python-middle-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "unknown",
+          "url": "https://practicum.yandex.ru/middle-python/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "yandex-python-free",
+      "slug": "yandex-python-free",
+      "title": "Основы Python-разработки",
+      "provider": "Яндекс Практикум",
+      "language": "python",
+      "direction": "basics",
+      "summary": "Отдельный бесплатный курс для самостоятельного знакомства с Python: теория, тренажёр и задачи. Около 20 часов всего, без обязательной недельной нагрузки.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "Python",
+        "Переменные",
+        "Функции",
+        "Условия"
+      ],
+      "source": "https://start.practicum.yandex/python-free/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-python-free-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://start.practicum.yandex/python-free/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "stepik-python-generation",
+      "slug": "stepik-python-generation",
+      "title": "«Поколение Python»: курс для начинающих",
+      "provider": "Stepik",
+      "language": "python",
+      "direction": "basics",
+      "summary": "Бесплатный начальный курс Python с теорией, тестами и интерактивными задачами. Самостоятельная работа с автоматической проверкой.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "Python",
+        "Строки",
+        "Циклы",
+        "Функции"
+      ],
+      "source": "https://stepik.org/course/58852/promo",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "stepik-python-generation-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://stepik.org/course/58852/promo"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "codebasics-python",
+      "slug": "codebasics-python",
+      "title": "Курс Python",
+      "provider": "Code Basics (Хекслет)",
+      "language": "python",
+      "direction": "basics",
+      "summary": "Бесплатный самоучитель Python и браузерный тренажёр: базовый синтаксис, строки, условия, циклы и функции.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "Python",
+        "Строки",
+        "Условия",
+        "Функции"
+      ],
+      "source": "https://code-basics.com/ru/languages/python",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "codebasics-python-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://code-basics.com/ru/languages/python"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "yandex-java",
+      "slug": "yandex-java",
+      "title": "Java-разработчик",
+      "provider": "Яндекс Практикум",
+      "language": "java",
+      "direction": "backend",
+      "summary": "Платная профессия с нуля: Java, объектная модель, Spring Boot, базы данных и проекты с ревью. Бесплатна только вводная часть.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "job",
+        "switch"
+      ],
+      "topics": [
+        "Java",
+        "ООП",
+        "Spring Boot",
+        "SQL"
+      ],
+      "source": "https://practicum.yandex.ru/java-developer/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-java-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "unknown",
+          "url": "https://practicum.yandex.ru/java-developer/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "yandex-java-middle",
+      "slug": "yandex-java-middle",
+      "title": "Мидл Java-разработчик",
+      "provider": "Яндекс Практикум",
+      "language": "java",
+      "direction": "backend",
+      "summary": "Развитие навыков Java-разработки: Spring, реактивный стек, базы данных и прикладные проекты с ревью экспертов.",
+      "audience": [
+        "working",
+        "switch"
+      ],
+      "goals": [
+        "deepen",
+        "switch"
+      ],
+      "topics": [
+        "Java",
+        "Spring",
+        "WebFlux",
+        "Базы данных"
+      ],
+      "source": "https://practicum.yandex.ru/middle-java/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-java-middle-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "unknown",
+          "url": "https://practicum.yandex.ru/middle-java/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "hexlet-java",
+      "slug": "hexlet-java",
+      "title": "Java-разработчик с нуля",
+      "provider": "Хекслет",
+      "language": "java",
+      "direction": "backend",
+      "summary": "Платная профессия с проектами на Java и Spring. Тарифы отличаются содержанием и персональными консультациями; цены относятся к полной оплате.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "job",
+        "switch"
+      ],
+      "topics": [
+        "Java",
+        "Spring",
+        "SQL",
+        "Тестирование"
+      ],
+      "source": "https://ru.hexlet.io/programs/java",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "hexlet-java-standard",
+          "name": "Стандартный — полная оплата",
+          "price": 8500000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": 12,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "open",
+          "url": "https://ru.hexlet.io/programs/java"
+        },
+        {
+          "id": "hexlet-java-extended",
+          "name": "Расширенный — полная оплата",
+          "price": 11900000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "open",
+          "url": "https://ru.hexlet.io/programs/java"
+        },
+        {
+          "id": "hexlet-java-premium",
+          "name": "Премиальный — полная оплата",
+          "price": 18900000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "open",
+          "url": "https://ru.hexlet.io/programs/java"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "hexlet-java-free",
+      "slug": "hexlet-java-free",
+      "title": "Основы Java",
+      "provider": "Хекслет",
+      "language": "java",
+      "direction": "basics",
+      "summary": "Отдельный бесплатный вводный курс Java: синтаксис, типы, методы и простые программы. Упражнения и тесты в тренажёре, самостоятельный темп.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "Java",
+        "Типы",
+        "Методы",
+        "Условия"
+      ],
+      "source": "https://ru.hexlet.io/programs/java-basics-free",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "hexlet-java-free-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://ru.hexlet.io/programs/java-basics-free"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "codebasics-java",
+      "slug": "codebasics-java",
+      "title": "Курс Java",
+      "provider": "Code Basics (Хекслет)",
+      "language": "java",
+      "direction": "basics",
+      "summary": "Бесплатный самоучитель Java для взрослых начинающих: синтаксис, строки, методы, условия и циклы с упражнениями в браузере.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "Java",
+        "Строки",
+        "Методы",
+        "Циклы"
+      ],
+      "source": "https://code-basics.com/ru/languages/java",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "codebasics-java-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://code-basics.com/ru/languages/java"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "yandex-frontend",
+      "slug": "yandex-frontend",
+      "title": "Фронтенд-разработчик",
+      "provider": "Яндекс Практикум",
+      "language": "javascript",
+      "direction": "frontend",
+      "summary": "Платное обучение фронтенду с нуля: JavaScript, интерфейсы, React и проекты с обратной связью. Бесплатная часть не заменяет профессию.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "job",
+        "switch"
+      ],
+      "topics": [
+        "JavaScript",
+        "HTML",
+        "CSS",
+        "React"
+      ],
+      "source": "https://practicum.yandex.ru/frontend-developer/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "yandex-frontend-course",
+          "name": "Полная программа — стоимость уточняется",
+          "price": null,
+          "price_kind": "unknown",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "scheduled",
+          "enrollment": "unknown",
+          "url": "https://practicum.yandex.ru/frontend-developer/"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "hexlet-frontend",
+      "slug": "hexlet-frontend",
+      "title": "Фронтенд-разработчик",
+      "provider": "Хекслет",
+      "language": "javascript",
+      "direction": "frontend",
+      "summary": "Платная профессия: JavaScript, React и интерфейсы с проектами и ревью. Три тарифа полной оплаты; персональные консультации только в премиальном.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "job",
+        "switch"
+      ],
+      "topics": [
+        "JavaScript",
+        "React",
+        "HTML",
+        "CSS"
+      ],
+      "source": "https://ru.hexlet.io/programs/frontend",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "hexlet-frontend-standard",
+          "name": "Стандартный — полная оплата",
+          "price": 8500000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": 12,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "open",
+          "url": "https://ru.hexlet.io/programs/frontend"
+        },
+        {
+          "id": "hexlet-frontend-extended",
+          "name": "Расширенный — полная оплата",
+          "price": 11900000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "open",
+          "url": "https://ru.hexlet.io/programs/frontend"
+        },
+        {
+          "id": "hexlet-frontend-premium",
+          "name": "Премиальный — полная оплата",
+          "price": 17900000,
+          "price_kind": "exact",
+          "free": false,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": true,
+          "mentor": true,
+          "schedule": "flexible",
+          "enrollment": "open",
+          "url": "https://ru.hexlet.io/programs/frontend"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "hexlet-javascript-free",
+      "slug": "hexlet-javascript-free",
+      "title": "Основы JavaScript",
+      "provider": "Хекслет",
+      "language": "javascript",
+      "direction": "basics",
+      "summary": "Отдельная бесплатная программа JavaScript для самостоятельного обучения: текстовые уроки, упражнения и тесты в тренажёре.",
+      "audience": [
+        "none",
+        "basics",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "JavaScript",
+        "Строки",
+        "Функции",
+        "Условия"
+      ],
+      "source": "https://ru.hexlet.io/programs/javascript-basics-free",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "hexlet-javascript-free-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://ru.hexlet.io/programs/javascript-basics-free"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "codebasics-javascript",
+      "slug": "codebasics-javascript",
+      "title": "Курс JavaScript",
+      "provider": "Code Basics (Хекслет)",
+      "language": "javascript",
+      "direction": "basics",
+      "summary": "Бесплатный самоучитель JavaScript для взрослых начинающих: переменные, строки, объекты, условия и функции с практикой в браузере.",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "topics": [
+        "JavaScript",
+        "Объекты",
+        "Строки",
+        "Функции"
+      ],
+      "source": "https://code-basics.com/ru/languages/javascript",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "codebasics-javascript-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://code-basics.com/ru/languages/javascript"
+        }
+      ],
+      "demo": false
+    },
+    {
+      "id": "javascript-info",
+      "slug": "javascript-info",
+      "title": "Современный учебник JavaScript",
+      "provider": "JavaScript.ru",
+      "language": "javascript",
+      "direction": "frontend",
+      "summary": "Открытый онлайн-учебник: основы JavaScript, объектная модель, DOM и события. Самостоятельное чтение и задачи; платные курсы с преподавателем не включены.",
+      "audience": [
+        "none",
+        "basics",
+        "projects",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch",
+        "deepen"
+      ],
+      "topics": [
+        "JavaScript",
+        "ООП",
+        "DOM",
+        "События"
+      ],
+      "source": "https://learn.javascript.ru/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "status": "published",
+      "offers": [
+        {
+          "id": "javascript-info-course",
+          "name": "Бесплатная полная программа",
+          "price": 0,
+          "price_kind": "exact",
+          "free": true,
+          "price_checked_at": "2026-10-05T05:15:30Z",
+          "hours": null,
+          "weeks": null,
+          "review": false,
+          "mentor": false,
+          "schedule": "flexible",
+          "enrollment": "continuous",
+          "url": "https://learn.javascript.ru/"
+        }
+      ],
+      "demo": false
+    }
+  ]
+}
