@@ -1,0 +1,227 @@
+{
+  "checked_at": "2026-10-05T05:15:30Z",
+  "scope": "Public official pages, read with web tool; prepared for operator review and explicit import, not a production publication record.",
+  "operator": "codex-catalog-curation",
+  "courses": [
+    {
+      "course_id": "yandex-go-basic",
+      "source": "https://practicum.yandex.ru/go-developer-basic/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Программа опубликована, но текущий старт потока не виден в публичном извлечении; enrollment=unknown.",
+      "prerequisites": "Программа с нуля; специальные знания программирования не обязательны.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Срок в месяцах не пересчитан в недели; полная цена не видна в публичном извлечении."
+    },
+    {
+      "course_id": "yandex-go-advanced",
+      "source": "https://practicum.yandex.ru/go-advanced/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Текущий старт потока не подтверждён; enrollment=unknown.",
+      "prerequisites": "Для действующих разработчиков; точные требования нужно сверить перед записью.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Основная программа содержит 3 встречи 1–1 с ментором. Старт и полная цена не подтверждены."
+    },
+    {
+      "course_id": "otus-go-basic",
+      "source": "https://otus.ru/lessons/go-basic/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Опубликован будущий старт и форма записи.",
+      "prerequisites": "Подходит без опыта и знакомым с основами программирования.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Старт 30 ноября. Видимый платёж от 8 500 ₽/мес не является полной ценой. Рекламная скидка до 27 сентября исключена."
+    },
+    {
+      "course_id": "stepik-golang",
+      "source": "https://stepik.org/course/54403/promo",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Базовые знания программирования; знание одного языка желательно.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "Автоматическая проверка задач и ответы в комментариях не считаются человеческим код-ревью."
+    },
+    {
+      "course_id": "codebasics-go",
+      "source": "https://code-basics.com/ru/languages/go",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Описание и FAQ требуют базовых знаний хотя бы одного языка.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "Рекламная отметка «с нуля» не отменяет prerequisites в описании и FAQ; профиль none исключён."
+    },
+    {
+      "course_id": "yandex-python",
+      "source": "https://practicum.yandex.ru/backend-developer/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Опубликован будущий старт и форма записи.",
+      "prerequisites": "Без технического образования и опыта в IT.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Опубликованы старты 8/22 октября и 5 ноября. Бесплатный первый модуль не считается полным курсом."
+    },
+    {
+      "course_id": "yandex-python-middle",
+      "source": "https://practicum.yandex.ru/middle-python/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Текущий старт потока не подтверждён; enrollment=unknown.",
+      "prerequisites": "Более года коммерческой разработки, SQL/БД и Linux на уровне пользователя.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Проекты вручную проверяются; наличие наставника не подтверждает индивидуальные занятия. Старт неизвестен."
+    },
+    {
+      "course_id": "yandex-python-free",
+      "source": "https://start.practicum.yandex/python-free/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Программа для начинающих с нуля.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "Это самостоятельный бесплатный продукт, а не бесплатный модуль платной профессии."
+    },
+    {
+      "course_id": "stepik-python-generation",
+      "source": "https://stepik.org/course/58852/promo",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Начальный уровень; отдельный курс для начинающих.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "Карточка обозначает полный курс бесплатным и разрешает начать сразу."
+    },
+    {
+      "course_id": "codebasics-python",
+      "source": "https://code-basics.com/ru/languages/python",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Подходит взрослым без опыта программирования.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "ИИ-подсказки не считаются человеческим наставничеством."
+    },
+    {
+      "course_id": "yandex-java",
+      "source": "https://practicum.yandex.ru/java-developer/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Программа опубликована, но текущий старт потока не виден в публичном извлечении; enrollment=unknown.",
+      "prerequisites": "Программа для начинающих с нуля.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Полная стоимость не извлечена; текущий старт не подтверждён."
+    },
+    {
+      "course_id": "yandex-java-middle",
+      "source": "https://practicum.yandex.ru/middle-java/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Текущий старт потока не подтверждён; enrollment=unknown.",
+      "prerequisites": "Java от года либо другой язык от трёх лет; Java Core, ООП, БД и Spring.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Индивидуальные встречи относятся к дополнительному модулю, а не автоматически к базовой программе."
+    },
+    {
+      "course_id": "hexlet-java",
+      "source": "https://ru.hexlet.io/programs/java",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Стоимость полной оплаты разделена по именованным тарифам; ежемесячный платёж не используется.",
+      "enrollment_evidence": "Опубликован будущий старт и форма записи.",
+      "prerequisites": "Начинающим без технического образования и при смене профессии.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Персональные консультации 80 ч подтверждены только для премиального тарифа. Срок подарка до 15 октября не перенесён на valid_until цены; срок скидочной цены не указан."
+    },
+    {
+      "course_id": "hexlet-java-free",
+      "source": "https://ru.hexlet.io/programs/java-basics-free",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Для новичков в программировании.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "Обозначены 39 часов всей программы; это не 39 часов в неделю. Платная профессия не включена в бесплатное предложение."
+    },
+    {
+      "course_id": "codebasics-java",
+      "source": "https://code-basics.com/ru/languages/java",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Источник явно допускает взрослых без опыта программирования.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "Автопроверка и ИИ-подсказки не считаются человеческим ревью."
+    },
+    {
+      "course_id": "yandex-frontend",
+      "source": "https://practicum.yandex.ru/frontend-developer/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Платная программа подтверждена, но полная цена не извлечена; price=null, price_kind=unknown, free=false.",
+      "enrollment_evidence": "Программа опубликована, но текущий старт потока не виден в публичном извлечении; enrollment=unknown.",
+      "prerequisites": "Профессия для начинающих с нуля.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Стоимость полной программы не извлечена из публичного текста."
+    },
+    {
+      "course_id": "hexlet-frontend",
+      "source": "https://ru.hexlet.io/programs/frontend",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Стоимость полной оплаты разделена по именованным тарифам; ежемесячный платёж не используется.",
+      "enrollment_evidence": "Опубликован будущий старт и форма записи.",
+      "prerequisites": "Профессия с нуля.",
+      "support_evidence": "Человеческое ревью проектов подтверждено.",
+      "notes": "Старт 8 октября; учебные материалы доступны без жёстких дедлайнов. Срок подарка до 15 октября не принят за срок цены; цены проверять перед оплатой."
+    },
+    {
+      "course_id": "hexlet-javascript-free",
+      "source": "https://ru.hexlet.io/programs/javascript-basics-free",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Начинающим программистам и осваивающим основы веб-разработки.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "На странице расходятся 50 и 62 часа общей длительности; hours/weeks не заполняются. Платная профессия не является бесплатной."
+    },
+    {
+      "course_id": "codebasics-javascript",
+      "source": "https://code-basics.com/ru/languages/javascript",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Для взрослых без опыта программирования.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "ИИ-ассистент и автоматический тренажёр не считаются человеческой проверкой кода."
+    },
+    {
+      "course_id": "javascript-info",
+      "source": "https://learn.javascript.ru/",
+      "checked_at": "2026-10-05T05:15:30Z",
+      "verification": "official_public_page_read",
+      "price_evidence": "Полная программа обозначена бесплатной.",
+      "enrollment_evidence": "Свободный доступ к самостоятельному материалу / запись на курс без даты потока.",
+      "prerequisites": "Учебник содержит материал от основ до продвинутых концепций.",
+      "support_evidence": "Самостоятельное обучение; автопроверка и ИИ не считаются человеческим ревью или индивидуальными занятиями.",
+      "notes": "Открытые главы читаются без оплаты; цена 0 относится только к учебнику, не к курсам с преподавателем и не к покупке EPUB/PDF."
+    }
+  ]
+}
