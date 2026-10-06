@@ -1,0 +1,41 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+stages:
+  - build
+
+build-images:
+  stage: build
+  image: docker:27.5.1-cli
+  services:
+    - name: docker:27.5.1-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TLS_VERIFY: "1"
+    DOCKER_CERT_PATH: /certs/client
+    DOCKER_BUILDKIT: "1"
+  parallel:
+    matrix:
+      - COMPONENT: api
+        BUILD_CONTEXT: backend
+      - COMPONENT: frontend
+        BUILD_CONTEXT: frontend
+  before_script:
+    - docker info
+  script:
+    - |
+      IMAGE="$CI_REGISTRY_IMAGE/$COMPONENT"
+      docker build --pull --tag "$IMAGE:$CI_COMMIT_SHA" "$BUILD_CONTEXT"
+      if [ "$CI_PIPELINE_SOURCE" != "merge_request_event" ]; then
+        printf '%s' "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
+        docker push "$IMAGE:$CI_COMMIT_SHA"
+      fi
+  after_script:
+    - docker logout "$CI_REGISTRY" || true
