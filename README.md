@@ -273,6 +273,33 @@ run, and an explicit import as described in the catalog publication runbook.
 Schedule daily database backups separately; installing cron does not create a
 backup job.
 
+### Configure Nginx and HTTPS
+
+After the application passes local deployment checks, copy
+[`scripts/setup-https.sh`](scripts/setup-https.sh) to `/root/setup-https.sh` and
+run it as root:
+
+```sh
+bash /root/setup-https.sh
+```
+
+Defaults are `DOMAIN=alekslesik.fvds.ru` and `PUBLIC_IP=83.220.174.166`.
+The script checks the effective Compose site origin, the loopback frontend,
+and IPv4 DNS resolution, installs Nginx and Certbot, creates a dedicated reverse
+proxy site, obtains a Let's Encrypt certificate with HTTP-to-HTTPS redirection,
+enables the renewal timer, tests renewal, and checks the public application.
+Public TCP ports 80 and 443 must be allowed by the hosting firewall. If UFW is
+already active, the script adds rules for these ports; it does not enable UFW.
+Any IPv6 DNS record must also point to this server for certificate validation.
+
+Set `LE_EMAIL` to register an ACME contact address, or omit it to register
+without email. To use another domain, first set the matching `SITE_URL` in
+`.env` and rerun deployment, then pass `DOMAIN` and `PUBLIC_IP` to this script.
+Existing unrelated Nginx sites are preserved. Repeated runs retain the managed
+site configuration, including Certbot's TLS changes, and reuse a certificate
+that is not yet due for renewal. Certificate issuance or renewal test failures
+are reported as errors; correct the cause and rerun.
+
 ### Container publishing and backups
 
 GitLab container build and registry publishing are configured in `.gitlab-ci.yml`.
