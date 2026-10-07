@@ -2,6 +2,7 @@
 import {useEffect,useState,useRef} from 'react';
 import type {Offer,Item,Response,ComparisonItem} from '../lib/catalog';
 import Modal from './modal';
+import ThemeControl from './theme-control';
 import ResultState from './result-state';
 import {recordEvent as event} from '../lib/analytics';
 const unavailableMessage='Каталог временно недоступен. Попробуйте ещё раз.';
@@ -52,7 +53,7 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  const searchButton=useRef<HTMLButtonElement>(null);
  const items=data?.items||[],page=data?.page||1;
  const hasFilters=Array.from(params?.keys()||[]).some(key=>!['sort','page','page_size','compare'].includes(key));
- return <><header><a className="brand" href="/"><span className="brandIcon">&lt;/&gt;</span>devcourse<span className="brandDot">.</span></a><span className="headerNote">Ваш путь в разработку</span><a href="/about" className="quiet">Как мы подбираем</a></header>
+ return <><header><a className="brand" href="/"><span className="brandIcon">&lt;/&gt;</span>devcourse<span className="brandDot">.</span></a><span className="headerNote">Ваш путь в разработку</span><ThemeControl/><a href="/about" className="quiet">Как мы подбираем</a></header>
  <main><section className="intro"><div className="eyebrow">МЕНЬШЕ ПОИСКА. БОЛЬШЕ ПРАКТИКИ.</div><h1>Учиться тому,<br className="mobileBreak"/> что нужно <span>вам.</span></h1><p>Сравните обучение разработке по опыту, цели и бюджету.<br/>От первого «Hello, world!» до следующего шага в карьере.</p></section>
  <div className="workspace"><aside><div className="filterTitle"><h2>Ваш маршрут</h2><button className="textButton" onClick={()=>navigate(new URLSearchParams())}>Сбросить</button></div>
  {params&&<form key={params.toString()} onSubmit={search}>

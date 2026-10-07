@@ -202,3 +202,17 @@ dialog.overlay::backdrop { background: transparent; }
   .skeleton { animation: none; }
   *,*::before,*::after { transition: none !important; }
 }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1320; --surface: #171d2b; --surface-raised: #20283a;
+  --surface-subtle: #20283a; --ink: #edf0f8; --muted: #aab5ca;
+  --line: #343f54; --accent: #b6a1ff; --accent-hover: #c5b5ff;
+  --accent-text: #171024; --accent-soft: #2d2344;
+  --success: #80e7b2; --success-soft: #17392e;
+  --warning: #f5d087; --warning-soft: #3b3020;
+  --overlay: #05080dcc; --shadow: 0 12px 36px #00000033;
+}
+.themeControl {display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px;}
+.themeControl select {width: auto; min-width: 110px; margin: 0;}
+@media(max-width: 700px) {header {flex-wrap: wrap; gap: 12px;} .headerNote {display: none;} .themeControl {margin-left: auto;}}

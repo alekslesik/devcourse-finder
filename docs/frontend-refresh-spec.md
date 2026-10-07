@@ -37,7 +37,7 @@ Deploy only through the existing manual release workflow.
 
 ## 4. Add theme preferences (P1)
 
-- [ ] Complete.
+- [x] Complete.
 - Expose System, Light, and Dark preferences and persist an explicit choice.
 - Follow OS changes while System is selected; work when localStorage is unavailable.
 - Apply the initial theme before paint without a light flash or hydration warning.
