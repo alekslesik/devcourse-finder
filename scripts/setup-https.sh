@@ -40,7 +40,7 @@ addresses=$(getent ahostsv4 "$domain" | awk '{print $1}' | sort -u)
 echo '[STEP] Installing Nginx and Certbot'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y nginx certbot python3-certbot-nginx
+apt-get install -y nginx certbot python3 python3-certbot-nginx
 site=/etc/nginx/sites-available/devcourse-finder
 enabled=/etc/nginx/sites-enabled/devcourse-finder
 marker="# Managed by DevCourse Finder setup-https.sh for $domain"
@@ -50,7 +50,52 @@ if [[ -e $site || -L $site ]]; then
   [[ -f $site && ! -L $site ]] && grep -Fxq "$marker" "$site" || {
     echo "Refusing to replace an unmanaged Nginx configuration: $site" >&2; exit 1;
   }
-else
+fi
+# Inspect all active includes, not just sites-enabled or nginx -t's exit code.
+# Duplicate server names are warnings and can otherwise shadow this proxy.
+python3 - "$domain" "$site" <<'PY'
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+domain, managed = sys.argv[1:]
+result = subprocess.run(["nginx", "-T"], capture_output=True, text=True)
+if result.returncode:
+    raise SystemExit("Cannot inspect active Nginx configuration; run nginx -t and fix its errors.")
+sections = re.split(r"^# configuration file (.+):\s*$", result.stdout, flags=re.MULTILINE)
+if len(sections) < 3:
+    raise SystemExit("Nginx did not return its active configuration; refusing to enable a site.")
+for path, body in zip(sections[1::2], sections[2::2]):
+    if os.path.realpath(path) == os.path.realpath(managed):
+        continue
+    lexer = shlex.shlex(body, posix=True, punctuation_chars=";{}")
+    lexer.whitespace_split = True
+    tokens = iter(lexer)
+    for token in tokens:
+        if token != "server_name":
+            continue
+        for name in tokens:
+            if ";" in name:
+                break
+            normalized = name.lower()
+            matches = normalized == domain
+            if normalized.startswith("*."):
+                matches = domain.endswith(normalized[1:])
+            elif normalized.startswith("."):
+                matches = domain == normalized[1:] or domain.endswith(normalized)
+            elif normalized.endswith(".*"):
+                matches = domain.startswith(normalized[:-1])
+            elif name.startswith("~"):
+                # Nginx uses PCRE, which is not Python's regex syntax. Do not
+                # guess whether an arbitrary regex virtual host can match.
+                raise SystemExit(f"A regex server name in {path} needs manual conflict review before enabling this domain.")
+            if matches:
+                raise SystemExit(f"Domain {domain} is already handled by another active Nginx configuration: {path}. Resolve the conflict before retrying.")
+print("[PASS] No domain conflict in other active Nginx configuration files")
+PY
+if [[ ! -e $site ]]; then
   cat > "$site" <<EOF
 $marker
 server {
@@ -113,4 +158,11 @@ curl --fail --silent --show-error --location --proto '=https' --proto-redir '=ht
   jq -e '(.items | type == "array") and (.total | type == "number")' >/dev/null
 echo "HTTPS setup complete: https://$domain"
 echo 'Automatic certificate renewal is enabled and its dry run passed.'
-echo 'Next: run check-vds.sh --https, then configure database backups and publish the catalog.'
+if [[ -f /root/check-vds.sh ]]; then
+  echo 'Verify deployment: bash /root/check-vds.sh --https'
+elif [[ -f /srv/devcourse-finder/scripts/check-vds.sh ]]; then
+  echo 'Verify deployment: bash /srv/devcourse-finder/scripts/check-vds.sh --https'
+else
+  echo "Verify HTTPS: curl --fail --show-error https://$domain/api/v1/courses"
+fi
+echo 'Next: configure database backups and publish the catalog.'

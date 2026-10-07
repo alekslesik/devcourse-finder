@@ -295,10 +295,42 @@ Any IPv6 DNS record must also point to this server for certificate validation.
 Set `LE_EMAIL` to register an ACME contact address, or omit it to register
 without email. To use another domain, first set the matching `SITE_URL` in
 `.env` and rerun deployment, then pass `DOMAIN` and `PUBLIC_IP` to this script.
+The script inspects the effective Nginx configuration and refuses another active
+site declaring the same domain, including matching wildcard names. Active regex
+server names require manual conflict review because Nginx uses PCRE semantics.
 Existing unrelated Nginx sites are preserved. Repeated runs retain the managed
 site configuration, including Certbot's TLS changes, and reuse a certificate
 that is not yet due for renewal. Certificate issuance or renewal test failures
 are reported as errors; correct the cause and rerun.
+
+### Verify the deployment
+
+Copy [`scripts/check-vds.sh`](scripts/check-vds.sh) to `/root/check-vds.sh` and
+run it from a root session after the deployment script finishes:
+
+```sh
+bash /root/check-vds.sh
+```
+
+The read-only check reports `[PASS]`, `[FAIL]`, and `[INFO]` for Docker access,
+protected `.env` permissions, production configuration, running container states
+and health checks, successful migration completion, actual port bindings,
+persistent database storage, a read-only SQL query, API readiness, the frontend
+home page, and a catalog request through the frontend. It does not print
+configuration secrets or change containers, configuration, or catalog data.
+An empty catalog is valid before publication.
+
+After configuring the reverse proxy and certificate, also check public HTTPS:
+
+```sh
+bash /root/check-vds.sh --https
+```
+
+This checks trusted TLS, the home page, and the catalog API at the configured
+`SITE_URL` from the VDS. It does not establish reachability from every external
+network. Exit codes are `0` for passed checks, `1` for failed deployment checks,
+and `2` for invalid invocation or missing check utilities. Daily backup
+scheduling, restoration, and catalog publication require separate verification.
 
 ### Container publishing and backups
 
