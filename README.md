@@ -56,6 +56,8 @@ ordinary container updates; deleting that volume deletes the database.
 
 ## Project documentation
 
+- [Frontend refresh specification](docs/frontend-refresh-spec.md)
+- [Frontend visual and accessibility checks](docs/frontend-refresh-validation.md)
 - [Functional requirements](docs/functional-requirements.md)
 - [MVP completion specification](docs/mvp-completion-spec.md)
 - [MVP status by requirement ID](docs/mvp-readiness.md)
