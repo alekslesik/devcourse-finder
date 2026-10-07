@@ -21,7 +21,7 @@ Deploy only through the existing manual release workflow.
 
 ## 2. Distinguish catalog states (P1)
 
-- [ ] Complete.
+- [x] Complete.
 - Provide separate loading, service-error, empty-catalog, and filtered-no-match states.
 - Keep the user's filters when retrying. Offer reset only when it is meaningful.
 - Use plain Russian messages and accessible status/alert semantics.
