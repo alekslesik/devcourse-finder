@@ -53,7 +53,7 @@ Deploy only through the existing manual release workflow.
 
 ## 6. Improve filters and mobile layout (P1)
 
-- [ ] Complete.
+- [x] Complete.
 - Preserve unsaved filter edits when changing sort order.
 - Keep URL-applied filters separate from draft form values; apply on search.
 - Hide filters behind an accessible expandable control on small screens.

@@ -228,3 +228,10 @@ dialog.overlay::backdrop { background: transparent; }
 .shareSearch p {font-size: 13px;}
 .trustLine {gap: 16px; padding-bottom: 18px; margin-bottom: 18px;}
 @media(max-width: 700px) {.resultActions {flex-direction: column;} .resultsHeading {align-items: stretch;}}
+.mobileFilters {display: none;}
+.priceInputs input {min-width: 0; font-variant-numeric: tabular-nums; padding-left: 10px; padding-right: 10px;}
+@media(max-width: 700px) {
+  .mobileFilters {display: flex; width: 100%; justify-content: space-between; margin: 0 0 16px;}
+  .workspace aside.filtersClosed {display: none;}
+  .workspace aside.filtersOpen {display: block; margin-bottom: 24px;}
+}
