@@ -23,6 +23,37 @@ All 20 functional acceptance criteria have passed and are merged. Production pub
 
 The catalog starts empty. Course records must be reviewed and imported explicitly; research data is not published automatically.
 
+## Architecture
+
+The application runs as four Docker Compose services:
+
+| Service | Technology | Responsibility |
+| --- | --- | --- |
+| `frontend` | Next.js / React | Catalog browsing, filters, course pages, and comparison |
+| `api` | Go | Search, comparison, catalog import, provider redirects, and event recording |
+| `db` | PostgreSQL | Courses, offers, import history, and events |
+| `migrate` | Go CLI | Creates and updates the database schema before the API starts |
+
+Compose starts the database and waits for its health check, runs the migration
+service to completion, starts the API and waits for readiness, then starts the
+frontend. A failed migration prevents the API from starting.
+
+On a production VDS, requests follow this path:
+
+```text
+Browser → HTTPS reverse proxy → Next.js → Go API → PostgreSQL
+```
+
+The frontend proxies `/api/*` and `/out/*` to the API. The production Compose
+configuration removes the API's published port; PostgreSQL has no published
+port. Both are reachable inside the Compose network. The HTTPS reverse proxy
+must be configured separately, for example with Nginx and a TLS certificate.
+
+The database, API, and frontend use `restart: unless-stopped` to recover after
+process failures or server reboots when Docker starts. Migrations are a one-shot
+service. PostgreSQL data persists in the `postgres-data` Docker volume across
+ordinary container updates; deleting that volume deletes the database.
+
 ## Project documentation
 
 - [Functional requirements](docs/functional-requirements.md)
@@ -151,6 +182,55 @@ From `frontend`, run `npm run build:test`, `npx playwright install --with-deps c
 PostgreSQL integration tests require `TEST_DATABASE_URL` pointing to a dedicated database ending in `_test`; tests clear that test database. CI supplies an isolated PostgreSQL service.
 
 ## Production configuration and backups
+
+### Prepare an Ubuntu VDS
+
+Copy [`scripts/setup-vds.sh`](scripts/setup-vds.sh) to the server and run:
+
+```sh
+sudo bash setup-vds.sh
+```
+
+The script installs Git, curl, certificate tools, OpenSSL, jq, cron, and Docker
+Engine with Compose when Docker is absent. It preserves an existing Docker
+installation and checks that Compose is version 2.24 or newer. It enables Docker
+and cron at boot and creates `/srv/devcourse-finder` as the deployment directory.
+Go, Node.js, and PostgreSQL run in the project's containers and do not need host
+installations.
+
+This prepares the host only. Repository checkout, production configuration,
+HTTPS, application startup, catalog publication, and a daily backup job remain
+deployment steps. The script does not install a reverse proxy or change firewall
+or SSH settings. If an existing Docker installation lacks a compatible Compose
+plugin, install or upgrade the plugin from that installation's package source
+and rerun the script.
+
+### Start the production application
+
+Place the repository in `/srv/devcourse-finder`, copy `.env.example` to `.env`,
+and set a unique `POSTGRES_PASSWORD`, a stable `CATALOG_OPERATOR`, and the public
+HTTPS `SITE_URL`. Protect `.env` with `chmod 600 .env` and keep it out of version
+control. Configure the HTTPS reverse proxy to forward requests to the frontend;
+for a proxy on the same host, set `WEB_PORT=127.0.0.1:3000` to bind the frontend
+to loopback.
+
+From the repository directory, build and start the application:
+
+```sh
+docker compose -f compose.yaml -f compose.production.yaml up --build -d
+```
+
+This follows the database → migrations → API → frontend startup sequence above.
+Use `docker compose -f compose.yaml -f compose.production.yaml ps` to inspect
+service status and add `logs --tail=100` instead of `ps` to inspect logs.
+
+The catalog is initially empty. The prepared real catalog contains 20 programs,
+but publication requires source review, validation, a backup, a reviewed dry
+run, and an explicit import as described in the catalog publication runbook.
+Schedule daily database backups separately; installing cron does not create a
+backup job.
+
+### Container publishing and backups
 
 GitLab container build and registry publishing are configured in `.gitlab-ci.yml`.
 See [GitLab CI setup](docs/gitlab-ci.md) for runner requirements and image tags.
