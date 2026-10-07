@@ -251,3 +251,11 @@ dialog.overlay::backdrop { background: transparent; }
   .offerInfo {display: flex; gap: 4px;}
   .offerInfo .secondary {margin: 12px 0 4px;}
 }
+.siteNav {display: flex; gap: 20px; margin-left: auto; font-size: 14px; color: var(--muted);}
+.skipLink {position: absolute; top: -80px; left: 16px; z-index: 50; background: var(--surface); color: var(--accent); padding: 12px; border-radius: 8px;}
+.skipLink:focus {top: 12px;}
+.document > h1 {max-width: 28ch;}
+.document > nav {font-size: 14px; margin-bottom: 24px;}
+.document > h2 {padding-top: 24px; border-top: 1px solid var(--line);}
+.tableWrap a {overflow-wrap: anywhere;}
+@media(max-width: 700px) {.siteNav {gap: 16px; order: 3; width: 100%; margin-left: 0;} header .themeControl {font-size: 0;} header .themeControl select {font-size: 13px; min-width: 105px;}}

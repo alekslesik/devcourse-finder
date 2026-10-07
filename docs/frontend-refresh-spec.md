@@ -70,7 +70,7 @@ Deploy only through the existing manual release workflow.
 
 ## 8. Unify routes and comparison (P2)
 
-- [ ] Complete.
+- [x] Complete.
 - Share navigation, footer, and theme controls across all routes and error pages.
 - Style course details, about content, and comparison using the same primitives.
 - Reuse one comparison table for the full page and legacy comparison dialog.

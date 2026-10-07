@@ -1,8 +1,8 @@
 'use client';
 import {useEffect,useState,useRef} from 'react';
-import type {Offer,Item,Response,ComparisonItem} from '../lib/catalog';
+import type {Response,ComparisonItem} from '../lib/catalog';
 import Modal from './modal';
-import ThemeControl from './theme-control';
+import ComparisonTable from './comparison-table';
 import CourseCard from './course-card';
 import ResultState from './result-state';
 import {recordEvent as event} from '../lib/analytics';
@@ -12,9 +12,6 @@ const languages:Record<string,string>={go:'Go',python:'Python',java:'Java',javas
 const experience:Record<string,string>={none:'Начинаю с нуля',basics:'Знаю основы',projects:'Пишу свои проекты',working:'Работаю разработчиком',switch:'Перехожу с другого языка'};
 const goals:Record<string,string>={try:'Попробовать программирование',job:'Подготовиться к первой работе',switch:'Сменить язык / направление',deepen:'Углубить знания'};
 const directions:Record<string,string>={basics:'Основы',backend:'Backend',frontend:'Frontend',fullstack:'Fullstack',automation:'Автоматизация'};
-function money(i:Item){if(i.effective_price===null)return i.offer.price_kind==='from'?'Цена от · уточните у школы':'Уточнить цену';return i.effective_price===0?'Бесплатно':new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(i.effective_price/100)}
-function date(v:string){return new Date(v).toLocaleDateString('ru-RU')}
-function support(o:Offer){return o.mentor?'Персональный наставник':o.review?'Проверка заданий':'Самостоятельно'}
 function Select({label,name,values,defaultValue}:{label:string;name:string;values:Record<string,string>;defaultValue?:string}){return <label>{label}<select name={name} defaultValue={defaultValue||''}><option value="">Не важно</option>{Object.entries(values).map(([v,t])=><option value={v} key={v}>{t}</option>)}</select></label>}
 const searchParameterNames=new Set(['language','direction','experience','goal','budget','support','schedule','sort','min','max','hours','include_free','include_closed','page','page_size']);
 const urlParameterNames=new Set([...searchParameterNames,'compare']);
@@ -46,19 +43,21 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
   }).catch(e=>{if(!ctrl.signal.aborted)setError(e instanceof SearchError?e.message:unavailableMessage)}).finally(()=>{if(!ctrl.signal.aborted)setLoading(false)});
   return()=>ctrl.abort();
  },[params,retry]);
- useEffect(()=>{if(!compareOpen)return;const ctrl=new AbortController();setCompare(null);setModalError('');fetch('/api/v1/compare?offer_ids='+selected.join(','),{signal:ctrl.signal}).then(r=>{if(!r.ok)throw Error('Не удалось загрузить сравнение');return r.json()}).then(setCompare).catch(e=>{if(e.name!=='AbortError')setModalError(e.message)});return()=>ctrl.abort()},[compareOpen,selected]);
+ useEffect(()=>{if(!compareOpen)return;const ctrl=new AbortController();setCompare(null);setModalError('');fetch('/api/v1/compare?offer_ids='+selected.join(','),{signal:ctrl.signal}).then(r=>{if(!r.ok)throw Error('Не удалось загрузить сравнение');return r.json()}).then(items=>{if(!ctrl.signal.aborted)setCompare(items)}).catch(()=>{if(!ctrl.signal.aborted)setModalError('Не удалось загрузить сравнение. Попробуйте открыть его ещё раз.')});return()=>ctrl.abort()},[compareOpen,selected]);
  function navigate(raw:URLSearchParams,preserveDraft=false){const p=canonicalParams(raw),query=p.toString();history.pushState(null,'',resultsPath+(query?'?'+query:''));setParams(p);if(!preserveDraft)setFormRevision(v=>v+1)}
  async function copySearch(){const url=location.href;try{if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');await navigator.clipboard.writeText(url);setShareURL('');setShareStatus('Ссылка скопирована')}catch{setShareURL(url);setShareStatus('Скопируйте ссылку из поля ниже')}}
  useEffect(()=>{setShareURL('');setShareStatus('')},[params]);
  function search(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget,f=new FormData(form),p=new URLSearchParams();const min=String(f.get('min')||''),max=String(f.get('max')||'');if(min&&max&&Number(min)>Number(max)){const input=form.elements.namedItem('max') as HTMLInputElement;input.setCustomValidity('Максимальный бюджет должен быть не меньше минимального.');input.reportValidity();return;}f.forEach((v,k)=>{if(v){p.set(k,k==='min'||k==='max'?String(Math.round(Number(v)*100)):String(v))}});navigate(p);setFiltersOpen(false)}
- function toggle(id:string){setNotice('');setSelected(s=>{if(s.includes(id))return s.filter(x=>x!==id);if(s.length===3){setNotice('В сравнении уже 3 тарифа. Уберите один, чтобы добавить новый.');return s}return [...s,id]})}
+ function updateSelection(ids:string[]){setSelected(ids);try{localStorage.setItem('devcourse-offers',JSON.stringify(ids))}catch{}}
+ function toggle(id:string){setNotice('');if(selected.includes(id)){updateSelection(selected.filter(x=>x!==id));return;}if(selected.length===3){setNotice('В сравнении уже 3 тарифа. Уберите один, чтобы добавить новый.');return;}updateSelection([...selected,id])}
+ function removeComparison(id:string){const ids=selected.filter(x=>x!==id);updateSelection(ids);if(!ids.length){close();return;}const p=new URLSearchParams(location.search);p.set('compare',ids.join(','));history.replaceState(null,'',location.pathname+'?'+p);}
  function showCompare(){try{localStorage.setItem('devcourse-offers',JSON.stringify(selected))}catch{};location.assign('/compare?offers='+selected.map(encodeURIComponent).join(','))}
  function close(){setCompareOpen(false);setModalError('');const p=new URLSearchParams(location.search);p.delete('compare');history.replaceState(null,'','?'+p)}
  useEffect(()=>{if(new URLSearchParams(location.search).has('compare'))return;try{const saved=JSON.parse(localStorage.getItem('devcourse-offers')||'[]');if(Array.isArray(saved))setSelected([...new Set(saved.filter((v:unknown):v is string=>typeof v==='string'))].slice(0,3))}catch{}},[]);
  const searchButton=useRef<HTMLButtonElement>(null);
  const items=data?.items||[],page=data?.page||1;
  const hasFilters=Array.from(params?.keys()||[]).some(key=>!['sort','page','page_size','compare'].includes(key));
- return <><header><a className="brand" href="/"><span className="brandIcon">&lt;/&gt;</span>devcourse<span className="brandDot">.</span></a><span className="headerNote">Ваш путь в разработку</span><ThemeControl/><a href="/about" className="quiet">Как мы подбираем</a></header>
+ return <>
  <main><section className="intro"><div className="eyebrow">МЕНЬШЕ ПОИСКА. БОЛЬШЕ ПРАКТИКИ.</div><h1>Учиться тому,<br className="mobileBreak"/> что нужно <span>вам.</span></h1><p>Сравните обучение разработке по опыту, цели и бюджету.<br/>От первого «Hello, world!» до следующего шага в карьере.</p></section>
  <button className="mobileFilters secondary" aria-expanded={filtersOpen} aria-controls="catalog-filters" onClick={()=>setFiltersOpen(v=>!v)}>{filtersOpen?'Скрыть фильтры':'Фильтры'}{hasFilters?' · '+Array.from(params?.keys()||[]).filter(k=>k in filterLabels).length:''}</button>
  <div className="workspace"><aside id="catalog-filters" className={filtersOpen?'filtersOpen':'filtersClosed'}><div className="filterTitle"><h2>Ваш маршрут</h2><button className="textButton" onClick={()=>navigate(new URLSearchParams())}>Сбросить</button></div>
@@ -80,9 +79,8 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  {!loading&&!error&&data&&data.total>data.page_size&&<nav className="pagination" aria-label="Страницы"><button disabled={page===1} onClick={()=>{const p=new URLSearchParams(params||'');p.set('page',String(page-1));navigate(p,true)}}>← Назад</button><span>{page} / {Math.ceil(data.total/data.page_size)}</span><button disabled={page*data.page_size>=data.total} onClick={()=>{const p=new URLSearchParams(params||'');p.set('page',String(page+1));navigate(p,true)}}>Далее →</button></nav>}
  </section></div>
  <section id="how" className="how"><div><div className="eyebrow">ПОНЯТНЫЙ ВЫБОР</div><h2>Условия важнее обещаний.</h2></div><p>Мы сравниваем конкретные тарифы и полную стоимость. Если цена устарела или неизвестна, показываем это явно и не включаем программу в поиск с ограничением бюджета. Переход и запись — на сайте источника. Каталог не гарантирует трудоустройство.</p></section></main>
- <footer><a className="brand" href="/">devcourse.</a><span>Учиться — ваш выбор. Найти — наша задача.</span><span>MVP · 2026</span></footer>
- {selected.length>0&&!compareOpen&&<div className="compareBar"><span><strong>{selected.length} из 3</strong> тарифов для сравнения</span><button className="primary" onClick={showCompare}>Сравнить →</button><button className="textButton" onClick={()=>setSelected([])}>Очистить</button></div>}
+ {selected.length>0&&!compareOpen&&<div className="compareBar"><span><strong>{selected.length} из 3</strong> тарифов для сравнения</span><button className="primary" onClick={showCompare}>Сравнить →</button><button className="textButton" onClick={()=>updateSelection([])}>Очистить</button></div>}
  {(compareOpen||modalError)&&<Modal label="Сравнение тарифов" onClose={close} fallbackFocus={searchButton}>
- {modalError?<p role="alert">{modalError}</p>:<><div className="eyebrow">ВАШ КОРОТКИЙ СПИСОК</div><h2>Сравнение тарифов</h2><p>Одинаковые критерии — осознанный выбор. Ссылка на эту страницу сохраняет сравнение.</p>{!compare?<p role="status">Загрузка…</p>:<div className="tableWrap" role="region" aria-label="Сравнение тарифов, горизонтальная прокрутка" tabIndex={0}><table><thead><tr><th scope="col">Условия</th>{compare.map((i,n)=><th scope="col" key={n}>{i.unavailable?(i.reason==='closed'?'Набор закрыт — предложение недоступно':'Предложение недоступно'):i.course.title}</th>)}</tr></thead><tbody>{['Тариф','Полная стоимость','Срок','Нагрузка','Поддержка','Проверено','Действия'].map((row,r)=><tr key={row}><th scope="row">{row}</th>{compare.map((i,n)=><td key={n}>{i.unavailable?'—':r===0?i.offer.name:r===1?money(i):r===2?(i.offer.weeks?i.offer.weeks+' нед.':'Не указано'):r===3?(i.offer.hours?i.offer.hours+' ч/нед.':'Не указано'):r===4?support(i.offer):r===5?date(i.course.checked_at):<a className="primary linkButton" href={'/out/'+i.offer.id} target="_blank" rel="noopener noreferrer">На сайт источника ↗</a>}</td>)}</tr>)}</tbody></table></div>}</>}
+ {modalError?<p role="alert">{modalError}</p>:<><div className="eyebrow">ВАШ КОРОТКИЙ СПИСОК</div><h2>Сравнение тарифов</h2><p>Одинаковые критерии — осознанный выбор. Ссылка на эту страницу сохраняет сравнение.</p>{!compare?<p role="status">Загрузка…</p>:<ComparisonTable items={compare} ids={selected} onRemove={removeComparison}/>}</>}
  </Modal>}</>
 }
