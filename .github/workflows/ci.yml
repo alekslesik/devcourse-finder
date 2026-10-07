@@ -9,6 +9,23 @@ permissions:
   contents: read
 
 jobs:
+  release-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate version and changelog
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_release.py'
+          if [ -n "$BASE_REF" ]; then
+            python3 scripts/release.py check --base-ref "origin/$BASE_REF"
+          else
+            python3 scripts/release.py check
+          fi
+
   backend:
     runs-on: ubuntu-latest
     services:

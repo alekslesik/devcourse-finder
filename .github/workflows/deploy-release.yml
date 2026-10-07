@@ -1,0 +1,68 @@
+name: Deploy release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published release tag, for example v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate the published release and prepare its source archive
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          gh release view "$TAG" --json isDraft,tagName | jq -e --arg tag "$TAG" '.isDraft == false and .tagName == $tag' >/dev/null
+          git fetch origin main --tags
+          sha=$(git rev-parse "$TAG^{commit}")
+          git merge-base --is-ancestor "$sha" origin/main
+          test "v$(git show "$sha:VERSION")" = "$TAG"
+          git archive --format=tar "$sha" > "$RUNNER_TEMP/release.tar"
+          digest=$(sha256sum "$RUNNER_TEMP/release.tar" | cut -d ' ' -f 1)
+          printf 'tag=%s\nsha=%s\ndigest=%s\n' "$TAG" "$sha" "$digest" >> "$GITHUB_OUTPUT"
+      - name: Install SSH password helper
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+      - name: Upload and deploy the selected release
+        env:
+          SSHPASS: ${{ secrets.VDS_PASS }}
+          VDS_HOST: ${{ vars.VDS_HOST || '83.220.174.166' }}
+          VDS_USER: ${{ vars.VDS_USER || 'root' }}
+          TAG: ${{ steps.release.outputs.tag }}
+          SHA: ${{ steps.release.outputs.sha }}
+          DIGEST: ${{ steps.release.outputs.digest }}
+        run: |
+          set -euo pipefail
+          test -n "$SSHPASS" || { echo 'Add the VDS_PASS Actions secret before deploying.' >&2; exit 1; }
+          [[ "$VDS_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$VDS_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          host_keys="$RUNNER_TEMP/vds_known_hosts"
+          cp .github/vds_known_hosts "$host_keys"
+          chmod 600 "$host_keys"
+          options=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$host_keys" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o PreferredAuthentications=password,keyboard-interactive -o NumberOfPasswordPrompts=1)
+          target="$VDS_USER@$VDS_HOST"
+          archive="/srv/devcourse-finder/incoming/$TAG-$SHA.tar"
+          sshpass -e ssh -T "${options[@]}" "$target" 'install -d -m 0700 /srv/devcourse-finder/incoming'
+          sshpass -e scp "${options[@]}" "$RUNNER_TEMP/release.tar" "$target:$archive"
+          sshpass -e ssh -T "${options[@]}" "$target" "bash -s -- '$TAG' '$SHA' '$DIGEST'" < scripts/deploy-release.sh
+          printf '### Deployed release\n\n- Version: `%s`\n- Commit: `%s`\n' "$TAG" "$SHA" >> "$GITHUB_STEP_SUMMARY"

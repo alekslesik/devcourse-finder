@@ -39,6 +39,13 @@ frontend/playwright-report/
 
 # Database backups
 backups/
+releases/
+incoming/
+current
+.current-*
+.deploy.lock
+DEPLOYED_VERSION
+__pycache__/
 
 .load-results/
 scripts/load/__pycache__/

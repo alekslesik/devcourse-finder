@@ -62,6 +62,71 @@ ordinary container updates; deleting that volume deletes the database.
 - [Catalog publication runbook](docs/catalog-operations.md)
 - [20 real programs, reviewed sources and explicit publication](docs/real-catalog.md)
 
+## Versions, releases, and manual deployment
+
+Every PR increments the application version in the root `VERSION` file and adds
+English notes to `CHANGELOG.md`. The first release is `v0.1.0`; subsequent PRs use
+patch increments for fixes/docs, minor increments for features, and major
+increments for incompatible changes. For example:
+
+```sh
+python3 scripts/release.py bump patch --note "Describe the change."
+python3 scripts/release.py check --base-ref origin/main
+```
+
+CI rejects PRs that do not increase the version relative to their base or omit
+the matching changelog entry. Update the version against the latest main before
+merging concurrent PRs. After each PR merges into `main`, the **Release** workflow
+pushes an annotated `v<VERSION>` tag at the merged commit and creates a GitHub
+Release with the description from that changelog entry. Existing tags are never
+moved. Creating a tag or release does not deploy anything.
+
+To deploy from the GitHub UI:
+
+1. Open **Actions → Deploy release → Run workflow**.
+2. Keep the workflow branch set to **main** and enter a published tag such as
+   `v0.1.0` in **version**.
+3. Click **Run workflow** and inspect the deployment job and its summary.
+
+The deploy workflow has only a `workflow_dispatch` trigger. It never deploys on
+main pushes, PR merges, tags, or release publication. It verifies that the
+selected published release points to a commit in main and archives that exact
+commit. The runner uploads the archive over SSH and runs the host deployment
+script. SSH verification uses the public VDS host key pinned in
+`.github/vds_known_hosts`.
+
+### One-time GitHub configuration
+
+Add **VDS_PASS** in **Settings → Secrets and variables → Actions → New repository
+secret**, using the VDS login password. It is never stored in Git. The defaults
+are host `83.220.174.166`, SSH port `22`, and user `root`; optional Actions
+variables `VDS_HOST` and `VDS_USER` override the host/user. Changing the host also
+requires verifying and updating its pinned SSH host key. The host must accept
+SSH from GitHub-hosted runners and have completed the initial VDS setup and
+deployment. Actions must be allowed to create tags and releases with its workflow
+token; repository or organization policies can restrict this.
+
+### What happens on the VDS
+
+Deployments are serialized by the workflow and a host lock. Before changing the
+running stack, the script verifies the archive checksum and creates a database
+backup in `/srv/devcourse-finder/backups`. It extracts source into
+`/srv/devcourse-finder/releases/<tag>-<commit>`, builds the images, runs migrations,
+and verifies API readiness, the frontend, and the catalog response.
+
+The production `.env` stays at `/srv/devcourse-finder/.env`, and the Compose
+project remains `devcourse-finder` so the existing database volume is reused.
+Nginx, HTTPS configuration, and catalog data are preserved. After checks pass,
+`/srv/devcourse-finder/current` points to the release and `DEPLOYED_VERSION`
+records its tag, commit, and deployment time. Old source releases and backups
+are retained.
+
+A failed deployment is reported as failed, and its version is not recorded as
+successful. It may have already changed containers or applied migrations;
+there is no automatic database restoration. Inspect the failure and backup
+before recovery. Selecting an older release is possible, but first check that
+its code is compatible with the current database schema.
+
 ## Run with Docker
 
 Requirements: Docker Engine with Docker Compose v2.
