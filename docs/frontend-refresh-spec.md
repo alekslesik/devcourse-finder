@@ -45,7 +45,7 @@ Deploy only through the existing manual release workflow.
 
 ## 5. Restructure the catalog workspace (P1)
 
-- [ ] Complete.
+- [x] Complete.
 - Compact the introductory content and align results/actions in one toolbar.
 - Show applied filter chips with individual removal and a clear reset action.
 - Keep sorting and link sharing discoverable without dominating the result area.
