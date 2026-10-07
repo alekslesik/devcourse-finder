@@ -219,10 +219,36 @@ setup, enter a root shell before proceeding:
 
 ```sh
 sudo -i
-cd /srv/devcourse-finder
 ```
 
-If already logged in as root, only change to the deployment directory.
+If already logged in as root, keep using that session.
+
+For an initial deployment after host preparation, copy
+[`scripts/deploy-vds.sh`](scripts/deploy-vds.sh) to `/root/deploy-vds.sh` and run
+it as root from outside the deployment directory:
+
+```sh
+cd /root
+bash deploy-vds.sh
+```
+
+Keep the launcher outside `/srv/devcourse-finder`: a fresh checkout requires
+that target directory to be absent or empty.
+
+The script clones the public repository into `/srv/devcourse-finder` if it has
+not been checked out, creates a protected production `.env` with a random
+database password only when no `.env` or existing database volume is present,
+builds and starts the stack, and checks the catalog API through the frontend.
+It preserves existing configuration and does not update an existing checkout.
+The frontend listens on `127.0.0.1:3000`; API and database ports remain private.
+The default public origin is `https://alekslesik.fvds.ru`. To use another domain
+when creating `.env`, run `SITE_URL=https://your-domain.example bash deploy-vds.sh`.
+For an existing `.env`, edit `SITE_URL` there instead. The script validates the
+effective frontend `SITE_URL` resolved by Compose before starting containers,
+including values from a preserved `.env`. HTTPS configuration, daily
+backups, and catalog publication remain separate steps.
+
+For manual deployment, follow the steps below.
 
 Place the repository in `/srv/devcourse-finder`, copy `.env.example` to `.env`,
 and set a unique `POSTGRES_PASSWORD`, a stable `CATALOG_OPERATOR`, and the public
