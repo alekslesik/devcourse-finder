@@ -29,7 +29,7 @@ Deploy only through the existing manual release workflow.
 
 ## 3. Establish visual foundations (P1)
 
-- [ ] Complete.
+- [x] Complete.
 - Introduce semantic CSS tokens for surfaces, text, borders, actions, and statuses.
 - Standardize typography, spacing, field/button sizes, radius, and focus treatment.
 - Remove hard-coded white surfaces and unreadably small essential labels.
