@@ -38,6 +38,8 @@ jobs:
           sha=$(git rev-parse "$TAG^{commit}")
           git merge-base --is-ancestor "$sha" origin/main
           test "v$(git show "$sha:VERSION")" = "$TAG"
+          git show "$sha:scripts/deploy-release.sh" > "$RUNNER_TEMP/deploy-release.sh"
+          bash -n "$RUNNER_TEMP/deploy-release.sh"
           git archive --format=tar "$sha" > "$RUNNER_TEMP/release.tar"
           digest=$(sha256sum "$RUNNER_TEMP/release.tar" | cut -d ' ' -f 1)
           printf 'tag=%s\nsha=%s\ndigest=%s\n' "$TAG" "$sha" "$digest" >> "$GITHUB_OUTPUT"
@@ -64,5 +66,5 @@ jobs:
           archive="/srv/devcourse-finder/incoming/$TAG-$SHA.tar"
           sshpass -e ssh -T "${options[@]}" "$target" 'install -d -m 0700 /srv/devcourse-finder/incoming'
           sshpass -e scp "${options[@]}" "$RUNNER_TEMP/release.tar" "$target:$archive"
-          sshpass -e ssh -T "${options[@]}" "$target" "bash -s -- '$TAG' '$SHA' '$DIGEST'" < scripts/deploy-release.sh
+          sshpass -e ssh -T "${options[@]}" "$target" "bash -s -- '$TAG' '$SHA' '$DIGEST'" < "$RUNNER_TEMP/deploy-release.sh"
           printf '### Deployed release\n\n- Version: `%s`\n- Commit: `%s`\n' "$TAG" "$SHA" >> "$GITHUB_STEP_SUMMARY"

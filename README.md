@@ -91,8 +91,10 @@ To deploy from the GitHub UI:
 The deploy workflow has only a `workflow_dispatch` trigger. It never deploys on
 main pushes, PR merges, tags, or release publication. It verifies that the
 selected published release points to a commit in main and archives that exact
-commit. The runner uploads the archive over SSH and runs the host deployment
-script. SSH verification uses the public VDS host key pinned in
+commit. The runner also reads the host deployment script from that same commit,
+checks its shell syntax, and uploads the archive over SSH before running it.
+Selecting an older release therefore uses that release's deployment logic.
+SSH verification uses the public VDS host key pinned in
 `.github/vds_known_hosts`.
 
 ### One-time GitHub configuration
