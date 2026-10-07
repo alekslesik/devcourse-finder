@@ -193,8 +193,12 @@ sudo bash setup-vds.sh
 
 The script installs Git, curl, certificate tools, OpenSSL, jq, cron, and Docker
 Engine with Compose when Docker is absent. It preserves an existing Docker
-installation and checks that Compose is version 2.24 or newer. It enables Docker
-and cron at boot and creates `/srv/devcourse-finder` as the deployment directory.
+installation and checks that Compose is version 2.24 or newer. It enables cron
+at boot and enables Docker when a system-level `docker.service` exists. For
+Docker managed by another service manager, it preserves that setup; configure
+startup at boot using that installation's service manager. The selected Docker
+daemon must be accessible from the root deployment session. The script creates
+`/srv/devcourse-finder` as the deployment directory.
 Go, Node.js, and PostgreSQL run in the project's containers and do not need host
 installations.
 
@@ -206,6 +210,19 @@ plugin, install or upgrade the plugin from that installation's package source
 and rerun the script.
 
 ### Start the production application
+
+Run all subsequent deployment operations, including repository checkout,
+configuration, Compose commands, catalog operations, and backup scheduling,
+from a root shell. The setup script does not grant the invoking user Docker
+socket access or ownership of the deployment directory. If you used `sudo` for
+setup, enter a root shell before proceeding:
+
+```sh
+sudo -i
+cd /srv/devcourse-finder
+```
+
+If already logged in as root, only change to the deployment directory.
 
 Place the repository in `/srv/devcourse-finder`, copy `.env.example` to `.env`,
 and set a unique `POSTGRES_PASSWORD`, a stable `CATALOG_OPERATOR`, and the public

@@ -49,7 +49,14 @@ if ! dpkg --compare-versions "${compose_version#v}" ge 2.24.0; then
   exit 1
 fi
 
-systemctl enable --now docker cron
+systemctl enable --now cron
+docker_unit_state=$(systemctl show --property=LoadState --value docker.service 2>/dev/null || true)
+if [[ "$docker_unit_state" == loaded ]]; then
+  systemctl enable --now docker.service
+else
+  echo 'No system docker.service found; preserving the existing Docker service manager.'
+  echo 'Ensure that your Docker installation starts at boot using its own service manager.'
+fi
 docker info >/dev/null
 mkdir -p /srv/devcourse-finder
 
@@ -57,4 +64,5 @@ echo 'DevCourse Finder host preparation complete.'
 docker --version
 docker compose version
 echo 'Deployment directory: /srv/devcourse-finder'
+echo 'Run subsequent deployment commands as root (sudo -i, then cd /srv/devcourse-finder).'
 echo 'Next: check out the repository, configure production .env and HTTPS, and start Compose.'
