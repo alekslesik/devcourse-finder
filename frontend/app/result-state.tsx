@@ -2,7 +2,7 @@ type Props = {
   kind: 'error' | 'empty' | 'filtered';
   message?: string;
   onRetry: () => void;
-  onReset: () => void;
+  onReset?: () => void;
 };
 
 export default function ResultState({kind, message, onRetry, onReset}: Props) {
@@ -16,7 +16,7 @@ export default function ResultState({kind, message, onRetry, onReset}: Props) {
     <h3>{title}</h3><p>{description}</p>
     <div className="stateActions">
       {kind !== 'filtered' && <button className="primary" onClick={onRetry}>{kind === 'error' ? 'Повторить' : 'Обновить каталог'}</button>}
-      {kind !== 'empty' && <button className={kind === 'filtered' ? 'primary' : ''} onClick={onReset}>{kind === 'filtered' ? 'Показать все программы' : 'Сбросить фильтры'}</button>}
+      {kind !== 'empty' && onReset && <button className={kind === 'filtered' ? 'primary' : ''} onClick={onReset}>{kind === 'filtered' ? 'Показать все программы' : 'Сбросить фильтры'}</button>}
     </div>
   </div>;
 }

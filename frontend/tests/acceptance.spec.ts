@@ -30,7 +30,7 @@ test('AC-08: empty results and API failure remain distinct without relaxing any 
   await expect(page.getByLabel('От, ₽',{exact:true})).toHaveValue('1');
   await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('1');
   await expect(page.getByLabel('Обратная связь')).toHaveValue('review');
-  await expect(page.getByLabel('Расписание')).toHaveValue('flexible');
+  await expect(page.locator('form').getByLabel('Расписание')).toHaveValue('flexible');
   await expect(page.getByLabel('Часов в неделю, не больше')).toHaveValue('10');
   await expect(page.getByLabel('Показать закрытый и неизвестный набор')).toBeChecked();
   await expect(page.getByLabel('Сортировка',{exact:true})).toHaveValue('price_asc');
@@ -57,7 +57,7 @@ test('AC-09: copied search URL restores filters, sort and page in an independent
  await page.goto('/courses?language=go&sort=price_asc&page=2');
  await expect(page.getByRole('region',{name:'Результаты поиска'})).toHaveAttribute('aria-busy','false');
  await page.getByRole('button',{name:'Скопировать ссылку',exact:true}).click();
- await expect(page.getByRole('status')).toHaveText('Ссылка скопирована');
+ await expect(page.locator('.shareSearch').getByRole('status')).toHaveText('Ссылка скопирована');
  const copied=await page.evaluate(()=>sessionStorage.getItem('copied-search'));
  expect(copied).toBe(page.url());
  const fresh=await browser.newContext();

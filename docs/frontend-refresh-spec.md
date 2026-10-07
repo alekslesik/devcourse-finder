@@ -78,7 +78,7 @@ Deploy only through the existing manual release workflow.
 
 ## 9. Verify visuals and accessibility (P1)
 
-- [ ] Complete.
+- [x] Complete.
 - Check 360, 768, and 1440 px in both themes; no page-level horizontal overflow.
 - Inspect successful results, loading, errors, empty catalog, no matches,
   course details, comparison, and about pages.
