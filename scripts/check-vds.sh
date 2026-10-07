@@ -21,7 +21,7 @@ if ! cd /srv/devcourse-finder; then
   exit 1
 fi
 compose=(docker compose -f compose.yaml -f compose.production.yaml)
-if ! timeout 20 docker info >/dev/null 2>&1; then
+if ! timeout --kill-after=2s 20 docker info >/dev/null 2>&1; then
   echo '[FAIL] Docker daemon is unavailable to this root session.' >&2
   exit 1
 fi
@@ -37,7 +37,7 @@ if [[ -f .env && ! -L .env ]]; then
 else
   fail 'A regular .env file is required'
 fi
-if ! config=$(timeout 20 "${compose[@]}" config --format json 2>/dev/null); then
+if ! config=$(timeout --kill-after=2s 20 "${compose[@]}" config --format json 2>/dev/null); then
   echo '[FAIL] Compose configuration is invalid; run docker compose -f compose.yaml -f compose.production.yaml config --quiet.' >&2
   exit 1
 fi
@@ -58,11 +58,11 @@ site_url=$(jq -r '.services.frontend.environment.SITE_URL // ""' <<<"$config")
 unset config
 
 for service in db migrate api frontend; do
-  if ! container=$(timeout 20 "${compose[@]}" ps --all --quiet "$service" 2>/dev/null) || [[ -z $container || $container == *$'\n'* ]]; then
+  if ! container=$(timeout --kill-after=2s 20 "${compose[@]}" ps --all --quiet "$service" 2>/dev/null) || [[ -z $container || $container == *$'\n'* ]]; then
     fail "$service: expected exactly one existing container"
     continue
   fi
-  if ! state=$(timeout 20 docker inspect --format '{{json .State}}' "$container" 2>/dev/null); then
+  if ! state=$(timeout --kill-after=2s 20 docker inspect --format '{{json .State}}' "$container" 2>/dev/null); then
     fail "$service: cannot inspect container state"
     continue
   fi
@@ -80,7 +80,7 @@ for service in db migrate api frontend; do
     fail "$service: not running or health check has not passed"
   fi
   # Check actual containers as well as the desired Compose configuration.
-  if ! ports=$(timeout 20 docker inspect --format '{{json .NetworkSettings.Ports}}' "$container" 2>/dev/null); then
+  if ! ports=$(timeout --kill-after=2s 20 docker inspect --format '{{json .NetworkSettings.Ports}}' "$container" 2>/dev/null); then
     fail "$service: cannot inspect published ports"
   elif [[ $service == frontend ]]; then
     if jq -e '
@@ -99,7 +99,7 @@ for service in db migrate api frontend; do
     fail "$service: unexpected published host ports"
   fi
   if [[ $service == db ]]; then
-    if timeout 20 docker inspect --format '{{json .Mounts}}' "$container" 2>/dev/null |
+    if timeout --kill-after=2s 20 docker inspect --format '{{json .Mounts}}' "$container" 2>/dev/null |
       jq -e 'any(.[]; .Type == "volume" and .Destination == "/var/lib/postgresql/data")' >/dev/null; then
       pass 'db: persistent data volume is mounted'
     else
@@ -108,27 +108,31 @@ for service in db migrate api frontend; do
   fi
 done
 
-if timeout 20 "${compose[@]}" exec -T db sh -c \
-  'psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --tuples-only --no-align --command "SELECT 1"' 2>/dev/null |
+echo '[CHECK] PostgreSQL SQL query (connection/query limits: 5 seconds; outer limit: 15 seconds)'
+if timeout --kill-after=2s 15 "${compose[@]}" exec --interactive=false -T db sh -c \
+  'PGCONNECT_TIMEOUT=5 PGOPTIONS="-c statement_timeout=5000" psql --no-psqlrc --no-password --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --tuples-only --no-align --command "SELECT 1"' </dev/null 2>/dev/null |
   jq -e '. == 1' >/dev/null 2>&1; then
   pass 'PostgreSQL: read-only SQL query succeeded'
 else
   fail 'PostgreSQL: SQL query failed'
 fi
-if timeout 15 "${compose[@]}" exec -T api wget -Y off -qO- \
-  http://127.0.0.1:8080/health/ready 2>/dev/null |
+echo '[CHECK] API readiness (limit: 15 seconds)'
+if timeout --kill-after=2s 15 "${compose[@]}" exec --interactive=false -T api wget -Y off -T 10 -qO- \
+  http://127.0.0.1:8080/health/ready </dev/null 2>/dev/null |
   jq -e '.ok == true' >/dev/null 2>&1; then
   pass 'API readiness: database connection is available'
 else
   fail 'API readiness check failed'
 fi
-if [[ $(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 15 \
+echo '[CHECK] Frontend home page (limit: 15 seconds)'
+if [[ $(curl --silent --output /dev/null --write-out '%{http_code}' --connect-timeout 5 --max-time 15 \
   http://127.0.0.1:3000/) == 200 ]]; then
   pass 'Frontend home page: HTTP 200'
 else
   fail 'Frontend home page did not return HTTP 200'
 fi
-if catalog=$(curl --fail --silent --max-time 15 http://127.0.0.1:3000/api/v1/courses) &&
+echo '[CHECK] Catalog through frontend (limit: 15 seconds)'
+if catalog=$(curl --fail --silent --connect-timeout 5 --max-time 15 http://127.0.0.1:3000/api/v1/courses) &&
   jq -e '(.items | type == "array") and (.total | type == "number" and . >= 0)' <<<"$catalog" >/dev/null 2>&1; then
   total=$(jq -r '.total' <<<"$catalog")
   pass "Frontend → API → database: catalog response is valid ($total courses)"
@@ -140,6 +144,7 @@ else
 fi
 
 if [[ ${1:-} == --https ]]; then
+  echo '[CHECK] Public HTTPS home page and catalog (limit: 20 seconds per request)'
   if [[ $site_url =~ ^https://[a-zA-Z0-9.-]+(:[0-9]+)?$ ]] &&
     [[ $(curl --silent --location --proto '=https' --proto-redir '=https' \
       --output /dev/null --write-out '%{http_code}' --max-time 20 "$site_url/") == 200 ]] &&
