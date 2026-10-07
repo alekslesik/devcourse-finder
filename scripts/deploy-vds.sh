@@ -17,9 +17,6 @@ docker info >/dev/null
 app_dir=/srv/devcourse-finder
 repo=https://github.com/alekslesik/devcourse-finder.git
 site_url=${SITE_URL:-https://alekslesik.fvds.ru}
-[[ $site_url =~ ^https://[a-zA-Z0-9.-]+(:[0-9]+)?$ ]] || {
-  echo 'SITE_URL must be an HTTPS origin without a trailing slash.' >&2; exit 1;
-}
 
 if [[ ! -d "$app_dir/.git" ]]; then
   git clone "$repo" "$app_dir"
@@ -34,6 +31,9 @@ done
 
 [[ ! -L .env ]] || { echo 'Refusing to use a symlink for .env.' >&2; exit 1; }
 if [[ ! -e .env ]]; then
+  [[ $site_url =~ ^https://[a-zA-Z0-9.-]+(:[0-9]+)?$ ]] || {
+    echo 'SITE_URL must be an HTTPS origin without a trailing slash.' >&2; exit 1;
+  }
   if docker volume inspect devcourse-finder_postgres-data >/dev/null 2>&1; then
     echo 'An existing database volume was found. Restore its original .env before proceeding.' >&2
     exit 1
@@ -63,9 +63,12 @@ compose=(docker compose -f compose.yaml -f compose.production.yaml)
   (.services.frontend.ports[0].host_ip == "127.0.0.1") and
   (.services.frontend.ports[0].published | tostring == "3000") and
   ((.services.api.ports // []) | length == 0) and
-  ((.services.db.ports // []) | length == 0)
+  ((.services.db.ports // []) | length == 0) and
+  (.services.frontend.environment.SITE_URL // "" |
+    test("^https://[a-zA-Z0-9.-]+(:[0-9]+)?$"))
 ' >/dev/null || {
   echo 'Configuration must keep API/database ports private and set WEB_PORT=127.0.0.1:3000.' >&2
+  echo 'The effective frontend SITE_URL must be an HTTPS origin without a trailing slash; check .env and exported variables.' >&2
   exit 1
 }
 
