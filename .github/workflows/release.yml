@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      # Only trusted merged code is checked out, never an unmerged PR head.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - name: Create version tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/release.py check
+          version="v$(cat VERSION)"
+          python3 scripts/release.py notes > "$RUNNER_TEMP/release-notes.md"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if git show-ref --verify --quiet "refs/tags/$version"; then
+            test "$(git rev-parse "$version^{commit}")" = "$MERGE_SHA"
+          else
+            git tag -a "$version" "$MERGE_SHA" -m "Release $version"
+            git push origin "refs/tags/$version"
+          fi
+          if ! gh release view "$version" >/dev/null 2>&1; then
+            gh release create "$version" --verify-tag --title "$version" --notes-file "$RUNNER_TEMP/release-notes.md"
+          fi
