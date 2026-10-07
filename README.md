@@ -224,6 +224,26 @@ cd /srv/devcourse-finder
 
 If already logged in as root, only change to the deployment directory.
 
+For an initial deployment after host preparation, copy
+[`scripts/deploy-vds.sh`](scripts/deploy-vds.sh) to the server and run it as root:
+
+```sh
+bash deploy-vds.sh
+```
+
+The script clones the public repository into `/srv/devcourse-finder` if it has
+not been checked out, creates a protected production `.env` with a random
+database password only when no `.env` or existing database volume is present,
+builds and starts the stack, and checks the catalog API through the frontend.
+It preserves existing configuration and does not update an existing checkout.
+The frontend listens on `127.0.0.1:3000`; API and database ports remain private.
+The default public origin is `https://alekslesik.fvds.ru`. To use another domain
+when creating `.env`, run `SITE_URL=https://your-domain.example bash deploy-vds.sh`.
+For an existing `.env`, edit `SITE_URL` there instead. HTTPS configuration, daily
+backups, and catalog publication remain separate steps.
+
+For manual deployment, follow the steps below.
+
 Place the repository in `/srv/devcourse-finder`, copy `.env.example` to `.env`,
 and set a unique `POSTGRES_PASSWORD`, a stable `CATALOG_OPERATOR`, and the public
 HTTPS `SITE_URL`. Protect `.env` with `chmod 600 .env` and keep it out of version
