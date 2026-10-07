@@ -235,3 +235,19 @@ dialog.overlay::backdrop { background: transparent; }
   .workspace aside.filtersClosed {display: none;}
   .workspace aside.filtersOpen {display: block; margin-bottom: 24px;}
 }
+.card h3 {font-size: clamp(19px, 1.6vw, 23px); line-height: 1.35;}
+.cardTop .miniBadge {letter-spacing: .4px; font-size: 12px;}
+.tariff {font-size: 13px; font-weight: 600;}
+.enrollmentBadge {color: var(--warning); background: var(--warning-soft); font-size: 12px; padding: 4px 8px; border-radius: 6px; margin-top: 6px;}
+.compareChoice {min-height: 44px; align-items: center; margin: 0; width: 100%; border-radius: 8px;}
+.compareChoice:has(input:checked) {color: var(--accent); font-weight: 600 !important;}
+.cardFooter span {overflow-wrap: anywhere;}
+@media(max-width: 1050px) {
+  .offerInfo .enrollmentBadge {grid-column: 1 / -1; justify-self: start;}
+  .offerInfo .price, .offerInfo > small {grid-column: 1;}
+  .offerInfo .secondary {grid-row: auto; grid-column: 2;}
+}
+@media(max-width: 700px) {
+  .offerInfo {display: flex; gap: 4px;}
+  .offerInfo .secondary {margin: 12px 0 4px;}
+}

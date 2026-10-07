@@ -62,7 +62,7 @@ Deploy only through the existing manual release workflow.
 
 ## 7. Improve course cards (P2)
 
-- [ ] Complete.
+- [x] Complete.
 - Prioritize title, provider, verified full price, practical conditions, and actions.
 - Keep demo, enrollment, freshness, and unknown-price information explicit.
 - Use stable offer identifiers for card keys and consistent selectable comparison controls.
