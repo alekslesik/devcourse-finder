@@ -2,6 +2,7 @@
 import {useEffect,useState,useRef} from 'react';
 import type {Offer,Item,Response,ComparisonItem} from '../lib/catalog';
 import Modal from './modal';
+import {recordEvent as event} from '../lib/analytics';
 const languages:Record<string,string>={go:'Go',python:'Python',java:'Java',javascript:'JavaScript'};
 const experience:Record<string,string>={none:'Начинаю с нуля',basics:'Знаю основы',projects:'Пишу свои проекты',working:'Работаю разработчиком',switch:'Перехожу с другого языка'};
 const goals:Record<string,string>={try:'Попробовать программирование',job:'Подготовиться к первой работе',switch:'Сменить язык / направление',deepen:'Углубить знания'};
@@ -9,7 +10,6 @@ const directions:Record<string,string>={basics:'Основы',backend:'Backend',
 function money(i:Item){if(i.effective_price===null)return i.offer.price_kind==='from'?'Цена от · уточните у школы':'Уточнить цену';return i.effective_price===0?'Бесплатно':new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(i.effective_price/100)}
 function date(v:string){return new Date(v).toLocaleDateString('ru-RU')}
 function support(o:Offer){return o.mentor?'Персональный наставник':o.review?'Проверка заданий':'Самостоятельно'}
-function event(kind:string,extra:Record<string,unknown>={}){fetch('/api/v1/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),kind,...extra}),keepalive:true}).catch(()=>{})}
 function Select({label,name,values,defaultValue}:{label:string;name:string;values:Record<string,string>;defaultValue?:string}){return <label>{label}<select name={name} defaultValue={defaultValue||''}><option value="">Не важно</option>{Object.entries(values).map(([v,t])=><option value={v} key={v}>{t}</option>)}</select></label>}
 const searchParameterNames=new Set(['language','direction','experience','goal','budget','support','schedule','sort','min','max','hours','include_free','include_closed','page','page_size']);
 const urlParameterNames=new Set([...searchParameterNames,'compare']);

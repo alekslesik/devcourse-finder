@@ -12,7 +12,7 @@ Deploy only through the existing manual release workflow.
 
 ## 1. Isolate analytics failures (P0)
 
-- [ ] Complete.
+- [x] Complete.
 - Search must succeed when `crypto.randomUUID` is unavailable, event requests fail,
   or event serialization/transmission throws synchronously.
 - Use a supported cryptographic UUID fallback or skip analytics gracefully.
