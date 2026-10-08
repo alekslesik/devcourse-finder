@@ -15,7 +15,11 @@ for(const width of [360,768,1440])for(const theme of ['light','dark'] as const){
   };
   for(const [path,name] of [['/courses','catalog'],['/courses/demo-go-1','course'],['/compare?offers=demo-go-1-standard,closed-tariff,removed','comparison'],['/about','about'],['/courses?compare=demo-go-1-standard,removed','dialog']] as const){
    await page.goto(path);
-   if(name==='catalog')await expect(page.locator('.card')).toHaveCount(12);
+   if(name==='catalog'){
+    await expect(page.locator('.card')).toHaveCount(12);
+    await expect(page.locator('header').getByRole('link',{name:'DevCourseFinder — на главную'})).toBeVisible();
+    await expect(page.locator('.routeIllustration')).toBeVisible({visible:width>700});
+   }
    if(name==='dialog')await expect(page.getByRole('dialog').getByRole('table')).toBeVisible();
    await inspect(name);
   }

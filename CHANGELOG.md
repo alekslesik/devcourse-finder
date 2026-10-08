@@ -5,6 +5,10 @@ Merged pull requests receive the matching Git tag and GitHub Release.
 
 ## [0.3.0] - 2026-10-08
 
+- Rebrand the shared header, footer, page metadata, messenger cover and browser icons as DevCourseFinder using a responsive, theme-aware SVG identity.
+- Add minimal flat catalog and result-state illustrations without crowding mobile search.
+- Keep all desktop filter controls reachable when the sticky sidebar is taller than the viewport.
+
 - Add branded 1200×630 Open Graph and large-image Twitter cards for Telegram and other messengers, with route-specific titles and descriptions.
 - Pass the public site origin into frontend builds and ship preview assets in the production container.
 - Verify Telegram, WhatsApp and Facebook crawler HTML plus the public PNG in production route tests.
