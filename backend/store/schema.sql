@@ -53,3 +53,12 @@ CREATE TABLE IF NOT EXISTS catalog_candidates (
 CREATE INDEX IF NOT EXISTS catalog_candidates_due ON catalog_candidates(next_attempt_at,adapter,attempted_at);
 
 ALTER TABLE offers ADD COLUMN IF NOT EXISTS support_known boolean;
+
+-- Mapping and new course rows commit together. Deferred foreign keys allow
+-- identity reservation before the validated catalog upsert in the transaction.
+CREATE TABLE IF NOT EXISTS catalog_identities (
+ adapter text NOT NULL, external_id text NOT NULL, canonical_url text UNIQUE NOT NULL,
+ course_id text NOT NULL REFERENCES courses(id) DEFERRABLE INITIALLY DEFERRED,
+ offer_id text NOT NULL REFERENCES offers(id) DEFERRABLE INITIALLY DEFERRED,
+ PRIMARY KEY(adapter,external_id)
+);
