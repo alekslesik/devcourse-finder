@@ -16,3 +16,31 @@ services:
   frontend:
     environment:
       SITE_URL: ${SITE_URL:?Set the public HTTPS origin}
+  catalog-updater:
+    build:
+      context: ./backend
+    command: ["catalog-update", "serve"]
+    environment:
+      APP_ENV: production
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-devcourse}
+      PGUSER: ${POSTGRES_USER:-devcourse}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?required}
+      PGSSLMODE: disable
+    volumes:
+      - ./data:/data:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "devcourse-finder", "catalog-update", "health"]
+      interval: 30s
+      timeout: 7s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m

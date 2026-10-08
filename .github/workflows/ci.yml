@@ -97,6 +97,13 @@ jobs:
         with:
           fetch-depth: 0
       - run: docker compose config --quiet
+      - name: Validate production stack including the catalog worker
+        env:
+          POSTGRES_PASSWORD: compose-validation-only
+          CATALOG_OPERATOR: compose-validation
+          SITE_URL: https://example.com
+          WEB_PORT: 127.0.0.1:3000
+        run: docker compose -f compose.yaml -f compose.production.yaml config --quiet
       - name: Run Compose smoke test
         run: ./scripts/compose-smoke.sh
 
