@@ -239,9 +239,9 @@ The test builds and starts the stack under a temporary Compose project, validate
 ## Brand assets
 
 DevCourseFinder uses an outlined SVG wordmark and a code/route symbol with a mint
-waypoint. The shared header and footer adapt it to light and dark themes. A small,
-flat illustration accompanies the desktop catalog introduction; mobile screens
-keep the focus on search. State illustrations use the same semantic theme colors.
+waypoint. The shared header and footer adapt it to light and dark themes.
+The catalog introduction stays focused on its headline and search.
+State illustrations use the same semantic theme colors.
 
 Reusable light/dark lockups and the symbol live in `frontend/public/brand/`.
 `frontend/scripts/brand-lockup.svg` is the vector source; the wordmark contains

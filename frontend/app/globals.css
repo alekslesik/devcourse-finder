@@ -266,18 +266,13 @@ dialog.overlay::backdrop { background: transparent; }
 .brand svg {display: block; width: 100%; height: auto;}
 :root[data-theme="dark"] .brand {--logo-accent: #b6a1ff;}
 footer .brand {width: 238px;}
-.intro {display: grid; grid-template-columns: minmax(0,1fr) 230px; align-items: center; gap: 32px;}
-.introCopy {min-width: 0;}
-.routeIllustration {display: block; width: 100%; max-height: 160px;}
 .stateIcon svg {width: 32px; height: 32px;}
-@media(max-width: 1050px) {.intro {grid-template-columns: minmax(0,1fr) 170px; gap: 20px;} .intro h1 {font-size: 34px;} header {gap: 18px;} header .brand {width: 252px;}}
+@media(max-width: 1050px) {.intro h1 {font-size: 34px;} header {gap: 18px;} header .brand {width: 252px;}}
 @media(max-width: 700px) {
   header {display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 16px;}
   header .brand {width: 260px; grid-column: 1 / -1;}
   header .siteNav {width: auto; order: initial; grid-column: 1; margin: 0; align-self: center;}
   header .themeControl {grid-column: 2; margin: 0;}
-  .intro {display: block;}
   .intro h1 {font-size: 32px;}
-  .routeIllustration {display: none;}
   footer .brand {width: 230px;}
 }
