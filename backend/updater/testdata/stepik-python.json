@@ -1,0 +1,27 @@
+{
+  "courses": [
+    {
+      "id": 58852,
+      "title": "\"Поколение Python\": курс для начинающих",
+      "is_public": true,
+      "is_active": true,
+      "is_enabled": true,
+      "is_archived": false,
+      "is_censored": false,
+      "is_paid": false,
+      "is_self_paced": true,
+      "price": null,
+      "currency_code": null,
+      "enrollment_begin_date": null,
+      "enrollment_end_date": null,
+      "actions": {
+        "can_be_enrolled": {
+          "enabled": true
+        },
+        "can_be_bought": {
+          "enabled": false
+        }
+      }
+    }
+  ]
+}
