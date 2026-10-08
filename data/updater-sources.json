@@ -1,0 +1,16 @@
+{
+  "sources": [
+    {
+      "course_id": "stepik-golang",
+      "adapter": "stepik",
+      "remote_id": 54403,
+      "expected_title": "Программирование на Golang"
+    },
+    {
+      "course_id": "stepik-python-generation",
+      "adapter": "stepik",
+      "remote_id": 58852,
+      "expected_title": "\"Поколение Python\": курс для начинающих"
+    }
+  ]
+}

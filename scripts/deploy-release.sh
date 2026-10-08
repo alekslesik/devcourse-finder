@@ -69,7 +69,7 @@ mv "$partial" "$backup"
 partial=''
 echo "Database backup: $backup"
 echo "[STEP] Building and starting $tag ($sha)"
-"${compose[@]}" up --build -d --wait --wait-timeout 180 </dev/null
+"${compose[@]}" up --build -d --remove-orphans --wait --wait-timeout 180 </dev/null
 timeout --kill-after=2s 15 "${compose[@]}" exec --interactive=false -T api \
   wget -Y off -T 10 -qO- http://127.0.0.1:8080/health/ready </dev/null | jq -e '.ok == true' >/dev/null
 ready=false

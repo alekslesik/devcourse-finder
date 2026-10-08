@@ -97,6 +97,17 @@ jobs:
         with:
           fetch-depth: 0
       - run: docker compose config --quiet
+      - name: Validate production stack including the catalog worker
+        env:
+          POSTGRES_PASSWORD: compose-validation-only
+          CATALOG_OPERATOR: compose-validation
+          SITE_URL: https://example.com
+          WEB_PORT: 127.0.0.1:3000
+        run: docker compose -f compose.yaml -f compose.production.yaml config --quiet
+      - name: Verify rollback removes services absent from an older release
+        env:
+          RUN_DOCKER_DEPLOY_TESTS: "1"
+        run: python3 -m unittest discover -s scripts -p 'test_deploy_orphans.py'
       - name: Run Compose smoke test
         run: ./scripts/compose-smoke.sh
 

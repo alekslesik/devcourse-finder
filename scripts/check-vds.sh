@@ -55,9 +55,13 @@ else
   fail 'Configuration requires WEB_PORT=127.0.0.1:3000, private API/database ports, and an HTTPS SITE_URL'
 fi
 site_url=$(jq -r '.services.frontend.environment.SITE_URL // ""' <<<"$config")
+services=(db migrate api frontend)
+if jq -e '.services | has("catalog-updater")' <<<"$config" >/dev/null; then
+  services+=(catalog-updater)
+fi
 unset config
 
-for service in db migrate api frontend; do
+for service in "${services[@]}"; do
   if ! container=$(timeout --kill-after=2s 20 "${compose[@]}" ps --all --quiet "$service" 2>/dev/null) || [[ -z $container || $container == *$'\n'* ]]; then
     fail "$service: expected exactly one existing container"
     continue
@@ -137,7 +141,7 @@ if catalog=$(curl --fail --silent --connect-timeout 5 --max-time 15 http://127.0
   total=$(jq -r '.total' <<<"$catalog")
   pass "Frontend → API → database: catalog response is valid ($total courses)"
   if [[ $total == 0 ]]; then
-    echo '[INFO] An empty catalog is normal before explicit catalog publication.'
+    echo '[INFO] An empty catalog is normal until a verified import or automatic collection completes.'
   fi
 else
   fail 'Catalog request through the frontend failed or returned invalid JSON'
@@ -161,7 +165,7 @@ fi
 echo
 if (( failures == 0 )); then
   echo 'RESULT: PASS — local deployment checks passed.'
-  echo 'Backup scheduling and catalog publication must be verified separately.'
+  echo 'Backup scheduling and catalog collection results must be verified separately.'
 else
   echo "RESULT: FAIL — $failures check(s) failed."
   echo 'Inspect: docker compose -f compose.yaml -f compose.production.yaml logs --tail=100'

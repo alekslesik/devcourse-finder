@@ -1,5 +1,10 @@
 # Реальный каталог для явной публикации — 05.10.2026
 
+> Automatic production collection is documented in [catalog-updater.md](catalog-updater.md).
+> Its verified updates publish without a manual protocol, dry run or review PR.
+> The operator procedure below applies only to explicit manual catalog imports.
+
+
 Подготовлен [data/real-catalog.json](../data/real-catalog.json): **20 программ, по пять для Go, Python, Java и JavaScript, 24 тарифа, все demo=false**. Это отдельный набор; демонстрационные записи и автоматический запуск приложения сохранены. Ни один каталог не импортируется при старте.
 
 Официальные публичные страницы прочитаны при подготовке данных 05.10.2026 через веб-инструмент. Индивидуальные основания цены, набора, prerequisites и поддержки записаны в [машиночитаемой проверке источников](../research/catalog-review-2026-10-05.json). Такая проверка не подтверждает прохождение курса, качество обучения, оплату из конкретной страны или согласование партнёрской программы.

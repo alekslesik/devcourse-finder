@@ -3,6 +3,15 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.4.0] - 2026-10-08
+
+- Remove services absent from the selected release, including when rolling back with an older deployment script.
+
+- Add a separate production catalog updater scheduled at 09:00 and 21:00 Europe/Moscow, with automatic publication and no data-review PRs.
+- Enable verified Stepik Go/Python API sources; retain other catalog templates until dedicated adapters can verify their price and enrollment contracts.
+- Preserve manual course states and other tariffs, confirm anomalous prices/closures in separate runs, and commit catalog snapshots atomically with API cache invalidation.
+- Track collection runs, source failures and evidence hashes; add worker health and deployment checks without changing manual release deployment.
+
 ## [0.3.1] - 2026-10-08
 
 - Simplify the catalog introduction to a smaller, plain heading and a single supporting sentence.

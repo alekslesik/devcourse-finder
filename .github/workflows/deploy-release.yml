@@ -66,5 +66,5 @@ jobs:
           archive="/srv/devcourse-finder/incoming/$TAG-$SHA.tar"
           sshpass -e ssh -T "${options[@]}" "$target" 'install -d -m 0700 /srv/devcourse-finder/incoming'
           sshpass -e scp "${options[@]}" "$RUNNER_TEMP/release.tar" "$target:$archive"
-          sshpass -e ssh -T "${options[@]}" "$target" "bash -s -- '$TAG' '$SHA' '$DIGEST'" < "$RUNNER_TEMP/deploy-release.sh"
+          sshpass -e ssh -T "${options[@]}" "$target" "env COMPOSE_REMOVE_ORPHANS=1 bash -s -- '$TAG' '$SHA' '$DIGEST'" < "$RUNNER_TEMP/deploy-release.sh"
           printf '### Deployed release\n\n- Version: `%s`\n- Commit: `%s`\n' "$TAG" "$SHA" >> "$GITHUB_STEP_SUMMARY"

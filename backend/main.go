@@ -13,11 +13,13 @@ import (
 	"os/signal"
 	"slices"
 	"strings"
+	"syscall"
 	"time"
 	"unicode/utf8"
 
 	"devcourse-finder/catalog"
 	"devcourse-finder/store"
+	"devcourse-finder/updater"
 )
 
 func write(w http.ResponseWriter, status int, v any) {
@@ -87,6 +89,54 @@ func run() error {
 	defer db.Pool.Close()
 	if len(args) > 0 {
 		switch args[0] {
+		case "catalog-update":
+			if len(args) != 2 {
+				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-update serve|once|status|health", nil)
+			}
+			stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+			defer cancel()
+			if args[1] == "health" {
+				bounded, done := context.WithTimeout(stop, 5*time.Second)
+				defer done()
+				if err := updater.Health(bounded, db); err != nil {
+					return commandFailure("updater_health", "updater_unhealthy", "Catalog updater is not healthy", err)
+				}
+				return nil
+			}
+			if args[1] == "status" {
+				return updater.Status(stop, db, os.Stdout)
+			}
+			if args[1] != "serve" && args[1] != "once" {
+				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-update serve|once|status|health", nil)
+			}
+			configFile := os.Getenv("CATALOG_UPDATE_SOURCES")
+			if configFile == "" {
+				configFile = "/data/updater-sources.json"
+			}
+			templateFile := os.Getenv("CATALOG_UPDATE_TEMPLATES")
+			if templateFile == "" {
+				templateFile = "/data/real-catalog.json"
+			}
+			config, err := updater.LoadConfig(configFile, templateFile)
+			if err != nil {
+				return commandFailure("updater_config", "invalid_updater_configuration", "Cannot validate catalog updater configuration", err)
+			}
+			service := updater.Service{DB: db, Config: config}
+			if args[1] == "serve" {
+				err = service.Serve(stop)
+			} else {
+				bounded, done := context.WithTimeout(stop, 10*time.Minute)
+				defer done()
+				var result updater.Result
+				result, err = service.Run(bounded)
+				if err == nil && result.Status == "failed" {
+					err = fmt.Errorf("all catalog sources failed verification")
+				}
+			}
+			if err != nil {
+				return commandFailure("catalog_update", "catalog_update_failed", "Catalog collection did not complete", err)
+			}
+			return nil
 		case "migrate":
 			if err := db.Migrate(ctx); err != nil {
 				return commandFailure("migrate", "migration_failed", "Database migration failed", err)
@@ -140,7 +190,7 @@ func run() error {
 			return commandFailure("arguments", "invalid_arguments", "Unknown command", nil)
 		}
 	}
-	stop, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	go func() {
 		db.Cleanup(stop)

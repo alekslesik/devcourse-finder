@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -110,6 +111,61 @@ func (d *DB) Import(ctx context.Context, data catalog.Dataset, operator string, 
 	if dry {
 		return nil
 	}
+	if e = importTx(ctx, tx, old, data, operator); e != nil {
+		return e
+	}
+	return tx.Commit(ctx)
+}
+
+// UpdateVerified merges observations against the current catalog while holding
+// the same publication lock as manual imports. The callback must not fetch HTTP.
+func (d *DB) UpdateVerified(ctx context.Context, domains []string, operator string, merge func(context.Context, pgx.Tx, []catalog.Course) ([]catalog.Course, error)) (int, error) {
+	tx, err := d.Pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(829104)"); err != nil {
+		return 0, err
+	}
+	old, err := load(ctx, tx)
+	if err != nil {
+		return 0, err
+	}
+	courses, err := merge(ctx, tx, old)
+	if err != nil {
+		return 0, err
+	}
+	if len(courses) > 0 {
+		// Preserve domains approved by earlier operator imports, including
+		// independently added tariffs retained by this merge.
+		var previousDomains []byte
+		if err = tx.QueryRow(ctx, "SELECT value FROM settings WHERE key='domains'").Scan(&previousDomains); err != nil && err != pgx.ErrNoRows {
+			return 0, err
+		}
+		var approved []string
+		if len(previousDomains) > 0 {
+			if err = json.Unmarshal(previousDomains, &approved); err != nil {
+				return 0, err
+			}
+		}
+		data := catalog.Dataset{Domains: append(approved, domains...), Courses: courses}
+		raw, err := json.Marshal(data)
+		if err != nil {
+			return 0, err
+		}
+		if _, err = catalog.Decode(bytes.NewReader(raw)); err != nil {
+			return 0, err
+		}
+		if err = importTx(ctx, tx, old, data, operator); err != nil {
+			return 0, err
+		}
+	}
+	return len(courses), tx.Commit(ctx)
+}
+
+func importTx(ctx context.Context, tx pgx.Tx, old []catalog.Course, data catalog.Dataset, operator string) error {
+	var e error
 	for _, c := range data.Courses {
 		_, e = tx.Exec(ctx, `INSERT INTO courses VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT(id) DO UPDATE SET slug=EXCLUDED.slug,title=EXCLUDED.title,provider=EXCLUDED.provider,language=EXCLUDED.language,direction=EXCLUDED.direction,summary=EXCLUDED.summary,audience=EXCLUDED.audience,goals=EXCLUDED.goals,topics=EXCLUDED.topics,source=EXCLUDED.source,checked_at=EXCLUDED.checked_at,status=EXCLUDED.status,demo=EXCLUDED.demo`, c.ID, c.Slug, c.Title, c.Provider, c.Language, c.Direction, c.Summary, c.Audience, c.Goals, c.Topics, c.Source, c.CheckedAt, c.Status, c.Demo)
 		if e != nil {
@@ -148,7 +204,7 @@ func (d *DB) Import(ctx context.Context, data catalog.Dataset, operator string, 
 	if _, e = tx.Exec(ctx, "INSERT INTO settings VALUES('domains',$1) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value", raw); e != nil {
 		return e
 	}
-	return tx.Commit(ctx)
+	return nil
 }
 func (d *DB) Domains(ctx context.Context) []string {
 	var raw []byte

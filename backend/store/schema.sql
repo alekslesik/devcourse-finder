@@ -19,3 +19,20 @@ CREATE TABLE IF NOT EXISTS imports(id bigserial PRIMARY KEY,created_at timestamp
 CREATE TABLE IF NOT EXISTS events(id text PRIMARY KEY,created_at timestamptz NOT NULL DEFAULT now(),kind text NOT NULL,course_id text, language text,goal text,total integer);
 CREATE INDEX IF NOT EXISTS events_time ON events(created_at);
 CREATE TABLE IF NOT EXISTS daily_stats(day date,kind text,course_id text,language text,goal text,count bigint NOT NULL,PRIMARY KEY(day,kind,course_id,language,goal));
+
+-- Automatic collection is independent of operator imports, but publication uses
+-- the existing imports audit and revision so API caches invalidate normally.
+CREATE TABLE IF NOT EXISTS updater_runs (
+ id bigserial PRIMARY KEY, started_at timestamptz NOT NULL DEFAULT now(),
+ finished_at timestamptz, status text NOT NULL DEFAULT 'running',
+ published integer NOT NULL DEFAULT 0, failed integer NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS updater_sources (
+ source_id text PRIMARY KEY, attempted_at timestamptz NOT NULL,
+ verified_at timestamptz, code text NOT NULL, failures integer NOT NULL DEFAULT 0,
+ evidence_sha256 text
+);
+CREATE TABLE IF NOT EXISTS updater_candidates (
+ source_id text PRIMARY KEY, fingerprint text NOT NULL,
+ observed_at timestamptz NOT NULL, confirmations integer NOT NULL
+);

@@ -1,5 +1,10 @@
 # Регламент публикации каталога
 
+> Automatic production collection is documented in [catalog-updater.md](catalog-updater.md).
+> Its verified updates publish without a manual protocol, dry run or review PR.
+> The operator procedure below applies only to explicit manual catalog imports.
+
+
 ## 1. Назначение и ответственность
 
 Регламент описывает проверяемую публикацию реального каталога DevCourse Finder и закрывает требование MVP-DATA-02. Его выполняет оператор, имеющий доступ к файлу каталога, приложению и резервному копированию PostgreSQL.
