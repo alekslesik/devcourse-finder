@@ -24,6 +24,7 @@ type Course struct {
 	Demo      bool      `json:"demo"`
 }
 type Offer struct {
+	SupportKnown   *bool      `json:"support_known,omitempty"`
 	ID             string     `json:"id"`
 	Name           string     `json:"name"`
 	Price          *int64     `json:"price"`
@@ -70,7 +71,7 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			if f.Experience == "experienced" {
 				ok := false
 				for _, a := range c.Audience {
-					if a != "none" {
+					if a != "none" && a != "unknown" {
 						ok = true
 					}
 				}
@@ -106,6 +107,9 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			if f.Hours != nil && (o.Hours == nil || *o.Hours > *f.Hours) {
 				continue
 			}
+			if f.Support != "" && o.SupportKnown != nil && !*o.SupportKnown {
+				continue
+			}
 			if f.Support == "review" && !o.Review || f.Support == "mentor" && !o.Mentor || f.Support == "self" && (o.Review || o.Mentor) {
 				continue
 			}
@@ -121,6 +125,9 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			}
 			if f.Min != nil || f.Max != nil {
 				reasons = append(reasons, "В пределах бюджета")
+			}
+			if f.Support != "" && o.SupportKnown != nil && !*o.SupportKnown {
+				continue
 			}
 			if f.Support == "review" {
 				reasons = append(reasons, "Проверка кода человеком")

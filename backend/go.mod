@@ -3,6 +3,7 @@ module devcourse-finder
 go 1.24.0
 
 require (
+	golang.org/x/net v0.38.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 )

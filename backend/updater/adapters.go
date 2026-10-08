@@ -16,10 +16,11 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
-	PriceUnknown bool   `json:"price_unknown,omitempty"`
-	Price        *int64 `json:"price,omitempty"`
-	Enrollment   string `json:"enrollment,omitempty"`
-	Schedule     string `json:"schedule,omitempty"`
+	ValidUntil   *time.Time `json:"valid_until,omitempty"`
+	PriceUnknown bool       `json:"price_unknown,omitempty"`
+	Price        *int64     `json:"price,omitempty"`
+	Enrollment   string     `json:"enrollment,omitempty"`
+	Schedule     string     `json:"schedule,omitempty"`
 }
 
 func decodeJSON(data []byte, v any) error {

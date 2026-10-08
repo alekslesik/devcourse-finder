@@ -71,12 +71,12 @@ func Decode(r io.Reader) (Dataset, error) {
 			return d, fail("audience, goals and offers required")
 		}
 		for _, v := range c.Audience {
-			if !slices.Contains([]string{"none", "basics", "projects", "working", "switch"}, v) {
+			if !slices.Contains([]string{"none", "basics", "projects", "working", "switch", "unknown"}, v) {
 				return d, fail("invalid audience")
 			}
 		}
 		for _, v := range c.Goals {
-			if !slices.Contains([]string{"try", "job", "switch", "deepen"}, v) {
+			if !slices.Contains([]string{"try", "job", "switch", "deepen", "unknown"}, v) {
 				return d, fail("invalid goal")
 			}
 		}

@@ -51,3 +51,5 @@ CREATE TABLE IF NOT EXISTS catalog_candidates (
  PRIMARY KEY(adapter,external_id)
 );
 CREATE INDEX IF NOT EXISTS catalog_candidates_due ON catalog_candidates(next_attempt_at,adapter,attempted_at);
+
+ALTER TABLE offers ADD COLUMN IF NOT EXISTS support_known boolean;

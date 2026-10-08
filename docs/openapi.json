@@ -829,6 +829,10 @@
           "valid_until": {
             "type": "string",
             "format": "date-time"
+          },
+          "support_known": {
+            "type": "boolean",
+            "description": "False when review/mentor evidence is unavailable; omitted for legacy curated offers."
           }
         },
         "required": [
