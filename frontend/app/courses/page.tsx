@@ -1,10 +1,9 @@
 import type {Metadata} from 'next';
+import {socialMetadata} from '../../lib/social-metadata';
 import Finder from '../finder';
 
 export const metadata:Metadata={
- title:'Каталог курсов для разработчиков — DevCourse',
- description:'Подберите обучение Go, Python, Java или JavaScript по опыту, цели, бюджету и формату поддержки.',
- alternates:{canonical:'/courses'},
+ ...socialMetadata('Каталог курсов для разработчиков — DevCourseFinder','Подберите обучение Go, Python, Java или JavaScript по опыту, цели, бюджету и формату поддержки.','/courses'),
  robots:{index:false,follow:true},
 };
 

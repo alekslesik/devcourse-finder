@@ -24,7 +24,7 @@ if [[ -n "${CODEX_PROXY_CERT:-}" ]]; then
   build_args+=(--secret "id=proxy_ca,src=$CODEX_PROXY_CERT")
 fi
 docker build "${build_args[@]}" -t "$E2E_API_IMAGE" backend
-docker build "${build_args[@]}" -t "$E2E_WEB_IMAGE" frontend
+docker build "${build_args[@]}" --build-arg "SITE_URL=$SITE_URL" -t "$E2E_WEB_IMAGE" frontend
 python3 scripts/e2e/catalog.py "$workspace/catalog.json"
 chmod 644 "$workspace/catalog.json"
 "${compose[@]}" up -d --no-build db migrate

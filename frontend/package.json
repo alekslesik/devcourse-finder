@@ -11,7 +11,7 @@
     "api:check": "redocly lint ../docs/openapi.json --extends=minimal && npm run api:generate && git diff --exit-code -- lib/api.generated.ts",
     "test:routes": "node --test scripts/routes.test.mjs",
     "test:e2e": "playwright test",
-    "build:test": "API_URL=http://127.0.0.1:8091 next build --webpack"
+    "build:test": "API_URL=http://127.0.0.1:8091 SITE_URL=https://courses.example next build --webpack"
   },
   "dependencies": {
     "next": "^16.0.0",

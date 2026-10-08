@@ -1,4 +1,4 @@
-# DevCourse Finder
+# DevCourseFinder
 
 Find and compare programming courses by language, experience level, learning goals, and budget.
 
@@ -235,6 +235,49 @@ Run the same isolated Compose smoke test locally with:
 ```
 
 The test builds and starts the stack under a temporary Compose project, validates and imports the demo catalog, checks health, search, program and comparison endpoints, restarts the stack without deleting its database volume, verifies that the catalog remains available, and removes all temporary resources.
+
+## Brand assets
+
+DevCourseFinder uses an outlined SVG wordmark and a code/route symbol with a mint
+waypoint. The shared header and footer adapt it to light and dark themes. A small,
+flat illustration accompanies the desktop catalog introduction; mobile screens
+keep the focus on search. State illustrations use the same semantic theme colors.
+
+Reusable light/dark lockups and the symbol live in `frontend/public/brand/`.
+`frontend/scripts/brand-lockup.svg` is the vector source; the wordmark contains
+outlines, so no font download is required. Its Open Sans license is included in
+`frontend/public/brand/NOTICE.txt`. Browser and Apple touch icons are shipped in
+`frontend/public/`. The brand does not change the deployment directory or database.
+
+## Messenger link previews
+
+Public pages include Open Graph and `summary_large_image` Twitter metadata in
+server HTML. Telegram, WhatsApp, and other supporting messengers can show the
+DevCourseFinder cover, page title, and description without running JavaScript. Course
+links use the program's own title and summary; all pages share a branded
+1200 × 630 PNG at `/social-preview-v2.png`.
+
+Set `SITE_URL` to the public HTTPS origin **before building** production images.
+Compose forwards it to the frontend build and runtime. Rebuild the frontend when
+the domain changes. For a direct Docker build, pass
+`--build-arg SITE_URL=https://your-domain.example`; setting only the runtime
+variable does not rewrite metadata in prerendered pages. The runtime image ships
+`public/` alongside the standalone Next.js server.
+
+The editable cover source is `frontend/scripts/social-preview.svg`; the PNG is
+committed, so production needs no fonts or rendering service. To regenerate it,
+install Open Sans locally and run from `frontend/`:
+
+```sh
+node --input-type=module -e "import sharp from 'sharp'; await sharp('scripts/social-preview.svg').png().toFile('public/social-preview-v2.png')"
+```
+
+Bump the image filename and metadata reference when changing the cover so image
+caches can distinguish versions. After deployment, check the page's `og:*` tags
+and that its absolute image URL returns HTTP 200 with `image/png`. Messenger
+previews are cached: old sent messages may keep an earlier card. In Telegram,
+request a refresh using `@WebpageBot`, then send the link again with previews
+enabled. Per-chat privacy settings and the messenger determine the final layout.
 
 ## Public routes and contract
 

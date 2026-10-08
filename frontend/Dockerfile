@@ -9,7 +9,8 @@ RUN --mount=type=secret,id=proxy_ca \
 
 FROM node:22-alpine AS build
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+ARG SITE_URL=http://localhost:3000
+ENV NEXT_TELEMETRY_DISABLED=1 SITE_URL=$SITE_URL
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
@@ -23,6 +24,7 @@ ENV HOSTNAME=0.0.0.0 \
 
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
 
 USER node
 EXPOSE 3000

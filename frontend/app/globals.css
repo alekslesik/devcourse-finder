@@ -39,8 +39,6 @@ input[type=number]::-webkit-inner-spin-button { appearance: none; }
 header { max-width: 1280px; min-height: 80px; display: flex; align-items: center; gap: 28px; margin: auto; padding: 16px 28px; border-bottom: 1px solid var(--line); }
 .brand { font-size: 24px; font-weight: 800; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .brand:hover { text-decoration: none; }
-.brandIcon { font-size: 16px; letter-spacing: -1px; background: var(--accent); color: var(--accent-text); border-radius: 9px; padding: 5px 8px; }
-.brandDot { color: var(--accent); margin-left: -7px; }
 .headerNote,.quiet { color: var(--muted); font-size: 14px; }
 .quiet { margin-left: auto; }
 main { max-width: 1280px; padding: 0 28px; margin: auto; }
@@ -55,7 +53,7 @@ h1 span { color: var(--accent); }
 .eyebrow { font-size: 12px; letter-spacing: 1.5px; font-weight: 700; color: var(--muted); }
 .mobileBreak { display: none; }
 .workspace { display: grid; grid-template-columns: 280px minmax(0,1fr); gap: 28px; align-items: start; }
-aside { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; position: sticky; top: 20px; }
+aside { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; position: sticky; top: 20px; max-height: calc(100dvh - 40px); overflow-y: auto; scrollbar-width: thin; }
 .filterTitle { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
 .filterTitle h2 { font-size: 19px; margin: 0; }
 .textButton { border-color: transparent; background: transparent; color: var(--accent); padding: 6px 8px; font-size: 13px; }
@@ -182,7 +180,7 @@ dialog.overlay::backdrop { background: transparent; }
   .intro p { font-size: 14px; }
   .intro br { display: none; }
   .workspace { display: block; }
-  aside { position: static; margin-bottom: 20px; padding: 20px; }
+  aside { position: static; max-height: none; overflow-y: visible; margin-bottom: 20px; padding: 20px; }
   .resultsHeading h2 { font-size: 22px; }
   .sort { width: 100%; }
   .trustLine { gap: 10px; }
@@ -263,3 +261,23 @@ dialog.overlay::backdrop { background: transparent; }
 .document a:not(.linkButton) {text-decoration: underline; text-underline-offset: 3px;}
 .languageChoice span {min-height: 44px;}
 .externalMark {display: inline-block; width: 1em; height: 1em; margin-left: 4px; vertical-align: -1px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;}
+/* DevCourseFinder identity: scalable wordmark and restrained flat graphics. */
+.brand {width: 286px; max-width: 100%; min-height: 44px; color: var(--ink); --logo-accent: #7555e8;}
+.brand svg {display: block; width: 100%; height: auto;}
+:root[data-theme="dark"] .brand {--logo-accent: #b6a1ff;}
+footer .brand {width: 238px;}
+.intro {display: grid; grid-template-columns: minmax(0,1fr) 230px; align-items: center; gap: 32px;}
+.introCopy {min-width: 0;}
+.routeIllustration {display: block; width: 100%; max-height: 160px;}
+.stateIcon svg {width: 32px; height: 32px;}
+@media(max-width: 1050px) {.intro {grid-template-columns: minmax(0,1fr) 170px; gap: 20px;} .intro h1 {font-size: 34px;} header {gap: 18px;} header .brand {width: 252px;}}
+@media(max-width: 700px) {
+  header {display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 16px;}
+  header .brand {width: 260px; grid-column: 1 / -1;}
+  header .siteNav {width: auto; order: initial; grid-column: 1; margin: 0; align-self: center;}
+  header .themeControl {grid-column: 2; margin: 0;}
+  .intro {display: block;}
+  .intro h1 {font-size: 32px;}
+  .routeIllustration {display: none;}
+  footer .brand {width: 230px;}
+}
