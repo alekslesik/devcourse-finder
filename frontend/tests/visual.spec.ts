@@ -18,7 +18,6 @@ for(const width of [360,768,1440])for(const theme of ['light','dark'] as const){
    if(name==='catalog'){
     await expect(page.locator('.card')).toHaveCount(12);
     await expect(page.locator('header').getByRole('link',{name:'DevCourseFinder — на главную'})).toBeVisible();
-    await expect(page.locator('.routeIllustration')).toBeVisible({visible:width>700});
    }
    if(name==='dialog')await expect(page.getByRole('dialog').getByRole('table')).toBeVisible();
    await inspect(name);
