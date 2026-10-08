@@ -5,6 +5,7 @@ Merged pull requests receive the matching Git tag and GitHub Release.
 
 ## [0.3.1] - 2026-10-08
 
+- Simplify the catalog introduction to a smaller, plain heading and a single supporting sentence.
 - Add restrained, clipped circular background accents that adapt to light and dark themes.
 - Remove the decorative catalog route illustration and replace the theme dropdown with an accessible sun/system/moon capsule that preserves saved and system preferences.
 

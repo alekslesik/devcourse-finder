@@ -62,7 +62,7 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  const items=data?.items||[],page=data?.page||1;
  const hasFilters=Array.from(params?.keys()||[]).some(key=>!['sort','page','page_size','compare'].includes(key));
  return <>
- <main><section className="intro"><div className="eyebrow">МЕНЬШЕ ПОИСКА. БОЛЬШЕ ПРАКТИКИ.</div><h1>Учиться тому,<br className="mobileBreak"/> что нужно <span>вам.</span></h1><p>Сравните обучение разработке по опыту, цели и бюджету.<br/> От первого «Hello, world!» до следующего шага в карьере.</p></section>
+ <main><section className="intro"><h1>Найдите свой курс</h1><p>Сравните курсы по опыту, цели и бюджету.</p></section>
  <button ref={filterButton} className="mobileFilters secondary" aria-expanded={filtersOpen} aria-controls="catalog-filters" onClick={()=>setFiltersOpen(v=>!v)}>{filtersOpen?'Скрыть фильтры':'Фильтры'}{hasFilters?' · '+Array.from(params?.keys()||[]).filter(k=>k in filterLabels).length:''}</button>
  <div className="workspace"><aside id="catalog-filters" className={filtersOpen?'filtersOpen':'filtersClosed'}><div className="filterTitle"><h2>Ваш маршрут</h2><button className="textButton" onClick={()=>navigate(new URLSearchParams())}>Сбросить</button></div>
  {params&&<form key={formRevision} onSubmit={search} onChange={e=>{const form=e.currentTarget;const input=form.elements.namedItem('max') as HTMLInputElement;input.setCustomValidity('')}}>
