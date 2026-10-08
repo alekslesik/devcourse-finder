@@ -36,3 +36,18 @@ CREATE TABLE IF NOT EXISTS updater_candidates (
  source_id text PRIMARY KEY, fingerprint text NOT NULL,
  observed_at timestamptz NOT NULL, confirmations integer NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS discovery_feeds (
+ feed_id text PRIMARY KEY, cursor integer NOT NULL DEFAULT 0,
+ attempted_at timestamptz, verified_at timestamptz, code text NOT NULL DEFAULT 'pending',
+ failures integer NOT NULL DEFAULT 0, candidates integer NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS catalog_candidates (
+ adapter text NOT NULL, external_id text NOT NULL, canonical_url text UNIQUE NOT NULL,
+ feed_id text NOT NULL, state text NOT NULL DEFAULT 'pending', code text NOT NULL DEFAULT 'pending',
+ first_seen_at timestamptz NOT NULL DEFAULT now(), last_seen_at timestamptz NOT NULL DEFAULT now(),
+ attempted_at timestamptz, next_attempt_at timestamptz NOT NULL DEFAULT now(),
+ failures integer NOT NULL DEFAULT 0, evidence_sha256 text,
+ PRIMARY KEY(adapter,external_id)
+);
+CREATE INDEX IF NOT EXISTS catalog_candidates_due ON catalog_candidates(next_attempt_at,adapter,attempted_at);

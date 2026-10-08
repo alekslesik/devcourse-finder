@@ -22,6 +22,7 @@ type Source struct {
 	ExpectedTitle string `json:"expected_title,omitempty"`
 }
 type Config struct {
+	Discovery []Feed          `json:"discovery,omitempty"`
 	Sources   []Source        `json:"sources"`
 	Templates catalog.Dataset `json:"-"`
 }
@@ -54,6 +55,19 @@ func LoadConfig(configFile, catalogFile string) (Config, error) {
 	return c, c.Validate()
 }
 func (c Config) Validate() error {
+	if len(c.Discovery) > 10 {
+		return errors.New("too many discovery feeds")
+	}
+	feedIDs := map[string]bool{}
+	for _, f := range c.Discovery {
+		if err := validateFeed(f); err != nil {
+			return err
+		}
+		if feedIDs[f.ID] {
+			return errors.New("duplicate feed")
+		}
+		feedIDs[f.ID] = true
+	}
 	if len(c.Sources) == 0 || len(c.Sources) > 100 {
 		return errors.New("expected 1 to 100 sources")
 	}
