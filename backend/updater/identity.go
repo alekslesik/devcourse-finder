@@ -31,13 +31,17 @@ func bindIdentity(ctx context.Context, tx pgx.Tx, candidate Candidate, record ca
 	}
 	if matched >= 0 {
 		current := old[matched]
+		source, err := canonical(current.Source)
+		if err != nil || source != candidate.URL {
+			return record, ErrIdentity
+		}
 		record.ID = current.ID
 		record.Slug = current.Slug
 		record.Source = current.Source
 		offers := []catalog.Offer{}
 		for _, o := range current.Offers {
 			clean, e := canonical(o.URL)
-			if offerID != "" && o.ID == offerID || offerID == "" && e == nil && clean == candidate.URL {
+			if e == nil && clean == candidate.URL && (offerID != "" && o.ID == offerID || offerID == "") {
 				offers = append(offers, o)
 			}
 		}

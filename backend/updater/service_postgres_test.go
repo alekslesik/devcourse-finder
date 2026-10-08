@@ -61,6 +61,7 @@ func productionConfig(t *testing.T) Config {
 	if err != nil {
 		t.Fatal(err)
 	}
+	c.Discovery = nil
 	return c
 }
 func clientResponse(status int, body string) *http.Client {

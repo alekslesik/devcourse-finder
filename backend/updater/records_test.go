@@ -11,14 +11,14 @@ import (
 func TestRecordHasUnknownClassificationsAndSafeText(t *testing.T) {
 	zero := int64(0)
 	c, err := normalizedRecord(Candidate{Adapter: "otus", ExternalID: "python-basic", URL: "https://otus.ru/lessons/python-basic"}, "<b>Python</b>", "<p>Программа курса</p><script>danger()</script><style>hidden</style>", "OTUS", Observation{Price: &zero, Enrollment: "open"}, time.Now())
-	if err != nil || c.Summary != "Программа курса" || c.Audience[0] != "unknown" || c.Goals[0] != "unknown" {
+	if err != nil || c.Summary != "Программа курса" || c.Audience[0] != "unknown" || c.Goals[0] != "unknown" || c.Direction != "unknown" {
 		t.Fatalf("misleading/unsafe record %#v %v", c, err)
 	}
 	raw, _ := json.Marshal(catalog.Dataset{Domains: []string{"otus.ru"}, Courses: []catalog.Course{c}})
 	if _, err = catalog.Decode(bytes.NewReader(raw)); err != nil {
 		t.Fatal(err)
 	}
-	for _, f := range []catalog.Filter{{Experience: "experienced"}, {Experience: "none"}, {Goal: "job"}, {Support: "self"}} {
+	for _, f := range []catalog.Filter{{Experience: "experienced"}, {Experience: "none"}, {Goal: "job"}, {Support: "self"}, {Direction: "basics"}} {
 		if len(catalog.Search([]catalog.Course{c}, f, time.Now())) != 0 {
 			t.Fatal("unknown evidence matched a confirmed filter", f)
 		}

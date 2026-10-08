@@ -61,7 +61,7 @@ func Decode(r io.Reader) (Dataset, error) {
 		}
 		ids[c.ID] = true
 		slugs[c.Slug] = true
-		if c.Title == "" || c.Provider == "" || !slices.Contains([]string{"go", "python", "java", "javascript"}, c.Language) || !slices.Contains([]string{"basics", "backend", "frontend", "fullstack", "automation"}, c.Direction) {
+		if c.Title == "" || c.Provider == "" || !slices.Contains([]string{"go", "python", "java", "javascript"}, c.Language) || !slices.Contains([]string{"basics", "backend", "frontend", "fullstack", "automation", "unknown"}, c.Direction) {
 			return d, fail("required name, provider, language, direction")
 		}
 		if !slices.Contains([]string{"draft", "published", "archived"}, c.Status) || c.CheckedAt.IsZero() || c.CheckedAt.After(time.Now().Add(24*time.Hour)) || !SafeURL(c.Source, d.Domains) {

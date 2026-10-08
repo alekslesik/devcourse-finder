@@ -97,7 +97,7 @@ func normalizedRecord(candidate Candidate, title, summary, provider string, o Ob
 	if len(id) > 70 {
 		id = candidate.Adapter + "-" + fingerprint([]byte(candidate.ExternalID))[:24]
 	}
-	direction := "basics"
+	direction := "unknown"
 	if strings.Contains(strings.ToLower(title), "backend") || strings.Contains(strings.ToLower(title), "бэкенд") {
 		direction = "backend"
 	}

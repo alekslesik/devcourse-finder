@@ -14,10 +14,13 @@ func candidateEndpoint(c Candidate) string {
 	if c.Adapter == "stepik" {
 		return "https://stepik.org/api/courses/" + c.ExternalID
 	}
+	if c.Adapter == "otus" || c.Adapter == "yandex" || c.Adapter == "hexlet" {
+		return c.URL + "/"
+	}
 	return c.URL
 }
 func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
-	if _, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok {
+	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
 		return catalog.Course{}, Observation{}, ErrSource
 	}
 	if c.Adapter == "stepik" {
@@ -145,7 +148,14 @@ func collectStructured(data []byte, c Candidate, now time.Time) (catalog.Course,
 				continue
 			}
 			if currency == "RUB" {
-				o.Price = &price
+				// Positive JSON-LD amounts from providers whose full-payment
+				// contract is not verified may be monthly subscription prices.
+				// Keep paid evidence, but do not advertise an exact full amount.
+				if price > 0 && c.Adapter != "otus" {
+					o.PriceUnknown = true
+				} else {
+					o.Price = &price
+				}
 			} else if price > 0 && currency != "" {
 				o.PriceUnknown = true
 			} else {

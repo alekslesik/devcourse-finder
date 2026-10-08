@@ -45,8 +45,8 @@ func TestStructuredProvidersRejectIntroInstallmentsAndRecommendations(t *testing
 		b, _ := json.Marshal(node)
 		return []byte(`<script type="application/ld+json">` + string(b) + `</script>`)
 	}
-	if _, o, err := collectCandidate(html(), c, now); err != nil || o.Price == nil || *o.Price != 8500000 {
-		t.Fatal("full offer rejected", err)
+	if _, o, err := collectCandidate(html(), c, now); err != nil || o.Price != nil || !o.PriceUnknown {
+		t.Fatal("unverified provider amount advertised as full price", err)
 	}
 	offer := node["offers"].(map[string]any)
 	offer["priceSpecification"] = map[string]any{"billingDuration": "P1M"}

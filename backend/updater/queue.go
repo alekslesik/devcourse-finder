@@ -148,10 +148,16 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		}
 		if failures > 0 {
 			stats.Failed++
+			// A failed detail read breaks consecutive anomaly confirmation just
+			// as it does for curated sources; retries cannot skip missing evidence.
+			if _, err = s.DB.Pool.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
+			 (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)`, w.Adapter, w.ExternalID); err != nil {
+				return stats, err
+			}
 		}
 		// Each completed item persists its own retry/refresh time. A process killed
 		// after claiming leaves only a 15-minute lease, never a permanent in-flight row.
-		if _, err = s.DB.Pool.Exec(ctx, `UPDATE catalog_candidates SET state=$3,code=$4,failures=$5,next_attempt_at=now()+$6::interval,evidence_sha256=NULLIF($7,'') WHERE adapter=$1 AND external_id=$2`, w.Adapter, w.ExternalID, state, code, failures, delay.String(), digest); err != nil {
+		if _, err = s.DB.Pool.Exec(ctx, `UPDATE catalog_candidates SET state=$3,code=$4,failures=$5,next_attempt_at=now()+$6*interval '1 second',evidence_sha256=NULLIF($7,'') WHERE adapter=$1 AND external_id=$2`, w.Adapter, w.ExternalID, state, code, failures, delay.Seconds(), digest); err != nil {
 			return stats, err
 		}
 		level := slog.LevelInfo

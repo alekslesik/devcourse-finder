@@ -54,3 +54,29 @@ for(const invalidity of ['stale','expired'] as const){
   await expect(page.locator('.card .price')).toHaveText('Уточнить цену');
  });
 }
+
+
+test('discovered courses do not invent support when evidence is unknown',async({page})=>{
+ await page.route('**/api/v1/courses*',async route=>{
+  const response=await route.fetch();
+  const body=await response.json();
+  const item=body.items[0];
+  item.offer.support_known=false;
+  item.offer.review=false;
+  item.offer.mentor=false;
+  await route.fulfill({json:{...body,items:[item],total:1}});
+ });
+ await page.goto('/courses');
+ await expect(page.locator('.card .facts')).toContainText('Поддержка не подтверждена');
+ await expect(page.locator('.card .facts')).not.toContainText('Самостоятельно');
+ await page.route('**/api/v1/compare*',async route=>{
+  const response=await route.fetch();
+  const body=await response.json();
+  for(const item of body){if(!item.unavailable){item.offer.support_known=false;item.offer.review=false;item.offer.mentor=false}}
+  await route.fulfill({json:body});
+ });
+ await page.goto('/courses?compare=demo-go-1-standard');
+ await expect(page.getByRole('dialog').getByRole('table')).toBeVisible();
+ await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Проверка кода',exact:true})})).toContainText('Не подтверждено');
+ await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Не подтверждено');
+});

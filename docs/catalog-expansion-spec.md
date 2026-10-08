@@ -1,8 +1,8 @@
 # Automatic catalog discovery and expansion
 
-The v0.4 updater refreshes two configured courses. It does not yet find new ones.
-A large catalog requires discovery as well as refresh; adding many unchecked
-IDs to the current source file is not sufficient.
+The v0.4 updater refreshed two configured courses. Version 0.5 adds automatic
+discovery and a persistent candidate pipeline. This document records the six
+implementation tasks and the remaining measured catalog-size goal.
 
 ## Goal and scope
 
@@ -95,3 +95,46 @@ integration contract. Anonymous `/api/courses?search=...` and `/api/search-resul
 requests returned HTTP 403 from this environment. Discovery must therefore verify
 an official usable catalog/feed/API route rather than assume these requests work.
 No unverified bulk candidates were added to production configuration.
+
+
+## Implementation report (v0.5.0)
+
+Each numbered task has one commit in the implementation PR:
+
+- [x] 1. Official sitemap discovery, canonical provider IDs, provenance and durable queue.
+- [x] 2. Sanitized complete records with unknown classification/support/price evidence.
+- [x] 3. Transactional identity mapping and protection of existing curated tariffs/URLs.
+- [x] 4. Stepik detail and conservative structured-course adapters; recorded OTUS full
+  price and expired Yandex contracts. Other provider amounts stay unknown until their
+  full-payment contract is verified. Unavailable/unsupported pages remain unpublished.
+- [x] 5. Twice-daily bounded provider/refresh lanes, persisted cursors, leases and backoff.
+- [x] 6. Automatic transactional publication/history/cache invalidation and database
+  coverage/feed/queue diagnostics; release notes and integration verification.
+
+Provider access is a measured deployment condition, not an adapter guarantee.
+OTUS discovery and full-price publication were verified live. Stepik detail was
+verified in recorded fixtures and earlier live checks, but current discovery/detail
+requests intermittently fail. Yandex's recorded starting-price offer is expired;
+Hexlet and CodeBasics endpoints returned server/access failures. Their feeds retry
+without publishing error pages or inventing records. Verified free/public access
+requires explicit evidence; positive unverified-provider schema amounts are unknown.
+
+The separate **100 verified-program goal remains open**. Tests with 100 synthetic
+candidates demonstrate batching/idempotency, not real coverage. Collection results
+below come only from official live pages in a disposable PostgreSQL database; no
+VDS deployment or database change was performed. Unknown classification does not
+count as confirmed beginner/experienced coverage. Further source contracts can be
+added through code releases while routine discoveries remain fully automatic.
+
+
+After three live collection runs on October 8, measured coverage was:
+
+| Provider | Go | Python | Java | JavaScript | Total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| OTUS | 2 | 2 | 5 | 2 | 11 |
+| Stepik | 1 | 0 | 0 | 0 | 1 |
+| Total | 3 | 2 | 5 | 2 | 12 |
+
+OTUS's queue contained 20 candidates: 11 published, 7 rejected and 2 pending.
+These results reflect source availability at collection time; they are not a
+hardcoded production seed. `catalog-update status` reports subsequent live totals.

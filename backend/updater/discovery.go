@@ -218,6 +218,10 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 		return 0, err
 	}
 	defer tx.Rollback(ctx)
+	var queued int
+	if err = tx.QueryRow(ctx, "SELECT count(*) FROM catalog_candidates").Scan(&queued); err != nil {
+		return 0, err
+	}
 	for _, raw := range urls {
 		candidate, ok := candidateURL(f.Adapter, raw, f.ID)
 		if !ok {
@@ -228,12 +232,20 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 		if f.Adapter != "stepik" && languageHint(candidate.ExternalID) == "" {
 			continue
 		}
-		tag, e := tx.Exec(ctx, `INSERT INTO catalog_candidates(adapter,external_id,canonical_url,feed_id)
-   SELECT $1,$2,$3,$4 WHERE (SELECT count(*) FROM catalog_candidates)<50000
-   ON CONFLICT(adapter,external_id) DO UPDATE SET last_seen_at=now(),feed_id=EXCLUDED.feed_id
-   WHERE catalog_candidates.canonical_url=EXCLUDED.canonical_url`, candidate.Adapter, candidate.ExternalID, candidate.URL, candidate.FeedID)
+		// Count the queue once, not once per sitemap entry. Existing identities
+		// remain refreshable when the insertion cap has been reached.
+		tag, e := tx.Exec(ctx, `UPDATE catalog_candidates SET last_seen_at=now(),feed_id=$4
+   WHERE adapter=$1 AND external_id=$2 AND canonical_url=$3`, candidate.Adapter, candidate.ExternalID, candidate.URL, candidate.FeedID)
 		if e != nil {
 			return 0, e
+		}
+		if tag.RowsAffected() == 0 && queued < 50000 {
+			tag, e = tx.Exec(ctx, `INSERT INTO catalog_candidates(adapter,external_id,canonical_url,feed_id)
+   VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING`, candidate.Adapter, candidate.ExternalID, candidate.URL, candidate.FeedID)
+			if e != nil {
+				return 0, e
+			}
+			queued += int(tag.RowsAffected())
 		}
 		count += int(tag.RowsAffected())
 	}
