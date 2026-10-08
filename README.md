@@ -21,11 +21,11 @@ All 20 functional acceptance criteria have passed and are merged. Production pub
 - functional requirements and course-provider research;
 - a Docker Compose development stack.
 
-The catalog starts empty. Course records must be reviewed and imported explicitly; research data is not published automatically.
+Production automatically collects and publishes verified configured sources. The initial enabled sources are two curated Stepik courses. Other research templates are not published automatically; see [automatic collection coverage and safeguards](docs/catalog-updater.md).
 
 ## Architecture
 
-The application runs as four Docker Compose services:
+The development stack runs four Docker Compose services; production adds a separate catalog worker:
 
 | Service | Technology | Responsibility |
 | --- | --- | --- |
@@ -33,10 +33,11 @@ The application runs as four Docker Compose services:
 | `api` | Go | Search, comparison, catalog import, provider redirects, and event recording |
 | `db` | PostgreSQL | Courses, offers, import history, and events |
 | `migrate` | Go CLI | Creates and updates the database schema before the API starts |
+| `catalog-updater` | Go background worker (production) | Verifies official sources and publishes catalog updates at 09:00 and 21:00 Europe/Moscow |
 
 Compose starts the database and waits for its health check, runs the migration
 service to completion, starts the API and waits for readiness, then starts the
-frontend. A failed migration prevents the API from starting.
+frontend. A failed migration prevents the API and catalog worker from starting. The worker starts after migration and collects independently of web requests.
 
 On a production VDS, requests follow this path:
 
@@ -49,7 +50,7 @@ configuration removes the API's published port; PostgreSQL has no published
 port. Both are reachable inside the Compose network. The HTTPS reverse proxy
 must be configured separately, for example with Nginx and a TLS certificate.
 
-The database, API, and frontend use `restart: unless-stopped` to recover after
+The database, API, frontend, and production catalog worker use `restart: unless-stopped` to recover after
 process failures or server reboots when Docker starts. Migrations are a one-shot
 service. PostgreSQL data persists in the `postgres-data` Docker volume across
 ordinary container updates; deleting that volume deletes the database.
@@ -61,7 +62,8 @@ ordinary container updates; deleting that volume deletes the database.
 - [Functional requirements](docs/functional-requirements.md)
 - [MVP completion specification](docs/mvp-completion-spec.md)
 - [MVP status by requirement ID](docs/mvp-readiness.md)
-- [Catalog publication runbook](docs/catalog-operations.md)
+- [Automatic catalog updater](docs/catalog-updater.md)
+- [Manual catalog import runbook](docs/catalog-operations.md)
 - [20 real programs, reviewed sources and explicit publication](docs/real-catalog.md)
 
 ## Versions, releases, and manual deployment
@@ -380,11 +382,12 @@ This follows the database → migrations → API → frontend startup sequence a
 Use `docker compose -f compose.yaml -f compose.production.yaml ps` to inspect
 service status and add `logs --tail=100` instead of `ps` to inspect logs.
 
-The catalog is initially empty. The prepared real catalog contains 20 programs,
-but publication requires source review, validation, a backup, a reviewed dry
-run, and an explicit import as described in the catalog publication runbook.
-Schedule daily database backups separately; installing cron does not create a
-backup job.
+The worker performs an initial collection and automatically publishes the two
+configured Stepik courses only after verifying their live data. It continues at
+09:00 and 21:00 Europe/Moscow. No data PR or operator import is required. The other
+18 prepared templates remain unpublished until dedicated adapters are connected
+or an operator explicitly imports them using the manual runbook. Schedule daily
+database backups separately; installing cron does not create a backup job.
 
 ### Configure Nginx and HTTPS
 
@@ -465,3 +468,11 @@ Run `./scripts/e2e-real.sh` after installing frontend dependencies and Playwrigh
 ## Import diagnostics
 
 CLI failures exit with code 1 and write JSON diagnostics to stderr: command, run ID, stage and code, plus safe validation/SQL metadata. Tests invoke the production entry point in separate processes and confirm rollback and redaction with PostgreSQL. Raw driver/decoder errors and connection strings are omitted. See [the publication runbook](docs/catalog-operations.md) for interpreting the diagnostics.
+
+### Automatic catalog collection
+
+Production includes a separate catalog updater that checks official sources at
+09:00 and 21:00 Europe/Moscow and automatically publishes verified changes without
+data PRs or manual imports. The initial enabled sources are the two curated Stepik
+courses; other templates are not imported automatically. See
+[coverage, safeguards and operational status](docs/catalog-updater.md).
