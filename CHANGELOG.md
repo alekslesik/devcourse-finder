@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.3.1] - 2026-10-08
+
+- Add restrained, clipped circular background accents that adapt to light and dark themes.
+- Remove the decorative catalog route illustration and replace the theme dropdown with an accessible sun/system/moon capsule that preserves saved and system preferences.
+
 ## [0.3.0] - 2026-10-08
 
 - Rebrand the shared header, footer, page metadata, messenger cover and browser icons as DevCourseFinder using a responsive, theme-aware SVG identity.

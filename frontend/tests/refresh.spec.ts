@@ -37,16 +37,21 @@ test('theme persists across routes and follows system changes with blocked stora
   await page.emulateMedia({colorScheme:'dark'});
   await page.goto('/courses');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
-  await page.getByLabel('Тема',{exact:true}).selectOption('light');
+  await page.getByRole('radio',{name:'Светлая тема',exact:true}).check();
   await page.goto('/about');
   await expect(page.locator('html')).toHaveAttribute('data-theme','light');
-  await expect(page.getByLabel('Тема',{exact:true})).toHaveValue('light');
+  await expect(page.getByRole('radio',{name:'Светлая тема',exact:true})).toBeChecked();
+  await page.getByRole('radio',{name:'Системная тема',exact:true}).focus();
+  await page.keyboard.press('Space');
+  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('radio',{name:'Светлая тема',exact:true})).toBeChecked();
   await page.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new Error('Storage blocked')}})});
   await page.goto('/compare?offers=demo-go-1-standard');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   await page.emulateMedia({colorScheme:'light'});
   await expect(page.locator('html')).toHaveAttribute('data-theme','light');
-  await page.getByLabel('Тема',{exact:true}).selectOption('dark');
+  await page.getByRole('radio',{name:'Тёмная тема',exact:true}).check();
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
 });
 
@@ -89,7 +94,7 @@ test('saved theme is applied before React loads, without hydration errors',async
  await page.goto('/about');
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
  await page.unroute('**/_next/static/**/*.js');
- await page.reload();await expect(page.getByLabel('Тема',{exact:true})).toHaveValue('dark');
+ await page.reload();await expect(page.getByRole('radio',{name:'Тёмная тема',exact:true})).toBeChecked();
  expect(errors.filter(message=>/hydration|didn't match|did not match/i.test(message))).toEqual([]);
  await page.keyboard.press('Tab');
  await expect(page.getByRole('link',{name:'Перейти к содержанию'})).toBeFocused();

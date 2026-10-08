@@ -240,7 +240,8 @@ The test builds and starts the stack under a temporary Compose project, validate
 
 DevCourseFinder uses an outlined SVG wordmark and a code/route symbol with a mint
 waypoint. The shared header and footer adapt it to light and dark themes.
-The catalog introduction stays focused on its headline and search.
+The catalog introduction stays focused on its headline and search, with subtle
+circular background accents. A sun/system/moon capsule selects the theme.
 State illustrations use the same semantic theme colors.
 
 Reusable light/dark lockups and the symbol live in `frontend/public/brand/`.
