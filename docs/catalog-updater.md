@@ -68,7 +68,9 @@ LLM invent prices from marketing text.
 Release deployment remains manual through **Deploy release**. After deploying
 this version, the production Compose overlay automatically builds and starts the
 worker alongside the existing services. No new secret, host port or cron entry is
-needed. Local development and smoke/e2e fixtures do not start the worker.
+needed. Deployments remove orphan services, so selecting a pre-worker release
+stops and removes the collector. The manual workflow passes this policy to older
+release scripts as well; database volumes are preserved. Local development and smoke/e2e fixtures do not start the worker.
 
 From `/srv/devcourse-finder/current`, using the existing production environment:
 

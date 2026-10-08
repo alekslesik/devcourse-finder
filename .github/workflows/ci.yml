@@ -104,6 +104,10 @@ jobs:
           SITE_URL: https://example.com
           WEB_PORT: 127.0.0.1:3000
         run: docker compose -f compose.yaml -f compose.production.yaml config --quiet
+      - name: Verify rollback removes services absent from an older release
+        env:
+          RUN_DOCKER_DEPLOY_TESTS: "1"
+        run: python3 -m unittest discover -s scripts -p 'test_deploy_orphans.py'
       - name: Run Compose smoke test
         run: ./scripts/compose-smoke.sh
 
