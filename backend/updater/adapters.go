@@ -16,10 +16,11 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
-	PriceUnknown bool   `json:"price_unknown,omitempty"`
-	Price        *int64 `json:"price,omitempty"`
-	Enrollment   string `json:"enrollment,omitempty"`
-	Schedule     string `json:"schedule,omitempty"`
+	ValidUntil   *time.Time `json:"valid_until,omitempty"`
+	PriceUnknown bool       `json:"price_unknown,omitempty"`
+	Price        *int64     `json:"price,omitempty"`
+	Enrollment   string     `json:"enrollment,omitempty"`
+	Schedule     string     `json:"schedule,omitempty"`
 }
 
 func decodeJSON(data []byte, v any) error {
@@ -35,6 +36,10 @@ func decodeJSON(data []byte, v any) error {
 }
 
 type stepikCourse struct {
+	Summary         string          `json:"summary"`
+	Lessons         int             `json:"lessons_count"`
+	Units           int             `json:"total_units"`
+	ContentLanguage string          `json:"language"`
 	ID              int             `json:"id"`
 	Title           string          `json:"title"`
 	Public          *bool           `json:"is_public"`

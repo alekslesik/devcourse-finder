@@ -21,7 +21,7 @@ All 20 functional acceptance criteria have passed and are merged. Production pub
 - functional requirements and course-provider research;
 - a Docker Compose development stack.
 
-Production automatically collects and publishes verified configured sources. The initial enabled sources are two curated Stepik courses. Other research templates are not published automatically; see [automatic collection coverage and safeguards](docs/catalog-updater.md).
+Production automatically collects and publishes verified configured sources. The worker discovers candidates from official provider sitemaps and refreshes verified programs, including the two curated Stepik courses. Research templates are not bulk-published; see [automatic collection coverage and safeguards](docs/catalog-updater.md).
 
 ## Architecture
 
@@ -383,11 +383,11 @@ This follows the database → migrations → API → frontend startup sequence a
 Use `docker compose -f compose.yaml -f compose.production.yaml ps` to inspect
 service status and add `logs --tail=100` instead of `ps` to inspect logs.
 
-The worker performs an initial collection and automatically publishes the two
-configured Stepik courses only after verifying their live data. It continues at
-09:00 and 21:00 Europe/Moscow. No data PR or operator import is required. The other
-18 prepared templates remain unpublished until dedicated adapters are connected
-or an operator explicitly imports them using the manual runbook. Schedule daily
+The worker performs an initial discovery and collection, then continues at
+09:00 and 21:00 Europe/Moscow. It publishes verified candidates automatically
+and refreshes existing records. No data PR or operator import is required.
+Unavailable sources and ambiguous pages remain unpublished; see the coverage
+and limits in [the updater runbook](docs/catalog-updater.md). Schedule daily
 database backups separately; installing cron does not create a backup job.
 
 ### Configure Nginx and HTTPS
@@ -474,6 +474,7 @@ CLI failures exit with code 1 and write JSON diagnostics to stderr: command, run
 
 Production includes a separate catalog updater that checks official sources at
 09:00 and 21:00 Europe/Moscow and automatically publishes verified changes without
-data PRs or manual imports. The initial enabled sources are the two curated Stepik
-courses; other templates are not imported automatically. See
+data PRs or manual imports. Discovery feeds cover Stepik, OTUS, Yandex Practicum, Hexlet and CodeBasics.
+Only candidates meeting the adapter evidence rules are published; source
+availability and actual coverage are reported from PostgreSQL. See
 [coverage, safeguards and operational status](docs/catalog-updater.md).

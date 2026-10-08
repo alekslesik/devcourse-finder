@@ -179,6 +179,8 @@ export interface components {
             price_checked_at: string;
             /** Format: date-time */
             valid_until?: string;
+            /** @description False when review/mentor evidence is unavailable; omitted for legacy curated offers. */
+            support_known?: boolean;
         };
         Result: {
             course: components["schemas"]["Course"];

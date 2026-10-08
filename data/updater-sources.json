@@ -12,5 +12,32 @@
       "remote_id": 58852,
       "expected_title": "\"Поколение Python\": курс для начинающих"
     }
+  ],
+  "discovery": [
+    {
+      "id": "stepik-sitemap",
+      "adapter": "stepik",
+      "url": "https://stepik.org/sitemap.xml"
+    },
+    {
+      "id": "otus-sitemap",
+      "adapter": "otus",
+      "url": "https://otus.ru/sitemap.xml"
+    },
+    {
+      "id": "yandex-sitemap",
+      "adapter": "yandex",
+      "url": "https://practicum.yandex.ru/sitemap.xml"
+    },
+    {
+      "id": "hexlet-sitemap",
+      "adapter": "hexlet",
+      "url": "https://ru.hexlet.io/sitemap.xml"
+    },
+    {
+      "id": "codebasics-sitemap",
+      "adapter": "codebasics",
+      "url": "https://code-basics.com/sitemap.xml"
+    }
   ]
 }

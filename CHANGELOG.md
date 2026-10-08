@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.5.0] - 2026-10-08
+
+- Discover and publish verified catalog candidates automatically from official provider feeds with persistent identity, bounded scheduling and measured coverage.
+- Preserve unknown course classifications, support and full-price evidence in filtering and display; reject ambiguous, expired and recurring-price offers.
+
 ## [0.4.0] - 2026-10-08
 
 - Remove services absent from the selected release, including when rolling back with an older deployment script.

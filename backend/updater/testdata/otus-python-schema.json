@@ -1,0 +1,26 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Course",
+      "name": "Python-разработчик. Базовый уровень",
+      "description": "Вы сформируете четкое представление о разных областях, с которыми соприкасается разработчик python.Получите базовые навыки программирования на языке Python, которые пригодятся при прохождении собеседований и работе на позиции Junior Python…",
+      "offers": [
+        {
+          "@type": "Offer",
+          "price": 130000,
+          "priceCurrency": "RUB",
+          "availability": "https://schema.org/InStock",
+          "url": "https://otus.ru/lessons/python-basic"
+        }
+      ],
+      "hasCourseInstance": {
+        "@type": "CourseInstance",
+        "courseMode": "Online",
+        "startDate": "2026-11-30",
+        "endDate": "2027-09-20",
+        "duration": "P6M"
+      }
+    }
+  ]
+}

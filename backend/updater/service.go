@@ -70,6 +70,7 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 		client = NewClient()
 		defer client.CloseIdleConnections()
 	}
+	checked := len(s.Config.Sources)
 	for _, source := range s.Config.Sources {
 		if ctx.Err() != nil {
 			return result, ctx.Err()
@@ -121,11 +122,26 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 		}
 		slog.Log(ctx, level, "catalog source checked", "source_id", source.CourseID, "code", code, "consecutive_failures", failures, "collection_id", result.ID)
 	}
+	if len(s.Config.Discovery) > 0 {
+		feedStats, discoveryErr := s.discover(ctx, client)
+		result.Failed += feedStats.Failed
+		checked += feedStats.Attempted
+		if discoveryErr != nil {
+			return result, discoveryErr
+		}
+		batchStats, batchErr := s.processBatch(ctx, client, s.publishDiscovered)
+		result.Published += batchStats.Published
+		result.Failed += batchStats.Failed
+		checked += batchStats.Attempted
+		if batchErr != nil {
+			return result, batchErr
+		}
+	}
 	result.Status = "completed"
 	if result.Failed > 0 {
 		result.Status = "partial"
 	}
-	if result.Failed == len(s.Config.Sources) {
+	if result.Failed >= checked && result.Published == 0 {
 		result.Status = "failed"
 	}
 	slog.Info("catalog collection finished", "collection_id", result.ID, "status", result.Status, "published", result.Published, "failed", result.Failed)
@@ -178,7 +194,7 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 	}
 	// A first publication needs live availability and price evidence; templates
 	// alone are never imported, and unknown enrollment cannot make them public.
-	if !found && (o.Enrollment != "open" && o.Enrollment != "continuous" || o.Price == nil) {
+	if !found && (o.Enrollment != "open" && o.Enrollment != "continuous" || o.Price == nil && !o.PriceUnknown) {
 		*code = "insufficient_initial_evidence"
 		return nil, nil
 	}
@@ -199,7 +215,7 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 		current.PriceKind = "exact"
 		current.Free = *o.Price == 0
 		current.PriceCheckedAt = now
-		current.ValidUntil = nil
+		current.ValidUntil = o.ValidUntil
 	}
 	if o.PriceUnknown {
 		current.Price = nil
@@ -362,5 +378,9 @@ func Status(ctx context.Context, db *store.DB, w io.Writer) error {
 			return err
 		}
 	}
-	return rows.Err()
+	if err = rows.Err(); err != nil {
+		return err
+	}
+	rows.Close()
+	return coverage(ctx, db, w)
 }

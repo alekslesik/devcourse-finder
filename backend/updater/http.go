@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const maxBody = 2 << 20
+const maxBody = 8 << 20
 
 var ErrSource = errors.New("source could not be verified")
 
@@ -63,7 +63,7 @@ func publicIP(ip net.IP) bool {
 
 func fetch(ctx context.Context, client *http.Client, raw string) ([]byte, string, error) {
 	u, err := url.Parse(raw)
-	if err != nil || u.Scheme != "https" || (u.Host != "stepik.org" && u.Host != "code-basics.com") || u.User != nil {
+	if err != nil || u.Scheme != "https" || !allowedSourceHost(u.Host) || u.User != nil {
 		return nil, "", ErrSource
 	}
 	for attempt := 0; attempt < 2; attempt++ {
@@ -99,4 +99,13 @@ func fetch(ctx context.Context, client *http.Client, raw string) ([]byte, string
 		return nil, "", ErrSource
 	}
 	return nil, "", ErrSource
+}
+
+func allowedSourceHost(host string) bool {
+	for _, allowed := range providerHosts {
+		if host == allowed {
+			return true
+		}
+	}
+	return false
 }
