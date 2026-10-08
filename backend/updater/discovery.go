@@ -96,6 +96,9 @@ func candidateURL(adapter, raw, feedID string) (Candidate, bool) {
 	return Candidate{Adapter: adapter, ExternalID: id, URL: clean, FeedID: feedID}, true
 }
 func validateFeed(f Feed) error {
+	if _, ok := providerHosts[f.Adapter]; !ok {
+		return errors.New("unknown sitemap provider")
+	}
 	u, err := url.Parse(f.URL)
 	if err != nil || !slugPattern.MatchString(f.ID) || u.Scheme != "https" || u.Host != providerHosts[f.Adapter] || u.User != nil || u.RawQuery != "" || u.Fragment != "" || !strings.HasSuffix(u.Path, ".xml") {
 		return errors.New("invalid official sitemap feed")

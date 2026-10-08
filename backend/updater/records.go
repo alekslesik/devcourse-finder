@@ -1,7 +1,6 @@
 package updater
 
 import (
-	"errors"
 	"io"
 	"regexp"
 	"strings"
@@ -94,12 +93,6 @@ func normalizedRecord(candidate Candidate, title, summary, provider string, o Ob
 	if !utf8.ValidString(title) || utf8.RuneCountInString(title) > 300 || title == "" || summary == "" || language == "" {
 		return catalog.Course{}, ErrSource
 	}
-	if o.Enrollment != "open" && o.Enrollment != "continuous" {
-		return catalog.Course{}, errors.New("initial enrollment is not confirmed open")
-	}
-	if o.Price == nil && !o.PriceUnknown {
-		return catalog.Course{}, ErrSource
-	}
 	id := candidate.Adapter + "-" + candidate.ExternalID
 	if len(id) > 70 {
 		id = candidate.Adapter + "-" + fingerprint([]byte(candidate.ExternalID))[:24]
@@ -118,6 +111,9 @@ func normalizedRecord(candidate Candidate, title, summary, provider string, o Ob
 		offer.Free = *o.Price == 0
 		offer.PriceKind = "exact"
 		offer.PriceCheckedAt = now
+	}
+	if offer.Enrollment == "" {
+		offer.Enrollment = "unknown"
 	}
 	if o.Schedule != "" {
 		offer.Schedule = o.Schedule

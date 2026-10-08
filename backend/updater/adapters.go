@@ -36,6 +36,10 @@ func decodeJSON(data []byte, v any) error {
 }
 
 type stepikCourse struct {
+	Summary         string          `json:"summary"`
+	Lessons         int             `json:"lessons_count"`
+	Units           int             `json:"total_units"`
+	ContentLanguage string          `json:"language"`
 	ID              int             `json:"id"`
 	Title           string          `json:"title"`
 	Public          *bool           `json:"is_public"`
