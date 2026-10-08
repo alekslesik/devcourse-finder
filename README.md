@@ -236,6 +236,36 @@ Run the same isolated Compose smoke test locally with:
 
 The test builds and starts the stack under a temporary Compose project, validates and imports the demo catalog, checks health, search, program and comparison endpoints, restarts the stack without deleting its database volume, verifies that the catalog remains available, and removes all temporary resources.
 
+## Messenger link previews
+
+Public pages include Open Graph and `summary_large_image` Twitter metadata in
+server HTML. Telegram, WhatsApp, and other supporting messengers can show the
+DevCourse cover, page title, and description without running JavaScript. Course
+links use the program's own title and summary; all pages share a branded
+1200 × 630 PNG at `/social-preview-v1.png`.
+
+Set `SITE_URL` to the public HTTPS origin **before building** production images.
+Compose forwards it to the frontend build and runtime. Rebuild the frontend when
+the domain changes. For a direct Docker build, pass
+`--build-arg SITE_URL=https://your-domain.example`; setting only the runtime
+variable does not rewrite metadata in prerendered pages. The runtime image ships
+`public/` alongside the standalone Next.js server.
+
+The editable cover source is `frontend/scripts/social-preview.svg`; the PNG is
+committed, so production needs no fonts or rendering service. To regenerate it,
+install Open Sans locally and run from `frontend/`:
+
+```sh
+node --input-type=module -e "import sharp from 'sharp'; await sharp('scripts/social-preview.svg').png().toFile('public/social-preview-v1.png')"
+```
+
+Bump the image filename and metadata reference when changing the cover so image
+caches can distinguish versions. After deployment, check the page's `og:*` tags
+and that its absolute image URL returns HTTP 200 with `image/png`. Messenger
+previews are cached: old sent messages may keep an earlier card. In Telegram,
+request a refresh using `@WebpageBot`, then send the link again with previews
+enabled. Per-chat privacy settings and the messenger determine the final layout.
+
 ## Public routes and contract
 
 The frontend exposes `/courses`, `/courses/{slug}`, `/compare?offers=...`, and `/about`. Course pages are rendered on the server; draft, archived, and unknown programs return 404. Comparison links restore up to three tariffs independently of local browser storage.
