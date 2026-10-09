@@ -21,7 +21,7 @@ All 20 functional acceptance criteria have passed and are merged. Production pub
 - functional requirements and course-provider research;
 - a Docker Compose development stack.
 
-Production automatically collects and publishes verified configured sources. The worker discovers candidates from official provider sitemaps and refreshes verified programs, including the two curated Stepik courses. Research templates are not bulk-published; see [automatic collection coverage and safeguards](docs/catalog-updater.md).
+Production automatically collects and publishes verified configured sources. The worker discovers candidates from official provider catalogs and sitemaps and refreshes verified programs, including the two curated Stepik courses. Research templates are not bulk-published; see [automatic collection coverage and safeguards](docs/catalog-updater.md).
 
 ## Architecture
 

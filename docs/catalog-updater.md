@@ -13,9 +13,12 @@ and the scheduler gracefully.
 
 ## Discovery and source coverage
 
-`data/updater-sources.json` enables five official sitemap feeds (Stepik, OTUS,
+`data/updater-sources.json` enables five official discovery feeds (Stepik, OTUS,
 Yandex Practicum, Hexlet and CodeBasics) and the two curated Stepik refreshes.
-Sitemap URLs identify candidates, not published records. Provider identity,
+Sitemap/catalog URLs identify candidates, not published records. CodeBasics uses
+its verified Russian catalog at `/ru` (`kind: catalog`), rather than a nonexistent
+`sitemap.xml`. Hexlet uses its robots-declared gzipped sitemap and only the
+`programs.xml.gz` child, excluding blogs/Q&A/subscription pages. Provider identity,
 canonical URL and provenance are persisted before individual detail verification.
 Stepik uses course-promo sitemap shards and anonymous detail APIs; general school
 sitemaps use course-path and programming-language hints to exclude unrelated URLs.
@@ -25,6 +28,17 @@ The Stepik adapter requires a Russian-language public program with at least thre
 lessons and units, verified visibility/active flags, enrollment actions/dates and
 explicit free/paid evidence. Free flags confirm zero even if price is null. Paid
 RUB amounts are exact; missing or foreign-currency prices remain unknown.
+
+CodeBasics uses its anonymous `web/languages/show` Inertia curriculum contract.
+Canonical URL, locale, course/landing identity, published/listed/main flags,
+successful built curriculum, at least three distinct lessons and an accessible
+first-lesson link must all match. A fresh independent `/ru` fetch must still contain
+the recorded platform-wide free-pricing FAQ answer; missing, changed or
+contradictory pricing text prevents publication/refresh. Both evidence digests
+contribute to the stored hash. Pricing is not inferred from an absent Offer or an
+exercise's text. This verifies Go, Python, Java, JavaScript and TypeScript programs;
+TypeScript uses the existing JavaScript language family. The independent pricing
+read happens once per batch and reserves an additional request budget.
 
 OTUS uses the recorded official JSON-LD Course/Offer full-payment contract.
 The schema reader also recognizes exact-identity Course or Online Course Product
@@ -41,7 +55,8 @@ candidate queue. Persistent cursors advance across child failures. Each run chec
 at most 36 queued details, interleaving up to six refreshes and six new/retry records
 per provider. The two curated refreshes run first. Requests are sequential; a
 15-minute persisted claim allows recovery after process termination. Runs retain a
-10-minute deadline and stop claiming work when less than 35 seconds remain.
+10-minute deadline and stop claiming work when less than 35 seconds remain (70 seconds for the first CodeBasics detail plus
+pricing-policy read).
 
 Normal detail refresh/retry is due after 12 hours. Repeated failures back off to
 24, 48 and at most 72 hours; protected identities are rechecked after seven days.
@@ -155,3 +170,21 @@ and the existing 128 MiB limit (`GOMEMLIMIT=96MiB`). Idle memory was approximate
 coverage status succeeded, and SIGTERM exited with code 0. Frontend production
 build/routes, six Chromium pricing/support checks, API compatibility/types,
 release metadata and production Compose validation passed.
+
+
+The source-coverage follow-up independently fetched the real CodeBasics catalog
+and five complete detail pages, then published all five into a disposable database.
+The focused run also verified the two curated Stepik records: seven real
+programs at that stage, with demo fixtures excluded from coverage. PostgreSQL race and
+failure-isolation tests passed, including refusal to refresh when the current
+platform pricing evidence disappears. Hexlet's real program map contains 138 URLs;
+the corrected production configuration queued 41 language-hinted candidates,
+**not verified/published courses**. Its marketing detail pages
+still need a dedicated full-tariff/enrollment contract. Stepik's sitemap shard and
+search/list access still returned 403; no bypass or synthetic IDs were used.
+
+
+The updated collector binary also completed a live CodeBasics refresh in the
+production runtime image as `app`, with a read-only filesystem, all capabilities
+dropped and a 128 MiB memory limit (`GOMEMLIMIT=96MiB`). It exited 0 without an
+OOM kill. This was a disposable-database verification, not a VDS deployment.
