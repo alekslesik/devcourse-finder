@@ -21,19 +21,25 @@ func candidateEndpoint(c Candidate) string {
 }
 func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
-		return catalog.Course{}, Observation{}, ErrSource
+		return catalog.Course{}, Observation{}, rejection("identity_mismatch")
 	}
 	if c.Adapter == "stepik" {
 		var payload struct {
 			Courses []stepikCourse `json:"courses"`
 		}
 		if decodeJSON(data, &payload) != nil || len(payload.Courses) != 1 {
-			return catalog.Course{}, Observation{}, ErrSource
+			return catalog.Course{}, Observation{}, rejection("invalid_payload")
 		}
 		remote := payload.Courses[0]
 		id, err := strconv.Atoi(c.ExternalID)
-		if err != nil || remote.ID != id || remote.Lessons < 3 || remote.Units < 3 || remote.ContentLanguage != "ru" {
-			return catalog.Course{}, Observation{}, ErrSource
+		if err != nil || remote.ID != id {
+			return catalog.Course{}, Observation{}, rejection("identity_mismatch")
+		}
+		if remote.ContentLanguage != "ru" {
+			return catalog.Course{}, Observation{}, rejection("unsupported_content_language")
+		}
+		if remote.Lessons < 3 || remote.Units < 3 {
+			return catalog.Course{}, Observation{}, rejection("insufficient_curriculum")
 		}
 		o, err := parseStepik(data, Source{RemoteID: id, ExpectedTitle: remote.Title}, now)
 		if err != nil {
@@ -70,7 +76,7 @@ func collectStructured(data []byte, c Candidate, now time.Time) (catalog.Course,
 	for _, match := range jsonLD.FindAllSubmatch(data, -1) {
 		var value any
 		if decodeJSON(match[1], &value) != nil {
-			return catalog.Course{}, Observation{}, ErrSource
+			return catalog.Course{}, Observation{}, rejection("invalid_structured_payload")
 		}
 		graphNodes(value, &nodes)
 	}
@@ -184,8 +190,14 @@ func collectStructured(data []byte, c Candidate, now time.Time) (catalog.Course,
 		}
 		accepted = append(accepted, verified{node, o})
 	}
+	if len(nodes) == 0 {
+		return catalog.Course{}, Observation{}, rejection("missing_course_schema")
+	}
+	if len(accepted) == 0 {
+		return catalog.Course{}, Observation{}, rejection("unverified_course_offer")
+	}
 	if len(accepted) != 1 {
-		return catalog.Course{}, Observation{}, ErrSource
+		return catalog.Course{}, Observation{}, rejection("ambiguous_course_schema")
 	}
 	v := accepted[0]
 	record, err := normalizedRecord(c, schemaString(v.node, "name"), schemaString(v.node, "description"), providerNames[c.Adapter], v.o, now)

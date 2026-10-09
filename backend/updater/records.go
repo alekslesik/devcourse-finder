@@ -90,8 +90,11 @@ func normalizedRecord(candidate Candidate, title, summary, provider string, o Ob
 	title = plainText(title, 301)
 	summary = plainText(summary, 2000)
 	language := courseLanguage(title, summary)
-	if !utf8.ValidString(title) || utf8.RuneCountInString(title) > 300 || title == "" || summary == "" || language == "" {
-		return catalog.Course{}, ErrSource
+	if !utf8.ValidString(title) || utf8.RuneCountInString(title) > 300 || title == "" || summary == "" {
+		return catalog.Course{}, rejection("invalid_course_text")
+	}
+	if language == "" {
+		return catalog.Course{}, rejection("unsupported_or_ambiguous_language")
 	}
 	id := candidate.Adapter + "-" + candidate.ExternalID
 	if len(id) > 70 {

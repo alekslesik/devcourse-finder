@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.8.0] - 2026-10-09
+
+- Expand bounded Stepik discovery to up to 120 new candidates and 30 refreshes per run, preserving provider fairness and the collection deadline.
+- Report safe verification rejection codes for Stepik and structured course pages without publishing invalid records.
+
 ## [0.7.0] - 2026-10-09
 
 - Add a manual Collect catalog GitHub Actions button to run an extra bounded collection with the currently deployed worker and report actual coverage.

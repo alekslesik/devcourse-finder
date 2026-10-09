@@ -147,7 +147,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			} else {
 				record, o, parseErr = collectCandidate(body, w.Candidate, time.Now().UTC())
 			}
-			code = "invalid_course"
+			code = rejectionCode(parseErr, "invalid_course")
 			if parseErr == nil {
 				var published int
 				code, published, err = publish(ctx, w.Candidate, record, o, digest)

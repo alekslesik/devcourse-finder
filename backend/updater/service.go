@@ -82,7 +82,7 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 		var observation Observation
 		if fetchErr == nil {
 			observation, fetchErr = parse(body, source, template.Source, observedAt)
-			code = "invalid_source"
+			code = rejectionCode(fetchErr, "invalid_source")
 		}
 		verified := fetchErr == nil
 		if verified {

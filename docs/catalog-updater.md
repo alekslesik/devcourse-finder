@@ -214,3 +214,20 @@ The updated collector binary also completed a live CodeBasics refresh in the
 production runtime image as `app`, with a read-only filesystem, all capabilities
 dropped and a 128 MiB memory limit (`GOMEMLIMIT=96MiB`). It exited 0 without an
 OOM kill. This was a disposable-database verification, not a VDS deployment.
+
+### Detail rejection diagnostics
+
+The candidate `code` in collection logs and persisted queue rows identifies the
+failed verification step. Stepik reports `invalid_payload`, `identity_mismatch`,
+`unsupported_content_language`, `insufficient_curriculum`,
+`missing_visibility_or_price_flags`, `private_or_censored_course`,
+`inactive_course`, and `invalid_price_evidence`. Normalization reports
+`invalid_course_text` or `unsupported_or_ambiguous_language` (the four supported
+programming languages are Go, Python, Java and JavaScript/TypeScript).
+Structured pages report `invalid_structured_payload`, `missing_course_schema`,
+`unverified_course_offer`, or `ambiguous_course_schema`. `unverified_course_offer`
+means no uniquely bound offer passed all availability, price and validity checks;
+it does not assert which individual field failed. Other adapter failures retain
+`invalid_course`; failed network reads retain `source_unavailable`.
+Only fixed codes are recorded, never raw source bodies or underlying error text.
+Rejection leaves existing publications intact and keeps the bounded retry policy.
