@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.15.0] - 2026-10-09
+
+- Add HTML Academy discovery and independent public payment verification to the page collector.
+- Keep recurring course totals unknown and exclude embedded profession bundles; reject missing, mismatched or expired evidence.
+- Document source coverage, limitations, queue safety and manual release deployment.
+
 ## [0.14.0] - 2026-10-09
 
 - Add RS School discovery and independent course/catalog checks for free full education and current Russian cohort enrollment.

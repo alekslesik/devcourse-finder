@@ -38,8 +38,8 @@ Further providers are tracked in the [worker roadmap](catalog-workers-roadmap.md
 
 ## Discovery and source coverage
 
-`data/updater-sources.json` enables eight official discovery feeds (Stepik, OTUS,
-Yandex Practicum, Hexlet, CodeBasics, Netology, PurpleSchool and RS School) and the two curated Stepik refreshes.
+`data/updater-sources.json` enables nine official discovery feeds (Stepik, OTUS,
+Yandex Practicum, Hexlet, CodeBasics, Netology, PurpleSchool, RS School and HTML Academy) and the two curated Stepik refreshes.
 Sitemap/catalog URLs identify candidates, not published records. CodeBasics uses
 its verified Russian catalog at `/ru` (`kind: catalog`), rather than a nonexistent
 `sitemap.xml`. Hexlet uses its robots-declared gzipped sitemap and only the
@@ -85,6 +85,11 @@ RS School belongs to the page collector. It independently reconciles course and
 catalog enrollment dates, verifies full free education, and rejects TBD or
 English-only cohorts. Closed historical cohorts cannot become new publications.
 See the [RS School contract and current coverage limits](rsschool-adapter.md).
+
+HTML Academy also belongs to the page collector. It binds individual-course
+pages to anonymous public payment data. Monthly subscriptions retain unknown
+complete prices, and embedded profession bundles are excluded. See the
+[HTML Academy contract and coverage limits](htmlacademy-adapter.md).
 
 OTUS uses the recorded official JSON-LD Course/Offer full-payment contract.
 The schema reader also recognizes exact-identity Course or Online Course Product

@@ -8,7 +8,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-var providerNames = map[string]string{"rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
+var providerNames = map[string]string{"htmlacademy": "HTML Academy", "rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
 
 func candidateEndpoint(c Candidate) string {
 	if c.Adapter == "stepik" {
@@ -23,6 +23,9 @@ func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, 
 	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
 		return catalog.Course{}, Observation{}, rejection("identity_mismatch")
 	}
+	if c.Adapter == "htmlacademy" {
+		return catalog.Course{}, Observation{}, rejection("invalid_htmlacademy_payment")
+	} // Requires independent public payment data.
 	if c.Adapter == "rsschool" {
 		return catalog.Course{}, Observation{}, rejection("invalid_rsschool_contract")
 	} // Requires the independent catalog read.
