@@ -9,7 +9,10 @@ import (
 	"devcourse-finder/catalog"
 )
 
-const batchLimit = 36
+// The sum of all configured provider lanes fits below the global cap.
+const batchLimit = 210
+const stepikNewLimit = 120
+const stepikRefreshLimit = 30
 const providerLaneLimit = 6
 
 type QueueWork struct {
@@ -69,7 +72,8 @@ func (s *Service) queueWork(ctx context.Context) ([]QueueWork, error) {
    row_number() OVER(PARTITION BY adapter,(state='published') ORDER BY attempted_at NULLS FIRST,first_seen_at,external_id) AS rank
   FROM catalog_candidates WHERE next_attempt_at<=now() AND adapter=ANY($1::text[])
  ) SELECT adapter,external_id,canonical_url,feed_id,state,failures FROM lanes
- WHERE rank<=$2 ORDER BY rank,adapter,(state='published') DESC LIMIT $3`, adapters, providerLaneLimit, batchLimit)
+ WHERE rank<=CASE WHEN adapter='stepik' THEN CASE WHEN state='published' THEN $3::bigint ELSE $4::bigint END ELSE $2::bigint END
+ ORDER BY rank,adapter,(state='published') DESC LIMIT $5`, adapters, providerLaneLimit, stepikRefreshLimit, stepikNewLimit, batchLimit)
 	if err != nil {
 		return nil, err
 	}

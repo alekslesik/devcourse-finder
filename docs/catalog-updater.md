@@ -52,8 +52,10 @@ Unsupported markup stays unpublished; no marketing-text price inference is used.
 Discovery is bounded to ten configured feeds, one child sitemap per feed/run,
 8 MiB fetched/decompressed documents, 100,000 sitemap locations and a 50,000-row
 candidate queue. Persistent cursors advance across child failures. Each run checks
-at most 36 queued details, interleaving up to six refreshes and six new/retry records
-per provider. The two curated refreshes run first. Requests are sequential; a
+at most 210 queued details: up to 120 new/retry Stepik records and 30 Stepik
+refreshes, plus six refreshes and six new/retry records per other provider.
+Ranks are interleaved so every provider and refresh lane gets an early turn.
+These are ceilings, not guaranteed throughput; slow responses reduce the batch. The two curated refreshes run first. Requests are sequential; a
 15-minute persisted claim allows recovery after process termination. Runs retain a
 10-minute deadline and stop claiming work when less than 35 seconds remain (70 seconds for the first CodeBasics detail plus
 pricing-policy read).
