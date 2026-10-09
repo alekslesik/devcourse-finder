@@ -18,7 +18,7 @@ const publisherBatchLimit = 500
 
 func failureCodeAllowed(code string) bool {
 	switch code {
-	case "invalid_netology_page", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment", "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
+	case "invalid_purpleschool_contract", "invalid_netology_page", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment", "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
 		return true
 	default:
 		return false
@@ -82,7 +82,7 @@ func (e QueuedObservation) validate(config Config) error {
 	if e.Kind == "curated" && e.SourceID == "" || e.Kind == "discovered" && e.SourceID != "" || !evidenceDigest.MatchString(e.Digest) {
 		return ErrSource
 	}
-	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || len(e.Record.Offers) != 1 || e.Record.Offers[0].URL != e.Candidate.URL {
+	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || (e.Candidate.Adapter != "purpleschool" && len(e.Record.Offers) != 1) || len(e.Record.Offers) == 0 || e.Record.Offers[0].URL != e.Candidate.URL {
 		return ErrSource
 	}
 	if e.Kind == "curated" {
@@ -95,7 +95,7 @@ func (e QueuedObservation) validate(config Config) error {
 		if len(expectedID) > 70 {
 			expectedID = e.Candidate.Adapter + "-" + fingerprint([]byte(e.Candidate.ExternalID))[:24]
 		}
-		if e.Record.ID != expectedID || e.Record.Offers[0].ID != expectedID+"-course" {
+		if e.Record.ID != expectedID || (e.Candidate.Adapter != "purpleschool" && e.Record.Offers[0].ID != expectedID+"-course") {
 			return ErrSource
 		}
 	}
@@ -107,6 +107,13 @@ func (e QueuedObservation) validate(config Config) error {
 		return ErrSource
 	}
 	o := e.Observation
+	if e.Candidate.Adapter == "purpleschool" {
+		if !validPurpleRecord(e) {
+			return ErrSource
+		}
+	} else if o.PurpleCourseID != 0 || len(o.PurpleTariffs) > 0 {
+		return ErrSource
+	}
 	if e.Candidate.Adapter == "netology" {
 		if o.NetologyFamilyID <= 0 || o.NetologyProgramID <= 0 {
 			return ErrSource
@@ -257,7 +264,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 					switch e.Kind {
 					case "failure":
 						code = e.FailureCode
-						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2)`, e.SourceID, url)
+						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2) OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.canonical_url=$2 AND i.adapter='purpleschool' AND starts_with(updater_candidates.source_id,i.course_id||':'))`, e.SourceID, url)
 					case "curated":
 						courses, applyErr = merge(ctx, tx, old, e.Record, e.SourceID, e.Observation, observedAt, &code)
 					case "discovered":

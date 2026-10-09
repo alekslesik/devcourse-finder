@@ -45,6 +45,11 @@
       "adapter": "netology",
       "url": "https://netology.ru/development",
       "kind": "catalog"
+    },
+    {
+      "id": "purpleschool-sitemap",
+      "adapter": "purpleschool",
+      "url": "https://purpleschool.ru/sitemap.xml"
     }
   ]
 }

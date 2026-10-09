@@ -33,7 +33,7 @@ type Candidate struct {
 	FeedID     string
 }
 
-var providerHosts = map[string]string{"netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
+var providerHosts = map[string]string{"purpleschool": "purpleschool.ru", "netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
 var slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,99}$`)
 var stepikPath = regexp.MustCompile(`^/course/(?:[a-z0-9-]+-)?([1-9][0-9]*)/promo$`)
 
@@ -75,6 +75,11 @@ func candidateURL(adapter, raw, feedID string) (Candidate, bool) {
 		clean = "https://stepik.org/course/" + id + "/promo"
 	case "otus":
 		id = strings.TrimPrefix(u.Path, "/lessons/")
+		if id == u.Path || !slugPattern.MatchString(id) {
+			return Candidate{}, false
+		}
+	case "purpleschool":
+		id = strings.TrimPrefix(u.Path, "/course/")
 		if id == u.Path || !slugPattern.MatchString(id) {
 			return Candidate{}, false
 		}
@@ -327,7 +332,7 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 func fingerprint(data []byte) string { sum := sha256.Sum256(data); return hex.EncodeToString(sum[:]) }
 func languageHint(text string) string {
 	text = strings.ToLower(text)
-	for _, pair := range [][2]string{{"javascript", "javascript"}, {"typescript", "javascript"}, {"python", "python"}, {"golang", "go"}, {"java", "java"}, {"frontend", "javascript"}, {"backend-developer", "python"}, {"go-", "go"}} {
+	for _, pair := range [][2]string{{"javascript", "javascript"}, {"typescript", "javascript"}, {"python", "python"}, {"golang", "go"}, {"java", "java"}, {"frontend", "javascript"}, {"react", "javascript"}, {"nodejs", "javascript"}, {"nestjs", "javascript"}, {"vuejs", "javascript"}, {"nextjs", "javascript"}, {"nuxt", "javascript"}, {"angular", "javascript"}, {"backend-developer", "python"}, {"go-", "go"}} {
 		if strings.Contains(text, pair[0]) {
 			return pair[1]
 		}

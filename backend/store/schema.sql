@@ -93,3 +93,5 @@ CREATE TABLE IF NOT EXISTS catalog_observation_watermarks (
 ALTER TABLE updater_runs ADD COLUMN IF NOT EXISTS worker text NOT NULL DEFAULT 'legacy';
 ALTER TABLE updater_runs ADD COLUMN IF NOT EXISTS queued integer NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS updater_runs_worker_time ON updater_runs(worker,started_at DESC);
+
+ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS purple_binding jsonb;
