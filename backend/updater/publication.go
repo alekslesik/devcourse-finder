@@ -52,6 +52,23 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 			return nil, nil
 		}
 	}
+	if candidate.Adapter == "netology" {
+		if o.NetologyFamilyID <= 0 || o.NetologyProgramID <= 0 {
+			return nil, ErrSource
+		}
+		var family *int64
+		err := tx.QueryRow(ctx, "SELECT netology_family_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID).Scan(&family)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		if family != nil && *family != o.NetologyFamilyID {
+			if _, err = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)`, candidate.Adapter, candidate.ExternalID); err != nil {
+				return nil, err
+			}
+			*code = "protected_identity"
+			return nil, nil
+		}
+	}
 	resolved, err := bindIdentity(ctx, tx, candidate, record, old)
 	if errors.Is(err, ErrIdentity) {
 		*code = "protected_identity"
@@ -63,6 +80,9 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 	courses, err := merge(ctx, tx, old, resolved, resolved.ID, o, observedAt, code)
 	if err == nil && len(courses) > 0 && candidate.Adapter == "yandex" {
 		_, err = tx.Exec(ctx, "UPDATE catalog_identities SET product_id=$3,profession_id=$4 WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID, o.ProductID, o.ProfessionID)
+	}
+	if err == nil && len(courses) > 0 && candidate.Adapter == "netology" {
+		_, err = tx.Exec(ctx, "UPDATE catalog_identities SET netology_family_id=$3,netology_program_id=$4 WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID, o.NetologyFamilyID, o.NetologyProgramID)
 	}
 	return courses, err
 }

@@ -66,6 +66,7 @@ ordinary container updates; deleting that volume deletes the database.
 - [MVP status by requirement ID](docs/mvp-readiness.md)
 - [Automatic catalog updater](docs/catalog-updater.md)
 - [Practicum verification contract](docs/practicum-adapter.md)
+- [Netology verification contract](docs/netology-adapter.md)
 - [Automatic discovery and catalog expansion plan](docs/catalog-expansion-spec.md)
 - [Manual catalog import runbook](docs/catalog-operations.md)
 - [20 real programs, reviewed sources and explicit publication](docs/real-catalog.md)
@@ -477,7 +478,7 @@ CLI failures exit with code 1 and write JSON diagnostics to stderr: command, run
 
 Production includes a separate catalog updater that checks official sources at
 09:00 and 21:00 Europe/Moscow and automatically publishes verified changes without
-data PRs or manual imports. Discovery feeds cover Stepik, OTUS, Yandex Practicum, Hexlet and CodeBasics.
+data PRs or manual imports. Discovery feeds cover Stepik, OTUS, Yandex Practicum, Hexlet, CodeBasics and Netology.
 Only candidates meeting the adapter evidence rules are published; source
 availability and actual coverage are reported from PostgreSQL. See
 [coverage, safeguards and operational status](docs/catalog-updater.md).

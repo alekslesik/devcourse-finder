@@ -8,7 +8,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-var providerNames = map[string]string{"stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
+var providerNames = map[string]string{"netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
 
 func candidateEndpoint(c Candidate) string {
 	if c.Adapter == "stepik" {
@@ -22,6 +22,9 @@ func candidateEndpoint(c Candidate) string {
 func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
 		return catalog.Course{}, Observation{}, rejection("identity_mismatch")
+	}
+	if c.Adapter == "netology" {
+		return collectNetology(data, c, now)
 	}
 	if c.Adapter == "stepik" {
 		var payload struct {

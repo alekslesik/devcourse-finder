@@ -33,7 +33,7 @@ type Candidate struct {
 	FeedID     string
 }
 
-var providerHosts = map[string]string{"stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
+var providerHosts = map[string]string{"netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
 var slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,99}$`)
 var stepikPath = regexp.MustCompile(`^/course/(?:[a-z0-9-]+-)?([1-9][0-9]*)/promo$`)
 
@@ -78,6 +78,11 @@ func candidateURL(adapter, raw, feedID string) (Candidate, bool) {
 		if id == u.Path || !slugPattern.MatchString(id) {
 			return Candidate{}, false
 		}
+	case "netology":
+		id = strings.TrimPrefix(u.Path, "/programs/")
+		if id == u.Path || !slugPattern.MatchString(id) {
+			return Candidate{}, false
+		}
 	case "hexlet":
 		id = strings.TrimPrefix(u.Path, "/programs/")
 		if id == u.Path || !slugPattern.MatchString(id) {
@@ -107,7 +112,7 @@ func validateFeed(f Feed) error {
 		return errors.New("invalid official sitemap feed")
 	}
 	if f.Kind == "catalog" {
-		if f.Adapter != "codebasics" || u.Path != "/ru" {
+		if !(f.Adapter == "codebasics" && u.Path == "/ru" || f.Adapter == "netology" && u.Path == "/development") {
 			return errors.New("unsupported official HTML catalog")
 		}
 	} else {

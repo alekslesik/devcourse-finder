@@ -38,8 +38,8 @@ Further providers are tracked in the [worker roadmap](catalog-workers-roadmap.md
 
 ## Discovery and source coverage
 
-`data/updater-sources.json` enables five official discovery feeds (Stepik, OTUS,
-Yandex Practicum, Hexlet and CodeBasics) and the two curated Stepik refreshes.
+`data/updater-sources.json` enables six official discovery feeds (Stepik, OTUS,
+Yandex Practicum, Hexlet, CodeBasics and Netology) and the two curated Stepik refreshes.
 Sitemap/catalog URLs identify candidates, not published records. CodeBasics uses
 its verified Russian catalog at `/ru` (`kind: catalog`), rather than a nonexistent
 `sitemap.xml`. Hexlet uses its robots-declared gzipped sitemap and only the
@@ -70,6 +70,11 @@ landing/profession/full-price/cohort reads. Monthly credit payments, introductor
 free access, personalized discounts and expired SEO prices cannot establish a
 full price. Product/profession IDs are bound separately and protected on change.
 See its [verification contract and known coverage limits](practicum-adapter.md).
+
+Netology belongs to the page collector. Its fixed `/development` catalog discovers
+program URLs; detail pages require bound Next.js program metadata and a matching
+rendered one-payment card. Cohort IDs may rotate within the protected program
+family. See the [Netology contract and coverage limits](netology-adapter.md).
 
 OTUS uses the recorded official JSON-LD Course/Offer full-payment contract.
 The schema reader also recognizes exact-identity Course or Online Course Product
