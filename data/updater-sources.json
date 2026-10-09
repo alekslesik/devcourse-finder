@@ -39,6 +39,12 @@
       "adapter": "codebasics",
       "url": "https://code-basics.com/ru",
       "kind": "catalog"
+    },
+    {
+      "id": "netology-catalog",
+      "adapter": "netology",
+      "url": "https://netology.ru/development",
+      "kind": "catalog"
     }
   ]
 }

@@ -18,7 +18,7 @@ const publisherBatchLimit = 500
 
 func failureCodeAllowed(code string) bool {
 	switch code {
-	case "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
+	case "invalid_netology_page", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment", "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
 		return true
 	default:
 		return false
@@ -107,6 +107,13 @@ func (e QueuedObservation) validate(config Config) error {
 		return ErrSource
 	}
 	o := e.Observation
+	if e.Candidate.Adapter == "netology" {
+		if o.NetologyFamilyID <= 0 || o.NetologyProgramID <= 0 {
+			return ErrSource
+		}
+	} else if o.NetologyFamilyID != 0 || o.NetologyProgramID != 0 {
+		return ErrSource
+	}
 	if e.Candidate.Adapter == "yandex" {
 		if !productUUID.MatchString(o.ProductID) || !productUUID.MatchString(o.ProfessionID) {
 			return ErrSource

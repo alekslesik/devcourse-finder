@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.11.0] - 2026-10-09
+
+- Add automatic Netology catalog discovery and verified full-payment parsing in the page collector.
+- Protect Netology program families while allowing cohort rotation; reject conflicting prices, tariffs and start dates.
+- Add source fixtures, negative and PostgreSQL publication tests, and an English adapter runbook. Deployment remains manual.
+
 ## [0.10.0] - 2026-10-09
 
 - Add a dedicated Practicum collector that reconciles official full-price and cohort APIs with canonical course pages and the robots-declared sitemap.
