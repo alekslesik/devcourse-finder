@@ -14,6 +14,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 // Feeds contain official public sitemaps, never search-engine results. A URL in
@@ -22,6 +24,7 @@ type Feed struct {
 	ID      string `json:"id"`
 	Adapter string `json:"adapter"`
 	URL     string `json:"url"`
+	Kind    string `json:"kind,omitempty"`
 }
 type Candidate struct {
 	Adapter    string
@@ -100,10 +103,62 @@ func validateFeed(f Feed) error {
 		return errors.New("unknown sitemap provider")
 	}
 	u, err := url.Parse(f.URL)
-	if err != nil || !slugPattern.MatchString(f.ID) || u.Scheme != "https" || u.Host != providerHosts[f.Adapter] || u.User != nil || u.RawQuery != "" || u.Fragment != "" || !strings.HasSuffix(u.Path, ".xml") {
+	if err != nil || !slugPattern.MatchString(f.ID) || u.Scheme != "https" || u.Host != providerHosts[f.Adapter] || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
 		return errors.New("invalid official sitemap feed")
 	}
+	if f.Kind == "catalog" {
+		if f.Adapter != "codebasics" || u.Path != "/ru" {
+			return errors.New("unsupported official HTML catalog")
+		}
+	} else {
+		if f.Kind != "" && f.Kind != "sitemap" || !(strings.HasSuffix(u.Path, ".xml") || strings.HasSuffix(u.Path, ".xml.gz")) {
+			return errors.New("unsupported discovery feed format")
+		}
+	}
 	return nil
+}
+
+// Only links from the explicitly configured catalog page can seed candidates.
+// Detail pages still independently verify identity, price and availability.
+func catalogLinks(data []byte, f Feed) ([]string, error) {
+	base, _ := url.Parse(f.URL)
+	var urls []string
+	seen := map[string]bool{}
+	tokenizer := html.NewTokenizer(bytes.NewReader(data))
+	for {
+		kind := tokenizer.Next()
+		if kind == html.ErrorToken {
+			if tokenizer.Err() != io.EOF {
+				return nil, ErrSource
+			}
+			break
+		}
+		if kind != html.StartTagToken {
+			continue
+		}
+		t := tokenizer.Token()
+		if t.Data != "a" {
+			continue
+		}
+		for _, attr := range t.Attr {
+			if attr.Key != "href" {
+				continue
+			}
+			u, err := url.Parse(attr.Val)
+			if err != nil {
+				continue
+			}
+			candidate, ok := candidateURL(f.Adapter, base.ResolveReference(u).String(), f.ID)
+			if ok && !seen[candidate.URL] {
+				seen[candidate.URL] = true
+				urls = append(urls, candidate.URL)
+			}
+		}
+	}
+	if len(urls) == 0 {
+		return nil, ErrSource
+	}
+	return urls, nil
 }
 func sitemap(data []byte) (kind string, urls []string, err error) {
 	if len(data) > maxBody {
@@ -175,6 +230,9 @@ func childSitemaps(f Feed, urls []string) []string {
 		if f.Adapter == "stepik" && !strings.Contains(u.Path, "sitemap-course-promo-") {
 			continue
 		}
+		if f.Adapter == "hexlet" && !strings.HasSuffix(u.Path, "/programs.xml.gz") {
+			continue
+		}
 		safe = append(safe, raw)
 	}
 	return safe
@@ -184,7 +242,14 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 	if err != nil {
 		return 0, err
 	}
-	kind, urls, err := sitemap(body)
+	var kind string
+	var urls []string
+	if f.Kind == "catalog" {
+		urls, err = catalogLinks(body, f)
+		kind = "catalog"
+	} else {
+		kind, urls, err = sitemap(body)
+	}
 	if err != nil {
 		return 0, err
 	}

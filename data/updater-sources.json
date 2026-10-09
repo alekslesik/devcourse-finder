@@ -32,12 +32,13 @@
     {
       "id": "hexlet-sitemap",
       "adapter": "hexlet",
-      "url": "https://ru.hexlet.io/sitemap.xml"
+      "url": "https://ru.hexlet.io/sitemaps/ru/sitemap.xml.gz"
     },
     {
-      "id": "codebasics-sitemap",
+      "id": "codebasics-catalog",
       "adapter": "codebasics",
-      "url": "https://code-basics.com/sitemap.xml"
+      "url": "https://code-basics.com/ru",
+      "kind": "catalog"
     }
   ]
 }
