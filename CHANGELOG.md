@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.7.0] - 2026-10-09
+
+- Add a manual Collect catalog GitHub Actions button to run an extra bounded collection with the currently deployed worker and report actual coverage.
+- Coordinate manual collection with release deployment using the host lock, preserve failed collection diagnostics, and protect the SSH script input stream.
+
 ## [0.6.0] - 2026-10-08
 
 - Replace broken CodeBasics/Hexlet discovery endpoints with the verified official catalog and robots-declared program sitemap.
