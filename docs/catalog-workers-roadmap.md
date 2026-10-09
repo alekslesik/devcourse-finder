@@ -21,6 +21,7 @@ Yandex Practicum is mandatory in the first provider expansion.
 | #45 | Skypro complete pricing and enrollment binding | #35–#37 |
 | #46 | JavaRush recurring prices and original currency | Catalog model design |
 | #47 | Larger provider limits and multi-provider resource verification | Provider expansion |
+| #49 | Identity-bound tariffs sharing one Practicum canonical landing | #38; publication contract design |
 
 One repository and backend image provide three process roles: API collector,
 page collector and publisher. PostgreSQL stores candidate jobs and normalized

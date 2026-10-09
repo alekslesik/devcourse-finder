@@ -32,6 +32,26 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 		*code = "insufficient_initial_evidence"
 		return nil, nil
 	}
+	if candidate.Adapter == "yandex" {
+		if !productUUID.MatchString(o.ProductID) || !productUUID.MatchString(o.ProfessionID) {
+			return nil, ErrSource
+		}
+		var product, profession *string
+		err := tx.QueryRow(ctx, "SELECT product_id,profession_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID).Scan(&product, &profession)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		if product != nil && *product != o.ProductID || profession != nil && *profession != o.ProfessionID {
+			// An identity-rejected read interrupts consecutive confirmation just
+			// like a failed fetch. Resolve the persisted (possibly curated) ID.
+			if _, err := tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
+                (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)`, candidate.Adapter, candidate.ExternalID); err != nil {
+				return nil, err
+			}
+			*code = "protected_identity"
+			return nil, nil
+		}
+	}
 	resolved, err := bindIdentity(ctx, tx, candidate, record, old)
 	if errors.Is(err, ErrIdentity) {
 		*code = "protected_identity"
@@ -40,7 +60,11 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 	if err != nil {
 		return nil, err
 	}
-	return merge(ctx, tx, old, resolved, resolved.ID, o, observedAt, code)
+	courses, err := merge(ctx, tx, old, resolved, resolved.ID, o, observedAt, code)
+	if err == nil && len(courses) > 0 && candidate.Adapter == "yandex" {
+		_, err = tx.Exec(ctx, "UPDATE catalog_identities SET product_id=$3,profession_id=$4 WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID, o.ProductID, o.ProfessionID)
+	}
+	return courses, err
 }
 
 func coverage(ctx context.Context, db *store.DB, w io.Writer) error {

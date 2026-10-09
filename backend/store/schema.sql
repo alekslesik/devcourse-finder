@@ -63,6 +63,9 @@ CREATE TABLE IF NOT EXISTS catalog_identities (
  PRIMARY KEY(adapter,external_id)
 );
 
+ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS product_id text;
+ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS profession_id text;
+
 -- Normalized observations are durable across collector/publisher restarts.
 -- Acknowledgements commit in the same transaction as catalog publication.
 CREATE TABLE IF NOT EXISTS catalog_observations (

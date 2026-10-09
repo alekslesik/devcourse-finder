@@ -33,8 +33,8 @@ offers, future timestamps and events older than an accepted source observation
 cannot refresh the catalog. A prolonged publisher outage therefore requires fresh
 collection after recovery, rather than replaying obsolete price evidence.
 
-These roles do not add new school adapters. Practicum's dedicated price contract
-and eight further providers are tracked in the [worker roadmap](catalog-workers-roadmap.md).
+The API role includes the dedicated [Practicum adapter](practicum-adapter.md).
+Further providers are tracked in the [worker roadmap](catalog-workers-roadmap.md).
 
 ## Discovery and source coverage
 
@@ -65,6 +65,12 @@ exercise's text. This verifies Go, Python, Java, JavaScript and TypeScript progr
 TypeScript uses the existing JavaScript language family. The independent pricing
 read happens once per batch and reserves an additional request budget.
 
+Practicum uses its robots-declared extensionless sitemap and four independent
+landing/profession/full-price/cohort reads. Monthly credit payments, introductory
+free access, personalized discounts and expired SEO prices cannot establish a
+full price. Product/profession IDs are bound separately and protected on change.
+See its [verification contract and known coverage limits](practicum-adapter.md).
+
 OTUS uses the recorded official JSON-LD Course/Offer full-payment contract.
 The schema reader also recognizes exact-identity Course or Online Course Product
 records from other schools, but positive prices from providers without a verified
@@ -83,7 +89,7 @@ Ranks are interleaved so every provider and refresh lane gets an early turn.
 These are ceilings, not guaranteed throughput; slow responses reduce the batch. The two curated refreshes run first. Requests are sequential; a
 15-minute persisted claim allows recovery after process termination. Runs retain a
 10-minute deadline and stop claiming work when less than 35 seconds remain (70 seconds for the first CodeBasics detail plus
-pricing-policy read).
+pricing-policy read; 140 seconds for a Practicum page and its three API reads).
 
 Normal detail refresh/retry is due after 12 hours. Repeated failures back off to
 24, 48 and at most 72 hours; protected identities are rechecked after seven days.

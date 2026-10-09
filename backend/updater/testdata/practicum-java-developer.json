@@ -1,0 +1,67 @@
+{
+  "profession": [
+    {
+      "id": "c787f225-b873-4f09-9bd4-1548cce4272d",
+      "slug": "java-developer",
+      "name": "Java-разработчик",
+      "description": "Разрабатывает серверные приложения и сервисы на Java",
+      "price": 170500,
+      "currency": "RUB",
+      "landing_path": "",
+      "type": "default",
+      "able_to_purchase": true,
+      "hidden_type": null,
+      "is_demand_test": false,
+      "is_interactive_textbook": false,
+      "tariff": "base",
+      "has_free_track": true
+    }
+  ],
+  "prices": {
+    "java-developer": {
+      "RUB": {
+        "profession_product_id": "c787f225-b873-4f09-9bd4-1548cce4272d",
+        "profession_is_regular_charge": false,
+        "profession_price": 170500,
+        "profession_final_price": 170500,
+        "total_absolute_discount": 0,
+        "percent_discount": 0,
+        "discount_deadline": null,
+        "absolute_promocode_discount": 0,
+        "discount_2035": 0,
+        "checklist_discount": 0,
+        "promo_tariff": {},
+        "promocode": {},
+        "certificates": [],
+        "profession_partial_price": 20100,
+        "credit_price": 6960
+      }
+    }
+  },
+  "squads": [
+    {
+      "id": 23463,
+      "name": "java-developer_cohort_93",
+      "date_begin": "2026-10-15T00:00:00Z",
+      "payment_deadline": "2026-10-14T00:00:00",
+      "subscriptions_num": 3,
+      "subscriptions_limit": 500
+    },
+    {
+      "id": 23465,
+      "name": "java-developer_cohort_94",
+      "date_begin": "2026-10-29T00:00:00Z",
+      "payment_deadline": "2026-10-15T00:00:00",
+      "subscriptions_num": 1,
+      "subscriptions_limit": 500
+    },
+    {
+      "id": 23466,
+      "name": "java-developer_cohort_95",
+      "date_begin": "2026-11-12T00:00:00Z",
+      "payment_deadline": "2026-10-29T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 500
+    }
+  ]
+}

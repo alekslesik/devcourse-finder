@@ -1,0 +1,67 @@
+{
+  "profession": [
+    {
+      "id": "b5efac65-18c4-430f-a037-84cd7f72f617",
+      "slug": "backend-developer",
+      "name": "Python-разработчик",
+      "description": "Создаёт бэкэнд веб-сервисов и приложений на Python",
+      "price": 137000,
+      "currency": "RUB",
+      "landing_path": "",
+      "type": "default",
+      "able_to_purchase": true,
+      "hidden_type": null,
+      "is_demand_test": false,
+      "is_interactive_textbook": false,
+      "tariff": "base",
+      "has_free_track": true
+    }
+  ],
+  "prices": {
+    "backend-developer": {
+      "RUB": {
+        "profession_product_id": "b5efac65-18c4-430f-a037-84cd7f72f617",
+        "profession_is_regular_charge": false,
+        "profession_price": 137000,
+        "profession_final_price": 137000,
+        "total_absolute_discount": 0,
+        "percent_discount": 0,
+        "discount_deadline": null,
+        "absolute_promocode_discount": 0,
+        "discount_2035": 0,
+        "checklist_discount": 0,
+        "promo_tariff": {},
+        "promocode": {},
+        "certificates": [],
+        "profession_partial_price": 16000,
+        "credit_price": 5593
+      }
+    }
+  },
+  "squads": [
+    {
+      "id": 22932,
+      "name": "backend-developer_cohort_152",
+      "date_begin": "2026-10-08T00:00:00Z",
+      "payment_deadline": "2026-10-11T00:00:00",
+      "subscriptions_num": 33,
+      "subscriptions_limit": 600
+    },
+    {
+      "id": 22933,
+      "name": "backend-developer_cohort_153",
+      "date_begin": "2026-10-22T00:00:00Z",
+      "payment_deadline": "2026-10-21T00:00:00",
+      "subscriptions_num": 5,
+      "subscriptions_limit": 600
+    },
+    {
+      "id": 22934,
+      "name": "backend-developer_cohort_154",
+      "date_begin": "2026-11-05T00:00:00Z",
+      "payment_deadline": "2026-10-22T00:00:00",
+      "subscriptions_num": 2,
+      "subscriptions_limit": 600
+    }
+  ]
+}

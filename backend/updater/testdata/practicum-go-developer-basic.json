@@ -1,0 +1,67 @@
+{
+  "profession": [
+    {
+      "id": "9752fad5-3e3d-4b18-a8f5-32321468b5bd",
+      "slug": "go-developer-basic",
+      "name": "Go-разработчик с нуля",
+      "description": "Создаёт бэкенд-сервисы на Go и работает с инфраструктурой",
+      "price": 154000,
+      "currency": "RUB",
+      "landing_path": "",
+      "type": "default",
+      "able_to_purchase": true,
+      "hidden_type": null,
+      "is_demand_test": false,
+      "is_interactive_textbook": false,
+      "tariff": "base",
+      "has_free_track": true
+    }
+  ],
+  "prices": {
+    "go-developer-basic": {
+      "RUB": {
+        "profession_product_id": "2f1eb5b7-9c8b-46fe-825f-81b2f64665a2",
+        "profession_is_regular_charge": false,
+        "profession_price": 154000,
+        "profession_final_price": 154000,
+        "total_absolute_discount": 0,
+        "percent_discount": 0,
+        "discount_deadline": null,
+        "absolute_promocode_discount": 0,
+        "discount_2035": 0,
+        "checklist_discount": 0,
+        "promo_tariff": {},
+        "promocode": {},
+        "certificates": [],
+        "profession_partial_price": 21500,
+        "credit_price": 6287
+      }
+    }
+  },
+  "squads": [
+    {
+      "id": 24036,
+      "name": "go-developer-basic_cohort_40",
+      "date_begin": "2026-10-08T00:00:00Z",
+      "payment_deadline": "2026-10-11T00:00:00",
+      "subscriptions_num": 4,
+      "subscriptions_limit": 600
+    },
+    {
+      "id": 22902,
+      "name": "go-developer-basic_cohort_41",
+      "date_begin": "2026-10-22T00:00:00Z",
+      "payment_deadline": "2026-10-21T00:00:00",
+      "subscriptions_num": 1,
+      "subscriptions_limit": 600
+    },
+    {
+      "id": 22903,
+      "name": "go-developer-basic_cohort_42",
+      "date_begin": "2026-11-12T00:00:00Z",
+      "payment_deadline": "2026-10-29T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 600
+    }
+  ]
+}

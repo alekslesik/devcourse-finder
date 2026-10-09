@@ -117,6 +117,9 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		}
 		// Do not claim work that cannot reasonably finish within this run's budget.
 		reserve := 35 * time.Second
+		if w.Adapter == "yandex" {
+			reserve = 140 * time.Second // Page, profession, full price and cohort reads.
+		}
 		if w.Adapter == "codebasics" && !policyAttempted {
 			reserve = 70 * time.Second // One detail plus one pricing-policy fetch.
 		}
@@ -146,6 +149,8 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 					record, o, parseErr = collectCodeBasics(body, basicsPolicy, w.Candidate, time.Now().UTC())
 				}
 				digest = fingerprint([]byte(digest + ":" + basicsPolicyDigest))
+			} else if w.Adapter == "yandex" {
+				record, o, digest, parseErr = fetchPracticum(ctx, client, body, digest, w.Candidate)
 			} else {
 				record, o, parseErr = collectCandidate(body, w.Candidate, time.Now().UTC())
 			}
