@@ -239,3 +239,56 @@ func TestFailedDiscoveredReadBreaksClosureConfirmation(t *testing.T) {
 		t.Fatal("failed read retained confirmation", confirmations, err)
 	}
 }
+
+func TestCodeBasicsDiscoveryUsesFreshPolicyAndDoesNotDuplicate(t *testing.T) {
+	db := postgresFixture(t)
+	ctx := context.Background()
+	config := productionConfig(t)
+	config.Discovery = []Feed{{ID: "codebasics", Adapter: "codebasics", URL: "https://code-basics.com/ru", Kind: "catalog"}}
+	policy := fixtureHTML(t, "codebasics-free-policy.json")
+	body := basicsFixture(t)
+	policyReads := 0
+	service := Service{DB: db, Config: config, Client: &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+		data := []byte{}
+		if r.URL.Host == "code-basics.com" {
+			if r.URL.Path == "/ru" {
+				policyReads++
+				data = append(append([]byte{}, policy...), []byte(`<a href="/ru/languages/python">Python</a>`)...)
+			} else {
+				data = body
+			}
+		} else {
+			c := validStepik()
+			if strings.HasSuffix(r.URL.Path, "58852") {
+				c["id"] = 58852
+				c["title"] = `"Поколение Python": курс для начинающих`
+			}
+			data = stepikJSON(c)
+		}
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(string(data))), Header: http.Header{}, Request: r}, nil
+	})}}
+	if result, err := service.Run(ctx); err != nil || result.Published != 3 {
+		t.Fatal(result, err)
+	}
+	if policyReads != 2 {
+		t.Fatal("pricing policy not rechecked independently", policyReads)
+	}
+	var count int
+	if err := db.Pool.QueryRow(ctx, "SELECT count(*) FROM courses WHERE provider='CodeBasics'").Scan(&count); err != nil || count != 1 {
+		t.Fatal(count, err)
+	}
+	db.Pool.Exec(ctx, "UPDATE catalog_candidates SET next_attempt_at=now()")
+	// The platform's pricing policy has disappeared: retain the existing catalog
+	// snapshot and its old verification time, rather than refreshing free pricing.
+	policy = []byte(`<html>Pricing unavailable</html>`)
+	if result, err := service.Run(ctx); err != nil || result.Failed != 1 {
+		t.Fatal("missing pricing evidence not isolated", result, err)
+	}
+	if err := db.Pool.QueryRow(ctx, "SELECT count(*) FROM courses WHERE provider='CodeBasics'").Scan(&count); err != nil || count != 1 {
+		t.Fatal("duplicate/lost course", count, err)
+	}
+	var state string
+	if err := db.Pool.QueryRow(ctx, "SELECT state FROM catalog_candidates WHERE adapter='codebasics'").Scan(&state); err != nil || state != "rejected" {
+		t.Fatal(state, err)
+	}
+}

@@ -138,3 +138,23 @@ After three live collection runs on October 8, measured coverage was:
 OTUS's queue contained 20 candidates: 11 published, 7 rejected and 2 pending.
 These results reflect source availability at collection time; they are not a
 hardcoded production seed. `catalog-update status` reports subsequent live totals.
+
+
+## Source-coverage follow-up (v0.6.0)
+
+The implementation investigation found configured `/sitemap.xml` endpoints that
+return 404 on Hexlet and CodeBasics. The follow-up PR corrects Hexlet to the
+robots-declared `/sitemaps/ru/sitemap.xml.gz`, selects only its programs shard and
+adds bounded HTML discovery from CodeBasics `/ru`.
+
+CodeBasics now has a recorded curriculum-plus-platform-pricing contract, verified
+live for five full programs (Go, Python, Java, JavaScript, TypeScript). A fresh
+independent official pricing FAQ is required; missing/changed pricing, drafts,
+unbuilt curricula, wrong identities and one-lesson previews remain unpublished.
+
+The **100 verified-program goal remains open**. Hexlet's sitemap contains 138 program URLs; 41 matching path hints were queued
+for detail/tariff verification; Stepik discovery currently
+returns 403. The next breadth work is a dedicated Hexlet tariff/enrollment adapter
+and additional official-school catalog contracts. Existing records are deduplicated,
+so enabling a source refreshes any matching curated course instead of promising a
+fixed increase to the visible total. No production deployment was performed.

@@ -51,3 +51,34 @@ func TestIndexRejectsOtherHostsAndExerciseMaps(t *testing.T) {
 		t.Fatal("unapproved feed accepted")
 	}
 }
+
+func TestOfficialCatalogLinksAndGzipFeedValidation(t *testing.T) {
+	f := Feed{ID: "codebasics", Adapter: "codebasics", URL: "https://code-basics.com/ru", Kind: "catalog"}
+	if err := validateFeed(f); err != nil {
+		t.Fatal(err)
+	}
+	links, err := catalogLinks([]byte(`<a href="/ru/languages/python">Python</a><a href="/ru/languages/python/">duplicate</a><a href="/ru/languages/python/lessons/hello">fragment</a><a href="https://evil.example/ru/languages/java">external</a><a href="/en/languages/java">wrong locale</a>`), f)
+	if err != nil || len(links) != 1 || links[0] != "https://code-basics.com/ru/languages/python" {
+		t.Fatal(links, err)
+	}
+	if _, err = catalogLinks([]byte(`<html>Access denied</html>`), f); err == nil {
+		t.Fatal("error page discovered")
+	}
+	if err = validateFeed(Feed{ID: "hexlet", Adapter: "hexlet", URL: "https://ru.hexlet.io/sitemaps/ru/sitemap.xml.gz"}); err != nil {
+		t.Fatal(err)
+	}
+	f.URL = "https://code-basics.com/admin"
+	if validateFeed(f) == nil {
+		t.Fatal("unverified catalog path allowed")
+	}
+	children := childSitemaps(Feed{Adapter: "hexlet"}, []string{"https://ru.hexlet.io/sitemaps/ru/blogs.xml.gz", "https://ru.hexlet.io/sitemaps/ru/programs.xml.gz"})
+	if len(children) != 1 {
+		t.Fatal("blog shard selected", children)
+	}
+}
+
+func TestTypeScriptCandidateUsesJavaScriptFamilyHint(t *testing.T) {
+	if languageHint("typescript") != "javascript" {
+		t.Fatal("supported TypeScript course excluded from discovery")
+	}
+}

@@ -99,6 +99,9 @@ func retryDelay(failures int) time.Duration {
 }
 func (s *Service) processBatch(ctx context.Context, client *http.Client, publish publishCandidate) (BatchStats, error) {
 	stats := BatchStats{}
+	var basicsPolicy []byte
+	var basicsPolicyDigest string
+	policyAttempted := false
 	work, err := s.queueWork(ctx)
 	if err != nil {
 		return stats, err
@@ -108,7 +111,11 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			return stats, ctx.Err()
 		}
 		// Do not claim work that cannot reasonably finish within this run's budget.
-		if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < 35*time.Second {
+		reserve := 35 * time.Second
+		if w.Adapter == "codebasics" && !policyAttempted {
+			reserve = 70 * time.Second // One detail plus one pricing-policy fetch.
+		}
+		if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < reserve {
 			break
 		}
 		if _, err = s.DB.Pool.Exec(ctx, `UPDATE catalog_candidates SET attempted_at=now(),next_attempt_at=now()+interval '15 minutes' WHERE adapter=$1 AND external_id=$2`, w.Adapter, w.ExternalID); err != nil {
@@ -121,7 +128,21 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		failures := w.Failures + 1
 		delay := retryDelay(failures)
 		if err == nil {
-			record, o, parseErr := collectCandidate(body, w.Candidate, time.Now().UTC())
+			var record catalog.Course
+			var o Observation
+			var parseErr error
+			if w.Adapter == "codebasics" {
+				if !policyAttempted {
+					policyAttempted = true
+					basicsPolicy, basicsPolicyDigest, parseErr = fetch(ctx, client, "https://code-basics.com/ru")
+				}
+				if parseErr == nil {
+					record, o, parseErr = collectCodeBasics(body, basicsPolicy, w.Candidate, time.Now().UTC())
+				}
+				digest = fingerprint([]byte(digest + ":" + basicsPolicyDigest))
+			} else {
+				record, o, parseErr = collectCandidate(body, w.Candidate, time.Now().UTC())
+			}
 			code = "invalid_course"
 			if parseErr == nil {
 				var published int

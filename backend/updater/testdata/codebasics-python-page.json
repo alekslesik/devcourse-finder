@@ -1,0 +1,58 @@
+{
+  "component": "web/languages/show",
+  "url": "/ru/languages/python",
+  "props": {
+    "locale": "ru",
+    "course": {
+      "id": 3,
+      "slug": "python",
+      "current_version": {
+        "result": "Success",
+        "state": "built"
+      }
+    },
+    "courseLandingPage": {
+      "language_id": 3,
+      "slug": "python",
+      "main": true,
+      "listed": true,
+      "state": "published",
+      "header": "Курс Python",
+      "description": "Основы Python для начинающих. Простое и понятное объяснение всех ключевых конструкций от переменных до функций"
+    },
+    "firstLesson": {
+      "slug": "hello-world",
+      "language": {
+        "slug": "python"
+      }
+    },
+    "courseModules": [
+      {
+        "id": 14,
+        "locale": "ru"
+      }
+    ],
+    "lessonsByModuleId": {
+      "14": [
+        {
+          "slug": "hello-world",
+          "language": {
+            "slug": "python"
+          }
+        },
+        {
+          "slug": "comments",
+          "language": {
+            "slug": "python"
+          }
+        },
+        {
+          "slug": "instructions",
+          "language": {
+            "slug": "python"
+          }
+        }
+      ]
+    }
+  }
+}

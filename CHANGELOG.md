@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.6.0] - 2026-10-08
+
+- Replace broken CodeBasics/Hexlet discovery endpoints with the verified official catalog and robots-declared program sitemap.
+- Automatically verify and publish complete CodeBasics programs using current curriculum identity and independently refreshed platform-wide free-pricing evidence; include TypeScript in the JavaScript family.
+- Record actual source coverage and remaining catalog-growth limits without counting unverified candidates as published courses.
+
 ## [0.5.0] - 2026-10-08
 
 - Discover and publish verified catalog candidates automatically from official provider feeds with persistent identity, bounded scheduling and measured coverage.
