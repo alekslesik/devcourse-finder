@@ -1,0 +1,282 @@
+package updater
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"log/slog"
+	"regexp"
+	"time"
+
+	"devcourse-finder/catalog"
+	"github.com/jackc/pgx/v5"
+)
+
+const observationQueueLimit = 50000
+const publisherBatchLimit = 500
+
+var safeCode = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
+var evidenceDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)
+
+// QueuedObservation contains normalized public facts, never raw HTML, cookies,
+// credentials or arbitrary underlying error messages. The publisher revalidates it.
+type QueuedObservation struct {
+	Version     int            `json:"version"`
+	Kind        string         `json:"kind"`
+	Candidate   Candidate      `json:"candidate"`
+	SourceID    string         `json:"source_id,omitempty"`
+	Record      catalog.Course `json:"record"`
+	Observation Observation    `json:"observation"`
+	ObservedAt  time.Time      `json:"observed_at"`
+	Digest      string         `json:"digest,omitempty"`
+	FailureCode string         `json:"failure_code,omitempty"`
+}
+
+func (e QueuedObservation) validate(config Config) error {
+	identity, ok := candidateURL(e.Candidate.Adapter, e.Candidate.URL, e.Candidate.FeedID)
+	if e.Version != 1 || !ok || identity.URL != e.Candidate.URL || identity.ExternalID != e.Candidate.ExternalID || e.ObservedAt.IsZero() {
+		return ErrSource
+	}
+	if e.Kind != "curated" && e.Kind != "discovered" && e.Kind != "failure" {
+		return ErrSource
+	}
+	if e.SourceID != "" {
+		valid := false
+		for _, source := range config.Sources {
+			if source.CourseID == e.SourceID && source.Adapter == e.Candidate.Adapter && config.Template(source.CourseID).Source == e.Candidate.URL {
+				valid = true
+			}
+		}
+		if !valid {
+			return ErrSource
+		}
+	} else {
+		valid := false
+		for _, feed := range config.Discovery {
+			if feed.ID == e.Candidate.FeedID && feed.Adapter == e.Candidate.Adapter {
+				valid = true
+			}
+		}
+		if !valid {
+			return ErrSource
+		}
+	}
+	if e.Digest != "" && !evidenceDigest.MatchString(e.Digest) {
+		return ErrSource
+	}
+	if e.Kind == "failure" {
+		if !safeCode.MatchString(e.FailureCode) {
+			return ErrSource
+		}
+		return nil
+	}
+	if e.Kind == "curated" && e.SourceID == "" || e.Kind == "discovered" && e.SourceID != "" || !evidenceDigest.MatchString(e.Digest) {
+		return ErrSource
+	}
+	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || len(e.Record.Offers) != 1 || e.Record.Offers[0].URL != e.Candidate.URL {
+		return ErrSource
+	}
+	if e.Kind == "curated" {
+		template := config.Template(e.SourceID)
+		if e.Record.ID != template.ID || e.Record.Offers[0].ID != template.Offers[0].ID {
+			return ErrSource
+		}
+	} else {
+		expectedID := e.Candidate.Adapter + "-" + e.Candidate.ExternalID
+		if len(expectedID) > 70 {
+			expectedID = e.Candidate.Adapter + "-" + fingerprint([]byte(e.Candidate.ExternalID))[:24]
+		}
+		if e.Record.ID != expectedID || e.Record.Offers[0].ID != expectedID+"-course" {
+			return ErrSource
+		}
+	}
+	raw, err := json.Marshal(catalog.Dataset{Domains: []string{providerHosts[e.Candidate.Adapter]}, Courses: []catalog.Course{e.Record}})
+	if err != nil {
+		return err
+	}
+	if _, err = catalog.Decode(bytes.NewReader(raw)); err != nil {
+		return ErrSource
+	}
+	o := e.Observation
+	if o.Price != nil && *o.Price < 0 || o.Price != nil && o.PriceUnknown {
+		return ErrSource
+	}
+	for _, value := range []struct {
+		value   string
+		allowed []string
+	}{{o.Enrollment, []string{"", "open", "closed", "continuous"}}, {o.Schedule, []string{"", "flexible", "scheduled", "unknown"}}} {
+		valid := false
+		for _, allowed := range value.allowed {
+			if value.value == allowed {
+				valid = true
+			}
+		}
+		if !valid {
+			return ErrSource
+		}
+	}
+	return nil
+}
+
+func (s *Service) enqueue(ctx context.Context, e QueuedObservation) error {
+	e.Version = 1
+	e.ObservedAt = e.ObservedAt.UTC().Truncate(time.Microsecond)
+	if err := e.validate(s.Config); err != nil {
+		return err
+	}
+	raw, err := json.Marshal(e)
+	if err != nil {
+		return err
+	}
+	if len(raw) > 65536 {
+		return ErrSource
+	}
+	tx, err := s.DB.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(829110)"); err != nil {
+		return err
+	}
+	var count int
+	if err = tx.QueryRow(ctx, "SELECT count(*) FROM catalog_observations WHERE processed_at IS NULL").Scan(&count); err != nil {
+		return err
+	}
+	if count >= observationQueueLimit {
+		return errors.New("observation queue is full; publication must catch up")
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO catalog_observations(canonical_url,observed_at,kind,payload) VALUES($1,$2,$3,$4) ON CONFLICT(canonical_url,observed_at,kind) DO NOTHING`, e.Candidate.URL, e.ObservedAt, e.Kind, raw); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// Publish consumes FIFO observations under one publisher lock. Each catalog
+// merge, watermark, candidate status and acknowledgement commit atomically.
+func (s *Service) Publish(ctx context.Context) (result Result, err error) {
+	result.Status = "completed"
+	lock, err := s.DB.Pool.Begin(ctx)
+	if err != nil {
+		return result, err
+	}
+	defer func() {
+		cleanup, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		lock.Rollback(cleanup)
+	}()
+	var acquired bool
+	if err = lock.QueryRow(ctx, "SELECT pg_try_advisory_xact_lock(829108)").Scan(&acquired); err != nil {
+		return result, err
+	}
+	if !acquired {
+		return result, ErrBusy
+	}
+	for i := 0; i < publisherBatchLimit; i++ {
+		if err = ctx.Err(); err != nil {
+			return result, err
+		}
+		if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < 5*time.Second {
+			break
+		}
+		var id int64
+		var raw []byte
+		var url, kind string
+		var observedAt time.Time
+		err = s.DB.Pool.QueryRow(ctx, `SELECT id,payload,canonical_url,observed_at,kind FROM catalog_observations WHERE processed_at IS NULL ORDER BY id LIMIT 1`).Scan(&id, &raw, &url, &observedAt, &kind)
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = nil
+			break
+		}
+		if err != nil {
+			return result, err
+		}
+		var e QueuedObservation
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		decoder.DisallowUnknownFields()
+		valid := decoder.Decode(&e) == nil && e.validate(s.Config) == nil && e.Candidate.URL == url && e.Kind == kind && e.ObservedAt.Equal(observedAt)
+		code := "invalid_observation"
+		n, publishErr := s.DB.UpdateVerified(ctx, []string{providerHosts[e.Candidate.Adapter]}, "automatic-catalog-publisher", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
+			var courses []catalog.Course
+			if valid {
+				code = "verified"
+				var last time.Time
+				watermarkErr := tx.QueryRow(ctx, "SELECT observed_at FROM catalog_observation_watermarks WHERE canonical_url=$1", url).Scan(&last)
+				if watermarkErr != nil && !errors.Is(watermarkErr, pgx.ErrNoRows) {
+					return nil, watermarkErr
+				}
+				stale := !last.IsZero() && !observedAt.After(last) || time.Since(observedAt) > 48*time.Hour || observedAt.After(time.Now().Add(5*time.Minute))
+				// An operator or legacy updater may have recorded a newer verified read.
+				for _, c := range old {
+					if c.Source == url {
+						for _, o := range c.Offers {
+							if o.PriceCheckedAt.After(observedAt) {
+								stale = true
+							}
+						}
+					}
+				}
+				if stale {
+					code = "stale_observation"
+				} else {
+					var applyErr error
+					switch e.Kind {
+					case "failure":
+						code = e.FailureCode
+						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2)`, e.SourceID, url)
+					case "curated":
+						courses, applyErr = merge(ctx, tx, old, e.Record, e.SourceID, e.Observation, observedAt, &code)
+					case "discovered":
+						courses, applyErr = mergeDiscovered(ctx, tx, old, e.Candidate, e.Record, e.Observation, observedAt, &code)
+					}
+					if applyErr != nil {
+						return nil, applyErr
+					}
+					if _, applyErr = tx.Exec(ctx, `INSERT INTO catalog_observation_watermarks VALUES($1,$2,$3) ON CONFLICT(canonical_url) DO UPDATE SET observed_at=EXCLUDED.observed_at,event_id=EXCLUDED.event_id`, url, observedAt, id); applyErr != nil {
+						return nil, applyErr
+					}
+				}
+				if e.Kind != "failure" && code != "stale_observation" {
+					state := "rejected"
+					delay := 72 * time.Hour
+					switch code {
+					case "verified":
+						state = "published"
+						delay = 12 * time.Hour
+					case "pending_confirmation":
+						state = ""
+						delay = 12 * time.Hour
+					case "protected_course", "protected_offer", "protected_identity":
+						state = "protected"
+						delay = 7 * 24 * time.Hour
+					}
+					if _, updateErr := tx.Exec(ctx, `UPDATE catalog_candidates SET state=CASE WHEN $3='' THEN state ELSE $3 END,code=$4,next_attempt_at=$5 WHERE adapter=$1 AND external_id=$2 AND attempted_at<=$6`, e.Candidate.Adapter, e.Candidate.ExternalID, state, code, time.Now().Add(delay), observedAt); updateErr != nil {
+						return nil, updateErr
+					}
+					if e.SourceID != "" {
+						if _, updateErr := tx.Exec(ctx, `UPDATE updater_sources SET code=$2 WHERE source_id=$1 AND attempted_at<=$3`, e.SourceID, code, observedAt); updateErr != nil {
+							return nil, updateErr
+						}
+					}
+				}
+			}
+			if _, ackErr := tx.Exec(ctx, `UPDATE catalog_observations SET processed_at=now(),code=$2 WHERE id=$1 AND processed_at IS NULL`, id, code); ackErr != nil {
+				return nil, ackErr
+			}
+			return courses, nil
+		})
+		if publishErr != nil {
+			return result, publishErr
+		}
+		result.Published += n
+		if code == "invalid_observation" {
+			result.Failed++
+			result.Status = "partial"
+		}
+		slog.Info("catalog observation processed", "event_id", id, "code", code, "published", n)
+	}
+	// Retain recent diagnostics while incrementally trimming old/overflow done rows.
+	_, err = s.DB.Pool.Exec(ctx, `DELETE FROM catalog_observations WHERE id IN (SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL AND (processed_at<now()-interval '7 days' OR id<(SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL ORDER BY id DESC OFFSET 25000 LIMIT 1)) ORDER BY id LIMIT 1000)`)
+	return result, err
+}
