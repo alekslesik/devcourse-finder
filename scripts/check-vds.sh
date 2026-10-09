@@ -56,8 +56,21 @@ else
 fi
 site_url=$(jq -r '.services.frontend.environment.SITE_URL // ""' <<<"$config")
 services=(db migrate api frontend)
-if jq -e '.services | has("catalog-updater")' <<<"$config" >/dev/null; then
-  services+=(catalog-updater)
+for worker in catalog-updater catalog-pages catalog-publisher; do
+  if jq -e --arg worker "$worker" '.services | has($worker)' <<<"$config" >/dev/null; then
+    services+=("$worker")
+  fi
+done
+if jq -e '.services | has("catalog-pages") or has("catalog-publisher")' <<<"$config" >/dev/null; then
+  if jq -e '
+    .services["catalog-updater"].environment.CATALOG_WORKER == "api" and
+    .services["catalog-pages"].environment.CATALOG_WORKER == "pages" and
+    .services["catalog-publisher"].environment.CATALOG_WORKER == "publisher"
+  ' <<<"$config" >/dev/null; then
+    pass 'Catalog workers: API, pages and publisher roles configured'
+  else
+    fail 'Catalog worker role configuration is incomplete or incorrect'
+  fi
 fi
 unset config
 

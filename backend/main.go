@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -133,6 +134,16 @@ func run() error {
 				defer done()
 				var result updater.Result
 				result, err = service.Run(bounded)
+				// The background publisher may own the lock while manual collection finishes.
+				// Wait only for this expected contention, within the existing command deadline.
+				for worker == "publisher" && errors.Is(err, updater.ErrBusy) {
+					select {
+					case <-bounded.Done():
+						err = bounded.Err()
+					case <-time.After(time.Second):
+						result, err = service.Run(bounded)
+					}
+				}
 				if err == nil && result.Status == "failed" {
 					err = fmt.Errorf("all catalog sources failed verification")
 				}

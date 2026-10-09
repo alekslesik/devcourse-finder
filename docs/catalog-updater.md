@@ -1,15 +1,40 @@
 # Automatic catalog updater
 
-The production stack includes a separate `catalog-updater` process. It collects
-configured official sources at **09:00 and 21:00 Europe/Moscow**, then validates
-and publishes directly into PostgreSQL. No data PR, approval or manual import is
-required. The API invalidates its catalog cache using the existing import revision.
+Production uses three isolated roles from one Go image:
 
-On the first start, collection runs immediately. Restarts use persisted run times
-to avoid repeating a schedule window. A missed window is collected once; the
-service does not replay a backlog. PostgreSQL prevents overlapping collectors.
-An interrupted collection is retried in the next window. SIGTERM stops collection
-and the scheduler gracefully.
+| Service | Role | Sources | Schedule |
+| --- | --- | --- | --- |
+| `catalog-updater` | `api` | Stepik and configured Yandex sources | 09:00 and 21:00 Europe/Moscow |
+| `catalog-pages` | `pages` | OTUS, Hexlet and CodeBasics | 09:00 and 21:00 Europe/Moscow |
+| `catalog-publisher` | `publisher` | PostgreSQL observations; no HTTP fetching | Poll every 10 seconds |
+
+Each collector has independent persisted run times, advisory lock and heartbeat.
+A missed schedule runs once on startup; historical windows are not replayed.
+Collectors retain separate ten-minute deadlines and sequential HTTP requests.
+A failing or busy API collector does not hold the pages collector's lock.
+SIGTERM stops each scheduler gracefully. Empty `CATALOG_WORKER` retains the
+legacy single-worker behavior for older operational commands and local tests;
+legacy collection cannot overlap split collection/publication.
+
+Collectors enqueue versioned, identity-bound observations, including fixed failure
+codes, without changing the public catalog. Candidate/source retry state and the
+observation enqueue commit together. The publisher validates envelopes again,
+processes at most 500 events per poll, and commits the catalog change, identity,
+audit snapshot, watermark and acknowledgement in one transaction. Duplicate,
+invalid and stale events are acknowledged without publication. FIFO processing
+preserves intervening failure events and original observation timestamps for
+6–26-hour anomaly confirmation. No data PR, approval or manual import is required.
+The API invalidates its cache using the existing import revision.
+
+Pending observations are capped at 50,000; reaching capacity fails enqueue rather
+than dropping observations. Processed observations are incrementally pruned after
+seven days or beyond the newest 25,000 rows. Events older than 48 hours, expired
+offers, future timestamps and events older than an accepted source observation
+cannot refresh the catalog. A prolonged publisher outage therefore requires fresh
+collection after recovery, rather than replaying obsolete price evidence.
+
+These roles do not add new school adapters. Practicum's dedicated price contract
+and eight further providers are tracked in the [worker roadmap](catalog-workers-roadmap.md).
 
 ## Discovery and source coverage
 
@@ -92,7 +117,7 @@ free. Existing curated records retain their identity, classifications and edits.
 - Each accepted source update merges under the same transaction lock as manual
   imports. Current database state, validation, before/after history and publication
   commit together. A failed transaction cannot publish half a course. Imports keep
-  the pre-update catalog snapshot and the `automatic-catalog-updater` operator.
+  the pre-update catalog snapshot and the `automatic-catalog-publisher` operator (legacy runs retain `automatic-catalog-updater`).
 
 ## Run an extra collection from GitHub
 
@@ -100,7 +125,7 @@ After the workflow PR merges into `main`, open **Actions → Collect catalog →
 Run workflow**, select `main`, and click **Run workflow**. No input or terminal is
 required. The workflow uses the existing production `VDS_PASS` secret, VDS host/user
 variables and pinned SSH host key. It sends its helper over SSH and executes
-`catalog-update once` in the **currently deployed** running worker, followed by
+`catalog-update once` in each **currently deployed** running role (API, pages, publisher), followed by
 `catalog-update status`. Deploying the workflow release to the VDS is not required
 for the button itself; deploy a newer application release to use its new adapters.
 
@@ -121,8 +146,8 @@ code is preserved.
 ## Deployment and diagnosis
 
 Release deployment remains manual through **Deploy release**. After deploying
-this version, the production Compose overlay automatically builds and starts the
-worker alongside the existing services. No new secret, host port or cron entry is
+this version, the production Compose overlay automatically builds and starts all three
+roles alongside the existing services. No new secret, host port or cron entry is
 needed. Deployments remove orphan services, so selecting a pre-worker release
 stops and removes the collector. The manual workflow passes this policy to older
 release scripts as well; database volumes are preserved. Local development and smoke/e2e fixtures do not start the worker.
@@ -131,17 +156,20 @@ From `/srv/devcourse-finder/current`, using the existing production environment:
 
 ```bash
 docker compose --env-file /srv/devcourse-finder/.env \
-  -f compose.yaml -f compose.production.yaml ps catalog-updater
+  -f compose.yaml -f compose.production.yaml ps catalog-updater catalog-pages catalog-publisher
 
 docker compose --env-file /srv/devcourse-finder/.env \
-  -f compose.yaml -f compose.production.yaml logs --tail=100 catalog-updater
+  -f compose.yaml -f compose.production.yaml logs --tail=100 catalog-updater catalog-pages catalog-publisher
 
 docker compose --env-file /srv/devcourse-finder/.env \
   -f compose.yaml -f compose.production.yaml exec -T \
   catalog-updater devcourse-finder catalog-update status
 ```
 
-`catalog-update health` checks a database heartbeat younger than 90 seconds.
+`catalog-update health` checks the selected role's database heartbeat younger than 90 seconds.
+Status includes all three heartbeats and publication queue depth, oldest pending
+observation and last acknowledgement. A live publisher with a growing queue needs
+log/database investigation; health alone does not prove publication progress.
 It checks worker liveness, **not** whether every school is available. Source status
 includes attempted/verified timestamps, safe error codes and consecutive failures.
 The worker emits an error-level event after three consecutive source failures;
@@ -231,3 +259,27 @@ it does not assert which individual field failed. Other adapter failures retain
 `invalid_course`; failed network reads retain `source_unavailable`.
 Only fixed codes are recorded, never raw source bodies or underlying error text.
 Rejection leaves existing publications intact and keeps the bounded retry policy.
+
+### Split-worker deployment and recovery
+
+All three roles run as the existing non-root app, with read-only data mounts,
+no published ports, dropped capabilities and 128 MiB limits each
+(`GOMEMLIMIT=96MiB`; combined configured ceiling 384 MiB). No new dependency,
+secret, message broker or host cron is required. `check-vds.sh` verifies every
+configured role, its health and private ports.
+
+The Collect catalog helper detects the deployed Compose services. Older releases
+use one worker; split releases require all three running before collection starts.
+It runs collectors sequentially, then the publisher, and always attempts status
+while preserving the first failure. A manual publisher waits for background lock
+contention within its ten-minute deadline. The workflow allows 40 minutes for the
+three bounded commands and connection overhead.
+
+On publisher failure, inspect its logs and status, restore it, then run Collect
+catalog. Unacknowledged observations survive process/container restart and a
+failed publication transaction. Invalid events cannot block later valid events.
+Before rolling back to a legacy single-worker version, let publication drain and
+record queue status. The older binary ignores remaining observation tables;
+rollback does not delete them or replay them, and schema migration is additive.
+Deployment remains manual through Deploy release; neither merge nor release
+publication deploys the host.

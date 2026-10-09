@@ -3,6 +3,14 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.9.0] - 2026-10-09
+
+- Separate catalog ingestion into independently scheduled API and page collectors with a durable PostgreSQL observation queue and atomic publisher.
+- Preserve original verification timestamps, failure ordering and manual edits; acknowledge publication in the same transaction as catalog and audit changes.
+- Add independent worker health, queue diagnostics and bounded retention; reject invalid, duplicate and outdated observations.
+- Run all three roles in production and support both split and legacy deployments through the manual Collect catalog button, without enabling automatic deployment.
+- Track mandatory Practicum and further provider adapters in a GitHub roadmap; no additional school adapter is enabled by this release.
+
 ## [0.8.0] - 2026-10-09
 
 - Expand bounded Stepik discovery to up to 120 new candidates and 30 refreshes per run, preserving provider fairness and the collection deadline.

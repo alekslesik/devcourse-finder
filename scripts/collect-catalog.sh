@@ -17,12 +17,27 @@ release=$(readlink -f "$base/current")
 compose=(docker compose --project-name devcourse-finder --env-file "$base/.env" -f "$release/compose.yaml" -f "$release/compose.production.yaml")
 services=$("${compose[@]}" config --services </dev/null)
 [[ $'\n'"$services"$'\n' == *$'\ncatalog-updater\n'* ]] || { echo 'The deployed release does not include catalog-updater.' >&2; exit 1; }
-container=$("${compose[@]}" ps --status running -q catalog-updater </dev/null)
-[[ -n $container ]] || { echo 'The deployed catalog-updater is not running. Inspect its service logs.' >&2; exit 1; }
-echo '[STEP] Discovering candidates and checking due records with the deployed worker'
+workers=(catalog-updater)
+if [[ $'\n'"$services"$'\n' == *$'\ncatalog-pages\n'* || $'\n'"$services"$'\n' == *$'\ncatalog-publisher\n'* ]]; then
+  for worker in catalog-pages catalog-publisher; do
+    [[ $'\n'"$services"$'\n' == *$'\n'"$worker"$'\n'* ]] || { echo 'The deployed split-worker configuration is incomplete.' >&2; exit 1; }
+    workers+=("$worker")
+  done
+fi
+# Check every role before starting collection; older releases retain one worker.
+for worker in "${workers[@]}"; do
+  container=$("${compose[@]}" ps --status running -q "$worker" </dev/null)
+  [[ -n $container ]] || { echo "The deployed $worker is not running. Inspect its service logs." >&2; exit 1; }
+done
 result=0
-# Disable exec stdin: bash itself is reading this script from the SSH stream.
-"${compose[@]}" exec --interactive=false -T catalog-updater devcourse-finder catalog-update once </dev/null || result=$?
+for worker in "${workers[@]}"; do
+  echo "[STEP] Running deployed $worker"
+  # Disable exec stdin: bash itself is reading this script from the SSH stream.
+  "${compose[@]}" exec --interactive=false -T "$worker" devcourse-finder catalog-update once </dev/null || {
+    code=$?
+    if [[ $result -eq 0 ]]; then result=$code; fi
+  }
+done
 echo '[STEP] Collection status and measured coverage'
 "${compose[@]}" exec --interactive=false -T catalog-updater devcourse-finder catalog-update status </dev/null || {
   if [[ $result -eq 0 ]]; then result=1; fi
