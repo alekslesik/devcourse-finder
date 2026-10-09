@@ -67,17 +67,24 @@ func parseStepik(data []byte, s Source, now time.Time) (Observation, error) {
 		Courses []stepikCourse `json:"courses"`
 	}
 	if decodeJSON(data, &payload) != nil || len(payload.Courses) != 1 {
-		return Observation{}, ErrSource
+		return Observation{}, rejection("invalid_payload")
 	}
 	c := payload.Courses[0]
-	if c.ID != s.RemoteID || normalizeTitle(c.Title) != normalizeTitle(s.ExpectedTitle) || c.Public == nil || c.Active == nil || c.Enabled == nil || c.Archived == nil || c.Censored == nil || c.Paid == nil || !*c.Public || *c.Censored {
-		return Observation{}, ErrSource
+	if c.ID != s.RemoteID || normalizeTitle(c.Title) != normalizeTitle(s.ExpectedTitle) {
+		return Observation{}, rejection("identity_mismatch")
 	}
+	if c.Public == nil || c.Active == nil || c.Enabled == nil || c.Archived == nil || c.Censored == nil || c.Paid == nil {
+		return Observation{}, rejection("missing_visibility_or_price_flags")
+	}
+	if !*c.Public || *c.Censored {
+		return Observation{}, rejection("private_or_censored_course")
+	}
+
 	if *c.Archived {
 		return Observation{Enrollment: "closed"}, nil
 	}
 	if !*c.Active || !*c.Enabled {
-		return Observation{}, ErrSource
+		return Observation{}, rejection("inactive_course")
 	}
 	o := Observation{}
 	if !*c.Paid {
@@ -86,7 +93,7 @@ func parseStepik(data []byte, s Source, now time.Time) (Observation, error) {
 		if len(c.Price) > 0 && string(c.Price) != "null" {
 			p, err := rubles(c.Price)
 			if err != nil || p != 0 {
-				return o, ErrSource
+				return o, rejection("invalid_price_evidence")
 			}
 		}
 		zero := int64(0)
@@ -94,7 +101,7 @@ func parseStepik(data []byte, s Source, now time.Time) (Observation, error) {
 	} else if len(c.Price) > 0 && string(c.Price) != "null" && c.Currency == "RUB" {
 		p, err := rubles(c.Price)
 		if err != nil || p <= 0 {
-			return o, ErrSource
+			return o, rejection("invalid_price_evidence")
 		}
 		o.Price = &p
 	} else {
@@ -113,7 +120,7 @@ func parseStepik(data []byte, s Source, now time.Time) (Observation, error) {
 	}
 	// can_be_enrolled=false can mean account restrictions, not a closed course.
 	if o.Price == nil && !o.PriceUnknown && o.Enrollment == "" {
-		return o, ErrSource
+		return o, rejection("unverified_enrollment")
 	}
 	return o, nil
 }
