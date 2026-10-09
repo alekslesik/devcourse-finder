@@ -80,7 +80,18 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 	if err != nil {
 		return nil, err
 	}
-	courses, err := merge(ctx, tx, old, resolved, resolved.ID, o, observedAt, code)
+	mergeObservation := o
+	if candidate.Adapter == "rsschool" {
+		mergeObservation.ValidUntil = nil
+	} // Rolling lease must not prevent closure confirmation.
+	courses, err := merge(ctx, tx, old, resolved, resolved.ID, mergeObservation, observedAt, code)
+	if candidate.Adapter == "rsschool" && len(courses) > 0 {
+		for i := range courses[0].Offers {
+			if courses[0].Offers[i].ID == resolved.Offers[0].ID {
+				courses[0].Offers[i].ValidUntil = o.ValidUntil
+			}
+		}
+	}
 	if err == nil && len(courses) > 0 && candidate.Adapter == "yandex" {
 		_, err = tx.Exec(ctx, "UPDATE catalog_identities SET product_id=$3,profession_id=$4 WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID, o.ProductID, o.ProfessionID)
 	}

@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.14.0] - 2026-10-09
+
+- Add RS School discovery and independent course/catalog checks for free full education and current Russian cohort enrollment.
+- Reject undetermined dates, English-only cohorts, contradictory evidence and archived registration identities; preserve prerequisites and stage-specific support limitations.
+- Keep new closed cohorts unpublished and confirm later closures across bounded freshness leases; add public fixtures, PostgreSQL tests and an English runbook. Frontend unchanged and deployment remains manual.
+
 ## [0.13.0] - 2026-10-09
 
 - Adopt the supplied liquid glass design with local Golos Text fonts, responsive catalog cards, horizontal filters, accessible styled selects and language shortcuts; preserve live API search, pricing and comparison.
