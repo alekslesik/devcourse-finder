@@ -16,15 +16,17 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
-	NetologyFamilyID  int64      `json:"netology_family_id,omitempty"`
-	NetologyProgramID int64      `json:"netology_program_id,omitempty"`
-	ProductID         string     `json:"product_id,omitempty"`
-	ProfessionID      string     `json:"profession_id,omitempty"`
-	ValidUntil        *time.Time `json:"valid_until,omitempty"`
-	PriceUnknown      bool       `json:"price_unknown,omitempty"`
-	Price             *int64     `json:"price,omitempty"`
-	Enrollment        string     `json:"enrollment,omitempty"`
-	Schedule          string     `json:"schedule,omitempty"`
+	PurpleCourseID    int64          `json:"purple_course_id,omitempty"`
+	PurpleTariffs     []PurpleTariff `json:"purple_tariffs,omitempty"`
+	NetologyFamilyID  int64          `json:"netology_family_id,omitempty"`
+	NetologyProgramID int64          `json:"netology_program_id,omitempty"`
+	ProductID         string         `json:"product_id,omitempty"`
+	ProfessionID      string         `json:"profession_id,omitempty"`
+	ValidUntil        *time.Time     `json:"valid_until,omitempty"`
+	PriceUnknown      bool           `json:"price_unknown,omitempty"`
+	Price             *int64         `json:"price,omitempty"`
+	Enrollment        string         `json:"enrollment,omitempty"`
+	Schedule          string         `json:"schedule,omitempty"`
 }
 
 func decodeJSON(data []byte, v any) error {

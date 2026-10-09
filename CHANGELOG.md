@@ -3,6 +3,15 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.12.0] - 2026-10-09
+
+- Reset all PurpleSchool tariff confirmations after failed reads in both split-worker and legacy collection modes.
+
+- Add automatic PurpleSchool discovery with separately verified self-study, AI and mentor tariffs.
+- Exclude demo modules; verify standalone free curricula and reconcile current tariff prices with rendered cards and purchase identities.
+- Publish multiple tariffs atomically with independent price confirmation, failed-read resets, protected identities and bounded freshness leases.
+- Add public fixtures, negative and PostgreSQL tests, and an English adapter runbook. Deployment remains manual.
+
 ## [0.11.0] - 2026-10-09
 
 - Add automatic Netology catalog discovery and verified full-payment parsing in the page collector.
