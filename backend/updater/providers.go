@@ -14,7 +14,7 @@ func candidateEndpoint(c Candidate) string {
 	if c.Adapter == "stepik" {
 		return "https://stepik.org/api/courses/" + c.ExternalID
 	}
-	if c.Adapter == "otus" || c.Adapter == "yandex" || c.Adapter == "hexlet" {
+	if c.Adapter == "otus" || c.Adapter == "yandex" {
 		return c.URL + "/"
 	}
 	return c.URL

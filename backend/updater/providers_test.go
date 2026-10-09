@@ -80,3 +80,10 @@ func TestUnknownCurrencyAndAggregateAreNotExactPrices(t *testing.T) {
 		t.Fatal("starting price became exact", err)
 	}
 }
+
+func TestHexletDetailUsesVerifiedCanonicalPath(t *testing.T) {
+	c := Candidate{Adapter: "hexlet", ExternalID: "python", URL: "https://ru.hexlet.io/programs/python"}
+	if candidateEndpoint(c) != c.URL {
+		t.Fatal("Hexlet trailing slash redirects before verification")
+	}
+}
