@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './liquid-glass.css';
 import {socialMetadata,siteOrigin,siteTitle,siteDescription} from '../lib/social-metadata';
 import {SiteHeader,SiteFooter} from './site-shell';
 import {themeScript} from '../lib/theme';

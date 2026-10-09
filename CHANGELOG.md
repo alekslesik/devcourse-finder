@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.13.0] - 2026-10-09
+
+- Adopt the supplied liquid glass design with local Golos Text fonts, responsive catalog cards, horizontal filters, accessible styled selects and language shortcuts; preserve live API search, pricing and comparison.
+
 ## [0.12.0] - 2026-10-09
 
 - Reset all PurpleSchool tariff confirmations after failed reads in both split-worker and legacy collection modes.
