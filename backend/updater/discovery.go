@@ -111,7 +111,7 @@ func validateFeed(f Feed) error {
 			return errors.New("unsupported official HTML catalog")
 		}
 	} else {
-		if f.Kind != "" && f.Kind != "sitemap" || !(strings.HasSuffix(u.Path, ".xml") || strings.HasSuffix(u.Path, ".xml.gz")) {
+		if f.Kind != "" && f.Kind != "sitemap" || !(strings.HasSuffix(u.Path, ".xml") || strings.HasSuffix(u.Path, ".xml.gz") || f.Adapter == "yandex" && u.Path == "/lang-static/sitemap/") {
 			return errors.New("unsupported discovery feed format")
 		}
 	}

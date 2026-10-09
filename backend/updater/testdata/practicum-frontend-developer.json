@@ -1,0 +1,67 @@
+{
+  "profession": [
+    {
+      "id": "4348b934-e82a-4f98-ae0a-f0c6b52fc782",
+      "slug": "frontend-developer",
+      "name": "Фронтенд-разработчик",
+      "description": "Создаёт интерактивные интерфейсы сайтов и веб-сервисов",
+      "price": 133000,
+      "currency": "RUB",
+      "landing_path": "",
+      "type": "default",
+      "able_to_purchase": true,
+      "hidden_type": null,
+      "is_demand_test": false,
+      "is_interactive_textbook": false,
+      "tariff": "base",
+      "has_free_track": true
+    }
+  ],
+  "prices": {
+    "frontend-developer": {
+      "RUB": {
+        "profession_product_id": "153bcf07-5260-4691-908a-ada59493a9cc",
+        "profession_is_regular_charge": false,
+        "profession_price": 133000,
+        "profession_final_price": 133000,
+        "total_absolute_discount": 0,
+        "percent_discount": 0,
+        "discount_deadline": null,
+        "absolute_promocode_discount": 0,
+        "discount_2035": 0,
+        "checklist_discount": 0,
+        "promo_tariff": {},
+        "promocode": {},
+        "certificates": [],
+        "profession_partial_price": 15500,
+        "credit_price": 5429
+      }
+    }
+  },
+  "squads": [
+    {
+      "id": 22478,
+      "name": "frontend-developer_cohort_75",
+      "date_begin": "2026-10-15T00:00:00Z",
+      "payment_deadline": "2026-10-14T00:00:00",
+      "subscriptions_num": 6,
+      "subscriptions_limit": 600
+    },
+    {
+      "id": 22479,
+      "name": "frontend-developer_cohort_76",
+      "date_begin": "2026-10-29T00:00:00Z",
+      "payment_deadline": "2026-10-15T00:00:00",
+      "subscriptions_num": 1,
+      "subscriptions_limit": 600
+    },
+    {
+      "id": 22480,
+      "name": "frontend-developer_cohort_77",
+      "date_begin": "2026-11-12T00:00:00Z",
+      "payment_deadline": "2026-10-29T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 600
+    }
+  ]
+}

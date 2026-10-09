@@ -3,6 +3,13 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.10.0] - 2026-10-09
+
+- Add a dedicated Practicum collector that reconciles official full-price and cohort APIs with canonical course pages and the robots-declared sitemap.
+- Reject monthly installments, free introductions, personalized discounts, expired offers and unbound course/tariff identities; verify cohort deadlines and available seats.
+- Persist profession and billable product identities separately, protect later identity changes, reset interrupted anomaly confirmations, and retain atomic observation publication.
+- Add recorded public API fixtures, failure cases, PostgreSQL integration tests and an optional bounded live verification; document shared-page tariff and access limitations.
+
 ## [0.9.0] - 2026-10-09
 
 - Separate catalog ingestion into independently scheduled API and page collectors with a durable PostgreSQL observation queue and atomic publisher.

@@ -65,6 +65,7 @@ ordinary container updates; deleting that volume deletes the database.
 - [MVP completion specification](docs/mvp-completion-spec.md)
 - [MVP status by requirement ID](docs/mvp-readiness.md)
 - [Automatic catalog updater](docs/catalog-updater.md)
+- [Practicum verification contract](docs/practicum-adapter.md)
 - [Automatic discovery and catalog expansion plan](docs/catalog-expansion-spec.md)
 - [Manual catalog import runbook](docs/catalog-operations.md)
 - [20 real programs, reviewed sources and explicit publication](docs/real-catalog.md)

@@ -1,0 +1,67 @@
+{
+  "profession": [
+    {
+      "id": "30a8fdd6-7ec9-4c51-9aca-1f5a15c3e5a0",
+      "slug": "java-developer-plus",
+      "name": "Java-разработчик расширенный",
+      "description": "Углублённый курс Java-разработчик",
+      "price": 232500,
+      "currency": "RUB",
+      "landing_path": "",
+      "type": "default",
+      "able_to_purchase": true,
+      "hidden_type": null,
+      "is_demand_test": false,
+      "is_interactive_textbook": false,
+      "tariff": "plus",
+      "has_free_track": true
+    }
+  ],
+  "prices": {
+    "java-developer-plus": {
+      "RUB": {
+        "profession_product_id": "f5487ae8-1a37-4f76-ba96-0041514e7c40",
+        "profession_is_regular_charge": false,
+        "profession_price": 232500,
+        "profession_final_price": 232500,
+        "total_absolute_discount": 0,
+        "percent_discount": 0,
+        "discount_deadline": null,
+        "absolute_promocode_discount": 0,
+        "discount_2035": 0,
+        "checklist_discount": 0,
+        "promo_tariff": {},
+        "promocode": {},
+        "certificates": [],
+        "profession_partial_price": 20500,
+        "credit_price": 9491
+      }
+    }
+  },
+  "squads": [
+    {
+      "id": 23474,
+      "name": "java-developer-plus_cohort_57",
+      "date_begin": "2026-10-15T00:00:00Z",
+      "payment_deadline": "2026-10-14T00:00:00",
+      "subscriptions_num": 5,
+      "subscriptions_limit": 500
+    },
+    {
+      "id": 23476,
+      "name": "java-developer-plus_cohort_58",
+      "date_begin": "2026-10-29T00:00:00Z",
+      "payment_deadline": "2026-10-15T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 500
+    },
+    {
+      "id": 23478,
+      "name": "java-developer-plus_cohort_59",
+      "date_begin": "2026-11-12T00:00:00Z",
+      "payment_deadline": "2026-10-29T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 500
+    }
+  ]
+}

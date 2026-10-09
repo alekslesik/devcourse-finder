@@ -27,7 +27,7 @@
     {
       "id": "yandex-sitemap",
       "adapter": "yandex",
-      "url": "https://practicum.yandex.ru/sitemap.xml"
+      "url": "https://practicum.yandex.ru/lang-static/sitemap/"
     },
     {
       "id": "hexlet-sitemap",
