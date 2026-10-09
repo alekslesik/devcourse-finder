@@ -76,3 +76,9 @@ func TestOfficialCatalogLinksAndGzipFeedValidation(t *testing.T) {
 		t.Fatal("blog shard selected", children)
 	}
 }
+
+func TestTypeScriptCandidateUsesJavaScriptFamilyHint(t *testing.T) {
+	if languageHint("typescript") != "javascript" {
+		t.Fatal("supported TypeScript course excluded from discovery")
+	}
+}

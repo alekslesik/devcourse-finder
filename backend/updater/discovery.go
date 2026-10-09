@@ -322,7 +322,7 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 func fingerprint(data []byte) string { sum := sha256.Sum256(data); return hex.EncodeToString(sum[:]) }
 func languageHint(text string) string {
 	text = strings.ToLower(text)
-	for _, pair := range [][2]string{{"javascript", "javascript"}, {"python", "python"}, {"golang", "go"}, {"java", "java"}, {"frontend", "javascript"}, {"backend-developer", "python"}, {"go-", "go"}} {
+	for _, pair := range [][2]string{{"javascript", "javascript"}, {"typescript", "javascript"}, {"python", "python"}, {"golang", "go"}, {"java", "java"}, {"frontend", "javascript"}, {"backend-developer", "python"}, {"go-", "go"}} {
 		if strings.Contains(text, pair[0]) {
 			return pair[1]
 		}
