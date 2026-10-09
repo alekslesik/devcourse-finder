@@ -104,6 +104,9 @@ func retryDelay(failures int) time.Duration {
 }
 func (s *Service) processBatch(ctx context.Context, client *http.Client, publish publishCandidate) (BatchStats, error) {
 	stats := BatchStats{}
+	var rsCatalog []byte
+	var rsCatalogDigest string
+	rsCatalogAttempted := false
 	var basicsPolicy []byte
 	var basicsPolicyDigest string
 	policyAttempted := false
@@ -119,6 +122,9 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		reserve := 35 * time.Second
 		if w.Adapter == "yandex" {
 			reserve = 140 * time.Second // Page, profession, full price and cohort reads.
+		}
+		if w.Adapter == "rsschool" && !rsCatalogAttempted {
+			reserve = 70 * time.Second
 		}
 		if w.Adapter == "codebasics" && !policyAttempted {
 			reserve = 70 * time.Second // One detail plus one pricing-policy fetch.
@@ -140,7 +146,19 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			var record catalog.Course
 			var o Observation
 			var parseErr error
-			if w.Adapter == "codebasics" {
+			if w.Adapter == "rsschool" {
+				if !rsCatalogAttempted {
+					rsCatalogAttempted = true
+					rsCatalog, rsCatalogDigest, parseErr = fetch(ctx, client, "https://rs.school/courses")
+				}
+				if len(rsCatalog) == 0 {
+					parseErr = ErrSource
+				}
+				if parseErr == nil {
+					record, o, parseErr = collectRSSchool(body, rsCatalog, w.Candidate, time.Now().UTC())
+				}
+				digest = fingerprint([]byte(digest + ":" + rsCatalogDigest))
+			} else if w.Adapter == "codebasics" {
 				if !policyAttempted {
 					policyAttempted = true
 					basicsPolicy, basicsPolicyDigest, parseErr = fetch(ctx, client, "https://code-basics.com/ru")

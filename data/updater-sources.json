@@ -50,6 +50,12 @@
       "id": "purpleschool-sitemap",
       "adapter": "purpleschool",
       "url": "https://purpleschool.ru/sitemap.xml"
+    },
+    {
+      "id": "rsschool-catalog",
+      "adapter": "rsschool",
+      "url": "https://rs.school/courses",
+      "kind": "catalog"
     }
   ]
 }
