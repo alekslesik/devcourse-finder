@@ -92,6 +92,30 @@ free. Existing curated records retain their identity, classifications and edits.
   commit together. A failed transaction cannot publish half a course. Imports keep
   the pre-update catalog snapshot and the `automatic-catalog-updater` operator.
 
+## Run an extra collection from GitHub
+
+After the workflow PR merges into `main`, open **Actions → Collect catalog →
+Run workflow**, select `main`, and click **Run workflow**. No input or terminal is
+required. The workflow uses the existing production `VDS_PASS` secret, VDS host/user
+variables and pinned SSH host key. It sends its helper over SSH and executes
+`catalog-update once` in the **currently deployed** running worker, followed by
+`catalog-update status`. Deploying the workflow release to the VDS is not required
+for the button itself; deploy a newer application release to use its new adapters.
+
+Collection logs show safe source results and actual coverage/queue statistics;
+the Actions summary shows success/failure. This starts another bounded discovery
+run, but checks only detail records whose persisted retry/refresh times are due.
+It does not force all prices to refresh or guarantee a higher visible total.
+The regular 09:00/21:00 Europe/Moscow schedule remains active.
+
+Manual workflow runs are serialized. The helper also takes the same host lock as
+release deployment before resolving `current`; if that lock is held, collection
+fails with a retry message. PostgreSQL separately prevents overlap with scheduled
+collection: if it is already running, retry after it finishes. A missing/stopped
+worker or an older release without the updater is reported instead of starting
+services. Diagnostics still run after a collection failure, and the failure exit
+code is preserved.
+
 ## Deployment and diagnosis
 
 Release deployment remains manual through **Deploy release**. After deploying

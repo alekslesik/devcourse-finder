@@ -478,3 +478,8 @@ data PRs or manual imports. Discovery feeds cover Stepik, OTUS, Yandex Practicum
 Only candidates meeting the adapter evidence rules are published; source
 availability and actual coverage are reported from PostgreSQL. See
 [coverage, safeguards and operational status](docs/catalog-updater.md).
+
+For an extra collection, use **Actions → Collect catalog → Run workflow** on
+`main`. It runs the currently deployed worker and prints coverage in the logs;
+no terminal or deployment is needed. Persisted detail-check due times and the
+regular schedule remain in effect.

@@ -1,0 +1,44 @@
+name: Collect catalog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: collect-catalog-production
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SSH password helper
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+      - name: Run collection on the currently deployed release
+        env:
+          SSHPASS: ${{ secrets.VDS_PASS }}
+          VDS_HOST: ${{ vars.VDS_HOST || '83.220.174.166' }}
+          VDS_USER: ${{ vars.VDS_USER || 'root' }}
+        run: |
+          set -euo pipefail
+          test -n "$SSHPASS" || { echo 'Add the VDS_PASS Actions secret before collecting.' >&2; exit 1; }
+          [[ "$VDS_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$VDS_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          host_keys="$RUNNER_TEMP/vds_known_hosts"
+          cp .github/vds_known_hosts "$host_keys"
+          chmod 600 "$host_keys"
+          options=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$host_keys" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o PreferredAuthentications=password,keyboard-interactive -o NumberOfPasswordPrompts=1)
+          sshpass -e ssh -T "${options[@]}" "$VDS_USER@$VDS_HOST" \
+            'bash -s -- /srv/devcourse-finder' < scripts/collect-catalog.sh
+      - name: Summarize collection
+        if: always()
+        env:
+          COLLECTION_STATUS: ${{ job.status }}
+        run: |
+          printf '### Catalog collection\n\n- Result: `%s`\n- Worker: currently deployed release\n- Coverage and source diagnostics: collection step logs\n\nDiscovery runs immediately; detail checks respect their persisted due times and limits.\n' "$COLLECTION_STATUS" >> "$GITHUB_STEP_SUMMARY"
