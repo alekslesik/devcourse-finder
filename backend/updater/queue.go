@@ -2,6 +2,7 @@ package updater
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5"
 	"log/slog"
 	"net/http"
 	"time"
@@ -20,7 +21,7 @@ type QueueWork struct {
 	State    string
 	Failures int
 }
-type BatchStats struct{ Attempted, Failed, Published, Seen int }
+type BatchStats struct{ Attempted, Failed, Published, Seen, Queued int }
 type publishCandidate func(context.Context, Candidate, catalog.Course, Observation, string) (string, int, error)
 
 func (s *Service) discover(ctx context.Context, client *http.Client) (BatchStats, error) {
@@ -126,6 +127,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			return stats, err
 		}
 		stats.Attempted++
+		var readEvent *QueuedObservation
 		body, digest, err := fetch(ctx, client, candidateEndpoint(w.Candidate))
 		code := "source_unavailable"
 		state := "rejected"
@@ -150,7 +152,12 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			code = rejectionCode(parseErr, "invalid_course")
 			if parseErr == nil {
 				var published int
-				code, published, err = publish(ctx, w.Candidate, record, o, digest)
+				if s.Worker != "" {
+					code = "queued"
+					readEvent = &QueuedObservation{Kind: "discovered", Candidate: w.Candidate, Record: record, Observation: o, ObservedAt: record.CheckedAt, Digest: digest}
+				} else {
+					code, published, err = publish(ctx, w.Candidate, record, o, digest)
+				}
 				if err != nil {
 					return stats, err
 				}
@@ -158,6 +165,9 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 				failures = 0
 				delay = 12 * time.Hour
 				switch code {
+				case "queued":
+					stats.Queued++
+					state = w.State
 				case "verified":
 					state = "published"
 				case "pending_confirmation":
@@ -175,14 +185,26 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			stats.Failed++
 			// A failed detail read breaks consecutive anomaly confirmation just
 			// as it does for curated sources; retries cannot skip missing evidence.
-			if _, err = s.DB.Pool.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
+			if s.Worker != "" {
+				readEvent = &QueuedObservation{Kind: "failure", Candidate: w.Candidate, FailureCode: code, Digest: digest, ObservedAt: time.Now().UTC()}
+				stats.Queued++
+			} else if _, err = s.DB.Pool.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
 			 (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)`, w.Adapter, w.ExternalID); err != nil {
 				return stats, err
 			}
 		}
 		// Each completed item persists its own retry/refresh time. A process killed
 		// after claiming leaves only a 15-minute lease, never a permanent in-flight row.
-		if _, err = s.DB.Pool.Exec(ctx, `UPDATE catalog_candidates SET state=$3,code=$4,failures=$5,next_attempt_at=now()+$6*interval '1 second',evidence_sha256=NULLIF($7,'') WHERE adapter=$1 AND external_id=$2`, w.Adapter, w.ExternalID, state, code, failures, delay.Seconds(), digest); err != nil {
+		updateCandidate := func(ctx context.Context, tx pgx.Tx) error {
+			_, e := tx.Exec(ctx, `UPDATE catalog_candidates SET state=$3,code=$4,failures=$5,next_attempt_at=now()+$6*interval '1 second',evidence_sha256=NULLIF($7,'') WHERE adapter=$1 AND external_id=$2`, w.Adapter, w.ExternalID, state, code, failures, delay.Seconds(), digest)
+			return e
+		}
+		if readEvent != nil {
+			err = s.enqueue(ctx, *readEvent, updateCandidate)
+		} else {
+			_, err = s.DB.Pool.Exec(ctx, `UPDATE catalog_candidates SET state=$3,code=$4,failures=$5,next_attempt_at=now()+$6*interval '1 second',evidence_sha256=NULLIF($7,'') WHERE adapter=$1 AND external_id=$2`, w.Adapter, w.ExternalID, state, code, failures, delay.Seconds(), digest)
+		}
+		if err != nil {
 			return stats, err
 		}
 		level := slog.LevelInfo

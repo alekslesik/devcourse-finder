@@ -16,11 +16,13 @@ services:
   frontend:
     environment:
       SITE_URL: ${SITE_URL:?Set the public HTTPS origin}
-  catalog-updater:
+  catalog-updater: &catalog-worker
+    image: devcourse-finder-catalog:local
     build:
       context: ./backend
     command: ["catalog-update", "serve"]
-    environment:
+    environment: &catalog-worker-env
+      CATALOG_WORKER: api
       APP_ENV: production
       GOMEMLIMIT: 96MiB
       PGHOST: db
@@ -45,3 +47,13 @@ services:
     cap_drop: ["ALL"]
     security_opt: ["no-new-privileges:true"]
     mem_limit: 128m
+  catalog-pages:
+    <<: *catalog-worker
+    environment:
+      <<: *catalog-worker-env
+      CATALOG_WORKER: pages
+  catalog-publisher:
+    <<: *catalog-worker
+    environment:
+      <<: *catalog-worker-env
+      CATALOG_WORKER: publisher

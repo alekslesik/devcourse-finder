@@ -15,30 +15,34 @@ import (
 func (s *Service) publishDiscovered(ctx context.Context, candidate Candidate, record catalog.Course, o Observation, digest string) (string, int, error) {
 	code := "verified"
 	published, err := s.DB.UpdateVerified(ctx, []string{providerHosts[candidate.Adapter]}, "automatic-catalog-discovery", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
-		existing := false
-		for _, c := range old {
-			u, e := canonical(c.Source)
-			if e == nil && u == candidate.URL {
-				existing = true
-				break
-			}
-		}
-		if !existing && (o.Enrollment != "open" && o.Enrollment != "continuous" || o.Price == nil && !o.PriceUnknown) {
-			code = "insufficient_initial_evidence"
-			return nil, nil
-		}
-		resolved, err := bindIdentity(ctx, tx, candidate, record, old)
-		if errors.Is(err, ErrIdentity) {
-			code = "protected_identity"
-			return nil, nil
-		}
-		if err != nil {
-			return nil, err
-		}
-		return merge(ctx, tx, old, resolved, resolved.ID, o, time.Now().UTC(), &code)
+		return mergeDiscovered(ctx, tx, old, candidate, record, o, time.Now().UTC(), &code)
 	})
 	return code, published, err
 }
+func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candidate Candidate, record catalog.Course, o Observation, observedAt time.Time, code *string) ([]catalog.Course, error) {
+	existing := false
+	for _, c := range old {
+		u, e := canonical(c.Source)
+		if e == nil && u == candidate.URL {
+			existing = true
+			break
+		}
+	}
+	if !existing && (o.Enrollment != "open" && o.Enrollment != "continuous" || o.Price == nil && !o.PriceUnknown) {
+		*code = "insufficient_initial_evidence"
+		return nil, nil
+	}
+	resolved, err := bindIdentity(ctx, tx, candidate, record, old)
+	if errors.Is(err, ErrIdentity) {
+		*code = "protected_identity"
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return merge(ctx, tx, old, resolved, resolved.ID, o, observedAt, code)
+}
+
 func coverage(ctx context.Context, db *store.DB, w io.Writer) error {
 	rows, err := db.Pool.Query(ctx, `SELECT language,provider,count(DISTINCT c.id),count(o.id),
  count(o.id) FILTER(WHERE free AND price=0 AND price_kind='exact' AND price_checked_at>now()-interval '30 days' AND (valid_until IS NULL OR valid_until>now())),

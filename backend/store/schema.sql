@@ -62,3 +62,28 @@ CREATE TABLE IF NOT EXISTS catalog_identities (
  offer_id text NOT NULL REFERENCES offers(id) DEFERRABLE INITIALLY DEFERRED,
  PRIMARY KEY(adapter,external_id)
 );
+
+-- Normalized observations are durable across collector/publisher restarts.
+-- Acknowledgements commit in the same transaction as catalog publication.
+CREATE TABLE IF NOT EXISTS catalog_observations (
+ id bigserial PRIMARY KEY,
+ canonical_url text NOT NULL,
+ observed_at timestamptz NOT NULL,
+ kind text NOT NULL CHECK (kind IN ('curated','discovered','failure')),
+ payload jsonb NOT NULL CHECK (octet_length(payload::text) <= 65536),
+ created_at timestamptz NOT NULL DEFAULT now(),
+ processed_at timestamptz,
+ code text NOT NULL DEFAULT 'pending',
+ UNIQUE(canonical_url, observed_at, kind)
+);
+CREATE INDEX IF NOT EXISTS catalog_observations_pending ON catalog_observations(id) WHERE processed_at IS NULL;
+CREATE INDEX IF NOT EXISTS catalog_observations_retention ON catalog_observations(processed_at) WHERE processed_at IS NOT NULL;
+CREATE TABLE IF NOT EXISTS catalog_observation_watermarks (
+ canonical_url text PRIMARY KEY,
+ observed_at timestamptz NOT NULL,
+ event_id bigint NOT NULL
+);
+
+ALTER TABLE updater_runs ADD COLUMN IF NOT EXISTS worker text NOT NULL DEFAULT 'legacy';
+ALTER TABLE updater_runs ADD COLUMN IF NOT EXISTS queued integer NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS updater_runs_worker_time ON updater_runs(worker,started_at DESC);

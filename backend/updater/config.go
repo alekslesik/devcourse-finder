@@ -68,8 +68,8 @@ func (c Config) Validate() error {
 		}
 		feedIDs[f.ID] = true
 	}
-	if len(c.Sources) == 0 || len(c.Sources) > 100 {
-		return errors.New("expected 1 to 100 sources")
+	if len(c.Sources) == 0 && len(c.Discovery) == 0 || len(c.Sources) > 100 {
+		return errors.New("expected configured sources or feeds; maximum 100 sources")
 	}
 	courses := map[string]catalog.Course{}
 	for _, v := range c.Templates.Courses {

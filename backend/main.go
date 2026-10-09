@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -95,10 +96,14 @@ func run() error {
 			}
 			stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 			defer cancel()
+			worker := os.Getenv("CATALOG_WORKER")
+			if err := updater.ValidateWorker(worker); err != nil {
+				return commandFailure("updater_config", "invalid_worker", "Invalid catalog worker role", err)
+			}
 			if args[1] == "health" {
 				bounded, done := context.WithTimeout(stop, 5*time.Second)
 				defer done()
-				if err := updater.Health(bounded, db); err != nil {
+				if err := updater.HealthWorker(bounded, db, worker); err != nil {
 					return commandFailure("updater_health", "updater_unhealthy", "Catalog updater is not healthy", err)
 				}
 				return nil
@@ -121,7 +126,7 @@ func run() error {
 			if err != nil {
 				return commandFailure("updater_config", "invalid_updater_configuration", "Cannot validate catalog updater configuration", err)
 			}
-			service := updater.Service{DB: db, Config: config}
+			service := updater.Service{DB: db, Config: config, Worker: worker}
 			if args[1] == "serve" {
 				err = service.Serve(stop)
 			} else {
@@ -129,6 +134,16 @@ func run() error {
 				defer done()
 				var result updater.Result
 				result, err = service.Run(bounded)
+				// The background publisher may own the lock while manual collection finishes.
+				// Wait only for this expected contention, within the existing command deadline.
+				for worker == "publisher" && errors.Is(err, updater.ErrBusy) {
+					select {
+					case <-bounded.Done():
+						err = bounded.Err()
+					case <-time.After(time.Second):
+						result, err = service.Run(bounded)
+					}
+				}
 				if err == nil && result.Status == "failed" {
 					err = fmt.Errorf("all catalog sources failed verification")
 				}

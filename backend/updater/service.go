@@ -21,10 +21,12 @@ type Service struct {
 	DB     *store.DB
 	Config Config
 	Client *http.Client
+	Worker string
 }
 type Result struct {
 	ID        int64  `json:"run_id"`
 	Published int    `json:"published"`
+	Queued    int    `json:"queued"`
 	Failed    int    `json:"failed"`
 	Status    string `json:"status"`
 }
@@ -32,6 +34,19 @@ type Result struct {
 var ErrBusy = errors.New("another collection is running")
 
 func (s *Service) Run(ctx context.Context) (result Result, err error) {
+	if err = ValidateWorker(s.Worker); err != nil {
+		return result, err
+	}
+	if s.Worker == "publisher" {
+		return s.Publish(ctx)
+	}
+	filtered, filterErr := s.Config.ForWorker(s.Worker)
+	if filterErr != nil {
+		return result, filterErr
+	}
+	copyService := *s
+	copyService.Config = filtered
+	s = &copyService
 	if err = s.Config.Validate(); err != nil {
 		return result, err
 	}
@@ -47,20 +62,36 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 		lock.Rollback(cleanup)
 	}()
 	var acquired bool
-	if err = lock.QueryRow(ctx, "SELECT pg_try_advisory_xact_lock(829105)").Scan(&acquired); err != nil {
+	guardQuery := "SELECT pg_try_advisory_xact_lock(829105)"
+	if s.Worker != "" {
+		guardQuery = "SELECT pg_try_advisory_xact_lock_shared(829105)"
+	}
+	if err = lock.QueryRow(ctx, guardQuery).Scan(&acquired); err != nil {
 		return result, err
 	}
 	if !acquired {
 		return result, ErrBusy
 	}
-	if err = s.DB.Pool.QueryRow(ctx, "INSERT INTO updater_runs DEFAULT VALUES RETURNING id").Scan(&result.ID); err != nil {
+	if s.Worker != "" {
+		key := int64(829106)
+		if s.Worker == "pages" {
+			key = 829107
+		}
+		if err = lock.QueryRow(ctx, "SELECT pg_try_advisory_xact_lock($1)", key).Scan(&acquired); err != nil {
+			return result, err
+		}
+		if !acquired {
+			return result, ErrBusy
+		}
+	}
+	if err = s.DB.Pool.QueryRow(ctx, "INSERT INTO updater_runs(worker) VALUES($1) RETURNING id", workerName(s.Worker)).Scan(&result.ID); err != nil {
 		return result, err
 	}
 	result.Status = "failed"
 	defer func() {
 		finish, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_, finishErr := s.DB.Pool.Exec(finish, "UPDATE updater_runs SET finished_at=now(),status=$2,published=$3,failed=$4 WHERE id=$1", result.ID, result.Status, result.Published, result.Failed)
+		_, finishErr := s.DB.Pool.Exec(finish, "UPDATE updater_runs SET finished_at=now(),status=$2,published=$3,failed=$4,queued=$5 WHERE id=$1", result.ID, result.Status, result.Published, result.Failed, result.Queued)
 		if err == nil {
 			err = finishErr
 		}
@@ -76,7 +107,7 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 			return result, ctx.Err()
 		}
 		template := s.Config.Template(source.CourseID)
-		observedAt := time.Now().UTC()
+		observedAt := time.Now().UTC().Truncate(time.Microsecond)
 		body, digest, fetchErr := fetch(ctx, client, endpoint(source, template.Source))
 		code := "source_unavailable"
 		var observation Observation
@@ -85,7 +116,21 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 			code = rejectionCode(fetchErr, "invalid_source")
 		}
 		verified := fetchErr == nil
-		if verified {
+		var readEvent *QueuedObservation
+		if s.Worker != "" {
+			candidate, ok := candidateURL(sourceAdapter(source.Adapter), template.Source, "")
+			if !ok {
+				return result, ErrSource
+			}
+			if verified {
+				readEvent = &QueuedObservation{Kind: "curated", Candidate: candidate, SourceID: source.CourseID, Record: template, Observation: observation, ObservedAt: observedAt, Digest: digest}
+				code = "queued"
+			} else {
+				readEvent = &QueuedObservation{Kind: "failure", Candidate: candidate, SourceID: source.CourseID, FailureCode: code, Digest: digest, ObservedAt: observedAt}
+				result.Failed++
+			}
+			result.Queued++
+		} else if verified {
 			code = "verified"
 			n, publishErr := s.DB.UpdateVerified(ctx, s.Config.Templates.Domains, "automatic-catalog-updater", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
 				return merge(ctx, tx, old, template, source.CourseID, observation, observedAt, &code)
@@ -106,11 +151,23 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 			verifiedAt = &observedAt
 		}
 		var failures int
-		if err = s.DB.Pool.QueryRow(ctx, `INSERT INTO updater_sources(source_id,attempted_at,verified_at,code,failures,evidence_sha256)
+		updateSource := func(ctx context.Context, tx pgx.Tx) error {
+			return tx.QueryRow(ctx, `INSERT INTO updater_sources(source_id,attempted_at,verified_at,code,failures,evidence_sha256)
    VALUES($1,$2,$3,$4,$5,NULLIF($6,'')) ON CONFLICT(source_id) DO UPDATE SET
    attempted_at=EXCLUDED.attempted_at,verified_at=COALESCE(EXCLUDED.verified_at,updater_sources.verified_at),
    code=EXCLUDED.code,failures=CASE WHEN EXCLUDED.failures=0 THEN 0 ELSE updater_sources.failures+1 END,
-   evidence_sha256=COALESCE(EXCLUDED.evidence_sha256,updater_sources.evidence_sha256) RETURNING failures`, source.CourseID, observedAt, verifiedAt, code, boolInt(!verified), digest).Scan(&failures); err != nil {
+   evidence_sha256=COALESCE(EXCLUDED.evidence_sha256,updater_sources.evidence_sha256) RETURNING failures`, source.CourseID, observedAt, verifiedAt, code, boolInt(!verified), digest).Scan(&failures)
+		}
+		if readEvent != nil {
+			err = s.enqueue(ctx, *readEvent, updateSource)
+		} else {
+			err = s.DB.Pool.QueryRow(ctx, `INSERT INTO updater_sources(source_id,attempted_at,verified_at,code,failures,evidence_sha256)
+   VALUES($1,$2,$3,$4,$5,NULLIF($6,'')) ON CONFLICT(source_id) DO UPDATE SET
+   attempted_at=EXCLUDED.attempted_at,verified_at=COALESCE(EXCLUDED.verified_at,updater_sources.verified_at),
+   code=EXCLUDED.code,failures=CASE WHEN EXCLUDED.failures=0 THEN 0 ELSE updater_sources.failures+1 END,
+   evidence_sha256=COALESCE(EXCLUDED.evidence_sha256,updater_sources.evidence_sha256) RETURNING failures`, source.CourseID, observedAt, verifiedAt, code, boolInt(!verified), digest).Scan(&failures)
+		}
+		if err != nil {
 			return result, err
 		}
 		level := slog.LevelInfo
@@ -130,6 +187,7 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 			return result, discoveryErr
 		}
 		batchStats, batchErr := s.processBatch(ctx, client, s.publishDiscovered)
+		result.Queued += batchStats.Queued
 		result.Published += batchStats.Published
 		result.Failed += batchStats.Failed
 		checked += batchStats.Attempted
@@ -144,7 +202,7 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 	if result.Failed >= checked && result.Published == 0 {
 		result.Status = "failed"
 	}
-	slog.Info("catalog collection finished", "collection_id", result.ID, "status", result.Status, "published", result.Published, "failed", result.Failed)
+	slog.Info("catalog collection finished", "collection_id", result.ID, "status", result.Status, "published", result.Published, "queued", result.Queued, "worker", workerName(s.Worker), "failed", result.Failed)
 	return result, nil
 }
 func boolInt(v bool) int {
@@ -279,25 +337,16 @@ func NextRun(now time.Time) time.Time {
 	}
 	return time.Date(local.Year(), local.Month(), local.Day()+1, 9, 0, 0, 0, location)
 }
-func heartbeat(ctx context.Context, db *store.DB) error {
-	_, err := db.Pool.Exec(ctx, `INSERT INTO settings VALUES('updater_heartbeat',to_jsonb(now())) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value`)
-	return err
-}
-func Health(ctx context.Context, db *store.DB) error {
-	var healthy bool
-	if err := db.Pool.QueryRow(ctx, `SELECT (value #>> '{}')::timestamptz > now()-interval '90 seconds' FROM settings WHERE key='updater_heartbeat'`).Scan(&healthy); err != nil {
+func heartbeat(ctx context.Context, db *store.DB) error { return heartbeatWorker(ctx, db, "") }
+func Health(ctx context.Context, db *store.DB) error    { return HealthWorker(ctx, db, "") }
+func (s *Service) Serve(ctx context.Context) error {
+	if err := ValidateWorker(s.Worker); err != nil {
 		return err
 	}
-	if !healthy {
-		return errors.New("updater heartbeat is stale")
-	}
-	return nil
-}
-func (s *Service) Serve(ctx context.Context) error {
 	if err := s.Config.Validate(); err != nil {
 		return err
 	}
-	if err := heartbeat(ctx, s.DB); err != nil {
+	if err := heartbeatWorker(ctx, s.DB, s.Worker); err != nil {
 		return err
 	}
 	beats, stopBeats := context.WithCancel(ctx)
@@ -311,20 +360,37 @@ func (s *Service) Serve(ctx context.Context) error {
 				return
 			case <-ticker.C:
 				pulse, cancel := context.WithTimeout(beats, 5*time.Second)
-				if heartbeat(pulse, s.DB) != nil && beats.Err() == nil {
+				if heartbeatWorker(pulse, s.DB, s.Worker) != nil && beats.Err() == nil {
 					slog.Error("updater heartbeat failed", "code", "heartbeat_failed")
 				}
 				cancel()
 			}
 		}
 	}()
+	if s.Worker == "publisher" {
+		for {
+			run, cancel := context.WithTimeout(ctx, 10*time.Minute)
+			_, err := s.Publish(run)
+			cancel()
+			if err != nil && !errors.Is(err, ErrBusy) && ctx.Err() == nil {
+				slog.Error("catalog publication failed", "code", "publication_failed")
+			}
+			timer := time.NewTimer(10 * time.Second)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return nil
+			case <-timer.C:
+			}
+		}
+	}
 	for {
 		// First run fills an empty verified catalog automatically. Restarts are
 		// deduplicated using the latest started run and the preceding schedule slot.
 		now := time.Now()
 		due := NextRun(now.Add(-12 * time.Hour))
 		var last *time.Time
-		if err := s.DB.Pool.QueryRow(ctx, "SELECT max(started_at) FROM updater_runs").Scan(&last); err != nil {
+		if err := s.DB.Pool.QueryRow(ctx, "SELECT max(started_at) FROM updater_runs WHERE worker=$1", workerName(s.Worker)).Scan(&last); err != nil {
 			return err
 		}
 		if last == nil || last.Before(due) {
@@ -347,19 +413,32 @@ func (s *Service) Serve(ctx context.Context) error {
 	}
 }
 func Status(ctx context.Context, db *store.DB, w io.Writer) error {
-	var id int64
-	var started time.Time
-	var finished *time.Time
-	var status string
-	var published, failed int
-	err := db.Pool.QueryRow(ctx, "SELECT id,started_at,finished_at,status,published,failed FROM updater_runs ORDER BY id DESC LIMIT 1").Scan(&id, &started, &finished, &status, &published, &failed)
-	if err != nil && err != pgx.ErrNoRows {
+	runs, err := db.Pool.Query(ctx, `SELECT id,worker,started_at,finished_at,status,published,failed,queued FROM (SELECT DISTINCT ON(worker) * FROM updater_runs ORDER BY worker,id DESC) latest ORDER BY worker`)
+	if err != nil {
 		return err
 	}
-	if err == nil {
-		if err = json.NewEncoder(w).Encode(map[string]any{"run_id": id, "started_at": started, "finished_at": finished, "status": status, "published": published, "failed": failed}); err != nil {
+	for runs.Next() {
+		var id int64
+		var worker, status string
+		var started time.Time
+		var finished *time.Time
+		var published, failed, queued int
+		if err = runs.Scan(&id, &worker, &started, &finished, &status, &published, &failed, &queued); err != nil {
+			runs.Close()
 			return err
 		}
+		if err = json.NewEncoder(w).Encode(map[string]any{"run_id": id, "worker": worker, "started_at": started, "finished_at": finished, "status": status, "published": published, "failed": failed, "queued": queued}); err != nil {
+			runs.Close()
+			return err
+		}
+	}
+	if err = runs.Err(); err != nil {
+		runs.Close()
+		return err
+	}
+	runs.Close()
+	if err = observationStatus(ctx, db, w); err != nil {
+		return err
 	}
 	rows, err := db.Pool.Query(ctx, "SELECT source_id,attempted_at,verified_at,code,failures FROM updater_sources ORDER BY source_id")
 	if err != nil {

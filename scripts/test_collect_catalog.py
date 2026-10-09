@@ -30,10 +30,10 @@ import json,os,sys
 args=sys.argv[1:]
 with open(os.environ['TEST_CALLS'],'a') as f:f.write(json.dumps(args)+'\\n')
 if 'config' in args:print(os.environ.get('TEST_SERVICES','db\\napi\\nfrontend\\ncatalog-updater'))
-elif 'ps' in args:print(os.environ.get('TEST_CONTAINER','container-id'))
+elif 'ps' in args:print('' if args[-1]==os.environ.get('TEST_STOPPED_WORKER') else os.environ.get('TEST_CONTAINER','container-id'))
 elif 'exec' in args:
  if sys.stdin.read():raise SystemExit('exec consumed the SSH script stream')
- if args[-1]=='once':raise SystemExit(int(os.environ.get('TEST_ONCE_EXIT','0')))
+ if args[-1]=='once':raise SystemExit(int(os.environ.get('TEST_ONCE_EXIT','0')) if 'catalog-updater' in args else 0)
  if args[-1]=='status':
   print('{"queue":true,"pending":1,"published":5}')
   raise SystemExit(int(os.environ.get('TEST_STATUS_EXIT','0')))
@@ -87,6 +87,26 @@ else:raise SystemExit('Unexpected Docker operation')
         result = self.run_script(TEST_CONTAINER='')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('not running', result.stderr)
+        self.assertFalse(any('exec' in call for call in self.recorded()))
+
+    def test_split_workers_run_in_order_and_preserve_first_failure(self):
+        services = 'db\napi\nfrontend\ncatalog-updater\ncatalog-pages\ncatalog-publisher'
+        result = self.run_script(TEST_SERVICES=services, TEST_ONCE_EXIT='7')
+        self.assertEqual(result.returncode, 7)
+        calls = [call for call in self.recorded() if 'exec' in call]
+        self.assertEqual([call[-1] for call in calls], ['once', 'once', 'once', 'status'])
+        self.assertEqual([call[call.index('-T')+1] for call in calls],
+                         ['catalog-updater', 'catalog-pages', 'catalog-publisher', 'catalog-updater'])
+
+    def test_split_workers_are_all_checked_before_execution(self):
+        services = 'catalog-updater\ncatalog-pages\ncatalog-publisher'
+        result = self.run_script(TEST_SERVICES=services, TEST_STOPPED_WORKER='catalog-publisher')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(any('exec' in call for call in self.recorded()))
+        self.calls.unlink()
+        result = self.run_script(TEST_SERVICES='catalog-updater\ncatalog-pages')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('incomplete', result.stderr)
         self.assertFalse(any('exec' in call for call in self.recorded()))
 
     def test_shared_deployment_lock_prevents_collection(self):

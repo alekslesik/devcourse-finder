@@ -33,7 +33,9 @@ The development stack runs four Docker Compose services; production adds a separ
 | `api` | Go | Search, comparison, catalog import, provider redirects, and event recording |
 | `db` | PostgreSQL | Courses, offers, import history, and events |
 | `migrate` | Go CLI | Creates and updates the database schema before the API starts |
-| `catalog-updater` | Go background worker (production) | Verifies official sources and publishes catalog updates at 09:00 and 21:00 Europe/Moscow |
+| `catalog-updater` | Go API collector (production) | Collects Stepik/Practicum observations at 09:00 and 21:00 Europe/Moscow |
+| `catalog-pages` | Go page collector (production) | Independently collects official HTML sources on the same schedule |
+| `catalog-publisher` | Go publisher (production) | Validates queued observations and atomically publishes; polls every 10 seconds |
 
 Compose starts the database and waits for its health check, runs the migration
 service to completion, starts the API and waits for readiness, then starts the
