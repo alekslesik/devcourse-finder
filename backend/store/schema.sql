@@ -83,3 +83,7 @@ CREATE TABLE IF NOT EXISTS catalog_observation_watermarks (
  observed_at timestamptz NOT NULL,
  event_id bigint NOT NULL
 );
+
+ALTER TABLE updater_runs ADD COLUMN IF NOT EXISTS worker text NOT NULL DEFAULT 'legacy';
+ALTER TABLE updater_runs ADD COLUMN IF NOT EXISTS queued integer NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS updater_runs_worker_time ON updater_runs(worker,started_at DESC);

@@ -16,7 +16,15 @@ import (
 const observationQueueLimit = 50000
 const publisherBatchLimit = 500
 
-var safeCode = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
+func failureCodeAllowed(code string) bool {
+	switch code {
+	case "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
+		return true
+	default:
+		return false
+	}
+}
+
 var evidenceDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)
 
 // QueuedObservation contains normalized public facts, never raw HTML, cookies,
@@ -44,7 +52,7 @@ func (e QueuedObservation) validate(config Config) error {
 	if e.SourceID != "" {
 		valid := false
 		for _, source := range config.Sources {
-			if source.CourseID == e.SourceID && source.Adapter == e.Candidate.Adapter && config.Template(source.CourseID).Source == e.Candidate.URL {
+			if source.CourseID == e.SourceID && sourceAdapter(source.Adapter) == e.Candidate.Adapter && config.Template(source.CourseID).Source == e.Candidate.URL {
 				valid = true
 			}
 		}
@@ -66,7 +74,7 @@ func (e QueuedObservation) validate(config Config) error {
 		return ErrSource
 	}
 	if e.Kind == "failure" {
-		if !safeCode.MatchString(e.FailureCode) {
+		if !failureCodeAllowed(e.FailureCode) {
 			return ErrSource
 		}
 		return nil
@@ -119,7 +127,7 @@ func (e QueuedObservation) validate(config Config) error {
 	return nil
 }
 
-func (s *Service) enqueue(ctx context.Context, e QueuedObservation) error {
+func (s *Service) enqueue(ctx context.Context, e QueuedObservation, updates ...func(context.Context, pgx.Tx) error) error {
 	e.Version = 1
 	e.ObservedAt = e.ObservedAt.UTC().Truncate(time.Microsecond)
 	if err := e.validate(s.Config); err != nil {
@@ -147,6 +155,11 @@ func (s *Service) enqueue(ctx context.Context, e QueuedObservation) error {
 	if count >= observationQueueLimit {
 		return errors.New("observation queue is full; publication must catch up")
 	}
+	for _, update := range updates {
+		if err = update(ctx, tx); err != nil {
+			return err
+		}
+	}
 	if _, err = tx.Exec(ctx, `INSERT INTO catalog_observations(canonical_url,observed_at,kind,payload) VALUES($1,$2,$3,$4) ON CONFLICT(canonical_url,observed_at,kind) DO NOTHING`, e.Candidate.URL, e.ObservedAt, e.Kind, raw); err != nil {
 		return err
 	}
@@ -167,6 +180,12 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 		lock.Rollback(cleanup)
 	}()
 	var acquired bool
+	if err = lock.QueryRow(ctx, "SELECT pg_try_advisory_xact_lock_shared(829105)").Scan(&acquired); err != nil {
+		return result, err
+	}
+	if !acquired {
+		return result, ErrBusy
+	}
 	if err = lock.QueryRow(ctx, "SELECT pg_try_advisory_xact_lock(829108)").Scan(&acquired); err != nil {
 		return result, err
 	}
@@ -206,7 +225,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 				if watermarkErr != nil && !errors.Is(watermarkErr, pgx.ErrNoRows) {
 					return nil, watermarkErr
 				}
-				stale := !last.IsZero() && !observedAt.After(last) || time.Since(observedAt) > 48*time.Hour || observedAt.After(time.Now().Add(5*time.Minute))
+				stale := e.Observation.ValidUntil != nil && !time.Now().Before(*e.Observation.ValidUntil) || !last.IsZero() && !observedAt.After(last) || time.Since(observedAt) > 48*time.Hour || observedAt.After(time.Now().Add(5*time.Minute))
 				// An operator or legacy updater may have recorded a newer verified read.
 				for _, c := range old {
 					if c.Source == url {

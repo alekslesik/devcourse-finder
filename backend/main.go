@@ -95,10 +95,14 @@ func run() error {
 			}
 			stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 			defer cancel()
+			worker := os.Getenv("CATALOG_WORKER")
+			if err := updater.ValidateWorker(worker); err != nil {
+				return commandFailure("updater_config", "invalid_worker", "Invalid catalog worker role", err)
+			}
 			if args[1] == "health" {
 				bounded, done := context.WithTimeout(stop, 5*time.Second)
 				defer done()
-				if err := updater.Health(bounded, db); err != nil {
+				if err := updater.HealthWorker(bounded, db, worker); err != nil {
 					return commandFailure("updater_health", "updater_unhealthy", "Catalog updater is not healthy", err)
 				}
 				return nil
@@ -121,7 +125,7 @@ func run() error {
 			if err != nil {
 				return commandFailure("updater_config", "invalid_updater_configuration", "Cannot validate catalog updater configuration", err)
 			}
-			service := updater.Service{DB: db, Config: config}
+			service := updater.Service{DB: db, Config: config, Worker: worker}
 			if args[1] == "serve" {
 				err = service.Serve(stop)
 			} else {
