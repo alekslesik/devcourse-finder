@@ -121,7 +121,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		// Do not claim work that cannot reasonably finish within this run's budget.
 		reserve := 35 * time.Second
 		if w.Adapter == "yandex" {
-			reserve = 140 * time.Second // Page, profession, full price and cohort reads.
+			reserve = 350 * time.Second // Parent plus two displayed tariffs: at most ten reads.
 		}
 		if w.Adapter == "javarush" || w.Adapter == "skillfactory" || w.Adapter == "htmlacademy" || w.Adapter == "rsschool" && !rsCatalogAttempted {
 			reserve = 70 * time.Second
@@ -174,7 +174,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			} else if w.Adapter == "htmlacademy" {
 				record, o, digest, parseErr = fetchHTMLAcademy(ctx, client, body, digest, w.Candidate)
 			} else if w.Adapter == "yandex" {
-				record, o, digest, parseErr = fetchPracticum(ctx, client, body, digest, w.Candidate)
+				record, o, digest, parseErr = fetchPracticumGroup(ctx, client, body, digest, w.Candidate)
 			} else {
 				record, o, parseErr = collectCandidate(body, w.Candidate, time.Now().UTC())
 			}
@@ -197,7 +197,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 				case "queued":
 					stats.Queued++
 					state = w.State
-				case "verified":
+				case "verified", "partial_tariffs":
 					state = "published"
 				case "pending_confirmation":
 					state = w.State
@@ -220,7 +220,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			} else if _, err = s.DB.Pool.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
 			 (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)
              OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.adapter=$1 AND i.external_id=$2
-              AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
+              AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro','yandex') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
 				return stats, err
 			}
 		}

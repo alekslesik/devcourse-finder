@@ -21,6 +21,9 @@ var productUUID = regexp.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0
 // Never follow an endpoint supplied by source HTML. The embedded map must agree
 // exactly with the fixed, slug-bound endpoint before any API request is made.
 func practicumPage(data []byte, c Candidate) error {
+	return practicumTariffPage(data, c, c.ExternalID)
+}
+func practicumTariffPage(data []byte, c Candidate, slug string) error {
 	if len(data) > maxBody || c.Adapter != "yandex" {
 		return rejection("invalid_practicum_page")
 	}
@@ -63,7 +66,7 @@ func practicumPage(data []byte, c Candidate) error {
 			if decodeJSON(tokenizer.Raw(), &endpoints) != nil {
 				return rejection("invalid_practicum_page")
 			}
-			configOK = endpoints[c.ExternalID] == practicumPricesURL(c.ExternalID)
+			configOK = endpoints[slug] == practicumPricesURL(slug)
 		}
 	}
 	if !russian || canonicals != 1 || !canonicalOK || configs != 1 || !configOK {
@@ -155,12 +158,15 @@ func emptyJSON(raw json.RawMessage, expected string) bool {
 }
 
 func collectPracticum(page, profession, prices, squads []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	return collectPracticumTariff(page, profession, prices, squads, c, c.ExternalID, now)
+}
+func collectPracticumTariff(page, profession, prices, squads []byte, c Candidate, slug string, now time.Time) (catalog.Course, Observation, error) {
 	var empty catalog.Course
 	var o Observation
 	if len(profession) > maxBody || len(prices) > maxBody || len(squads) > maxBody {
 		return empty, o, ErrSource
 	}
-	if err := practicumPage(page, c); err != nil {
+	if err := practicumTariffPage(page, c, slug); err != nil {
 		return empty, o, err
 	}
 	var programs []practicumProfession
@@ -168,7 +174,10 @@ func collectPracticum(page, profession, prices, squads []byte, c Candidate, now 
 		return empty, o, rejection("invalid_practicum_payload")
 	}
 	p := programs[0]
-	if p.Slug != c.ExternalID || !productUUID.MatchString(p.ID) || (p.LandingPath != "" && !matchingURL(practicumOrigin+p.LandingPath, c.URL)) {
+	if slug != c.ExternalID && (p.Tariff != "plus" || !boundPracticumTariff(page, c, slug)) {
+		return empty, o, rejection("identity_mismatch")
+	}
+	if p.Slug != slug || !productUUID.MatchString(p.ID) || (p.LandingPath != "" && !matchingURL(practicumOrigin+p.LandingPath, c.URL)) {
 		return empty, o, rejection("identity_mismatch")
 	}
 	if p.Currency != "RUB" || p.Type != "default" || p.AbleToPurchase == nil || !emptyJSON(p.HiddenType, "null") || p.DemandTest == nil || *p.DemandTest || p.Interactive == nil || *p.Interactive || (p.Tariff != "base" && p.Tariff != "plus") {
@@ -178,7 +187,7 @@ func collectPracticum(page, profession, prices, squads []byte, c Candidate, now 
 	if decodeJSON(prices, &pricing) != nil || len(pricing) != 1 {
 		return empty, o, rejection("invalid_practicum_price")
 	}
-	byCurrency, exists := pricing[c.ExternalID]
+	byCurrency, exists := pricing[slug]
 	if !exists {
 		return empty, o, rejection("identity_mismatch")
 	}
@@ -227,7 +236,7 @@ func collectPracticum(page, profession, prices, squads []byte, c Candidate, now 
 	for _, cohort := range cohorts {
 		begin, beginErr := practicumTime(cohort.Begin)
 		deadline, deadlineErr := practicumTime(cohort.Deadline)
-		if cohort.ID <= 0 || !strings.HasPrefix(cohort.Name, c.ExternalID+"_cohort_") || beginErr != nil || begin.IsZero() || deadlineErr != nil || cohort.Count == nil || cohort.Limit == nil || *cohort.Count < 0 || *cohort.Limit <= 0 || *cohort.Count > *cohort.Limit {
+		if cohort.ID <= 0 || !strings.HasPrefix(cohort.Name, slug+"_cohort_") || beginErr != nil || begin.IsZero() || deadlineErr != nil || cohort.Count == nil || cohort.Limit == nil || *cohort.Count < 0 || *cohort.Limit <= 0 || *cohort.Count > *cohort.Limit {
 			return empty, o, rejection("unverified_enrollment")
 		}
 		if *p.AbleToPurchase && now.Before(deadline) && *cohort.Count < *cohort.Limit {

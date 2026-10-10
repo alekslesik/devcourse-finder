@@ -38,7 +38,7 @@ Each candidate requires four independent anonymous GET responses on
    by the discount deadline and the last available cohort's payment deadline.
 
 The page, profession, price and cohort hashes all contribute to the stored evidence
-hash. Collection reserves 140 seconds before claiming a four-read candidate,
+hash. Collection reserves 350 seconds before claiming a candidate with up to ten reads,
 within the existing ten-minute run. The publisher does not make HTTP requests.
 
 Profession IDs and billable product IDs are separate: actual Java extended and
@@ -58,12 +58,33 @@ Java tariff. The landing fixture is a reduced authentic Python page; other-langu
 parser tests explicitly substitute its identity to exercise the contract. Those
 substitutions are not claimed as successful live page verification.
 
-A single canonical landing produces one complete program offer. Dedicated plus
-pages can be accepted when they meet the same contract. A plus SKU whose official
-landing is the base course's page, a redirected page, or a page without a matching
-`prices-config` mapping is skipped. Shared-page tariff grouping is tracked separately in
-[issue #49](https://github.com/alekslesik/devcourse-finder/issues/49). This avoids assigning a base price to an extended program or creating
-synthetic URLs to force an identity match.
+A canonical landing can publish its base offer and up to two plus offers. The
+site-wide `prices-config` map is insufficient: each plus SKU needs one real DOM
+`common-flow-card__wrapper` with its ID and exactly one official `/profile/<sku>/`
+link inside that wrapper. Escaped framework copies are ignored. Each tariff has
+independent profession, RUB full-payment and cohort GETs. Profession landing paths,
+when present, must match the parent canonical; language must match the base course.
+No synthetic course URL or redirected landing establishes identity.
+
+Normalized queue envelopes retain the parent and individual tariff facts or fixed
+failure codes. A failed plus read leaves its previous offer unchanged and clears
+only that tariff's anomaly confirmation. Partial tariff failures/protection keep the parent on its 12-hour refresh schedule; they do not impose a seven-day hold on healthy siblings. Base verification failure resets all
+parent confirmations. Both cases retain the public catalog and allow later retries.
+Offer leases are capped at 26 hours and by actual payment/discount deadlines.
+Missing tariffs are retained, rather than silently deleted or refreshed.
+
+Existing base profession/product and operator IDs remain protected. Plus bindings
+persist SKU, profession UUID, billable product UUID and offer ID in nullable
+`catalog_identities.practicum_tariffs`. Changes to one plus identity protect that
+one tariff while verified siblings can refresh. Operator-added offers remain
+untouched; an unbound offer-ID collision cannot be adopted. Price and enrollment
+anomalies use independent per-SKU confirmation keys. Catalog updates, binding
+changes and queue acknowledgements share a transaction; acknowledgement failure
+rolls them back together. The older base-only contract remains valid on rollback.
+
+Recorded official Python and Go plus API responses and a reduced displayed-card
+fixture exercise shared-page behavior. The Go page identity substitution is a
+parser test, not a claim of live Go landing verification.
 
 On October 9, anonymous source research returned all four language price and
 cohort APIs, while some landing pages returned protective HTML instead of course

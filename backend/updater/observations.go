@@ -83,7 +83,7 @@ func (e QueuedObservation) validate(config Config) error {
 	if e.Kind == "curated" && e.SourceID == "" || e.Kind == "discovered" && e.SourceID != "" || !evidenceDigest.MatchString(e.Digest) {
 		return ErrSource
 	}
-	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || (e.Candidate.Adapter != "purpleschool" && !verifiedTariffAdapter(e.Candidate.Adapter) && len(e.Record.Offers) != 1) || len(e.Record.Offers) == 0 || e.Record.Offers[0].URL != e.Candidate.URL {
+	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || (e.Candidate.Adapter != "purpleschool" && !(e.Candidate.Adapter == "yandex" && len(e.Observation.PracticumTariffs) > 0) && !verifiedTariffAdapter(e.Candidate.Adapter) && len(e.Record.Offers) != 1) || len(e.Record.Offers) == 0 || e.Record.Offers[0].URL != e.Candidate.URL {
 		return ErrSource
 	}
 	if e.Kind == "curated" {
@@ -96,7 +96,7 @@ func (e QueuedObservation) validate(config Config) error {
 		if len(expectedID) > 70 {
 			expectedID = e.Candidate.Adapter + "-" + fingerprint([]byte(e.Candidate.ExternalID))[:24]
 		}
-		if e.Record.ID != expectedID || (e.Candidate.Adapter != "purpleschool" && !verifiedTariffAdapter(e.Candidate.Adapter) && e.Record.Offers[0].ID != expectedID+"-course") {
+		if e.Record.ID != expectedID || (e.Candidate.Adapter != "purpleschool" && !(e.Candidate.Adapter == "yandex" && len(e.Observation.PracticumTariffs) > 0) && !verifiedTariffAdapter(e.Candidate.Adapter) && e.Record.Offers[0].ID != expectedID+"-course") {
 			return ErrSource
 		}
 	}
@@ -163,6 +163,14 @@ func (e QueuedObservation) validate(config Config) error {
 			return ErrSource
 		}
 	} else if o.NetologyFamilyID != 0 || o.NetologyProgramID != 0 {
+		return ErrSource
+	}
+	if len(o.PracticumTariffs) > 0 {
+		if !validPracticumGroup(e) {
+			return ErrSource
+		}
+	}
+	if e.Candidate.Adapter != "yandex" && len(o.PracticumTariffs) > 0 {
 		return ErrSource
 	}
 	if e.Candidate.Adapter == "yandex" {
@@ -308,7 +316,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 					switch e.Kind {
 					case "failure":
 						code = e.FailureCode
-						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2) OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.canonical_url=$2 AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, e.SourceID, url)
+						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2) OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.canonical_url=$2 AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro','yandex') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, e.SourceID, url)
 					case "curated":
 						courses, applyErr = merge(ctx, tx, old, e.Record, e.SourceID, e.Observation, observedAt, &code)
 					case "discovered":
@@ -325,7 +333,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 					state := "rejected"
 					delay := 72 * time.Hour
 					switch code {
-					case "verified":
+					case "verified", "partial_tariffs":
 						state = "published"
 						delay = 12 * time.Hour
 					case "pending_confirmation":

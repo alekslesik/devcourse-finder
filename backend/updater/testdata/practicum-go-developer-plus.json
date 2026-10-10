@@ -1,0 +1,103 @@
+{
+  "profession": [
+    {
+      "id": "cdec71df-b7d5-4b08-9330-c89ed9c5f7da",
+      "slug": "go-developer-plus",
+      "name": "Go-разработчик расширенный",
+      "description": "Курс \"Go-разработчик с нуля расширенный\"",
+      "price": 200000,
+      "currency": "RUB",
+      "landing_path": "/go-developer-basic/",
+      "type": "default",
+      "able_to_purchase": true,
+      "hidden_type": null,
+      "is_demand_test": false,
+      "is_interactive_textbook": false,
+      "tariff": "plus"
+    }
+  ],
+  "prices": {
+    "go-developer-plus": {
+      "RUB": {
+        "profession_product_id": "486bc82d-948f-4156-b7f1-6a722ffe8057",
+        "profession_is_regular_charge": false,
+        "profession_partial_payments_amount": 11,
+        "profession_price": 200000,
+        "profession_final_price": 200000,
+        "profession_partial_price": 21500,
+        "profession_final_partial_price": 21500,
+        "profession_b2b_price": 200000,
+        "bank_installment_price": 0,
+        "final_bank_installment_price": 0,
+        "percent_discount": 0,
+        "total_absolute_discount": 0,
+        "partial_percent_discount": 0,
+        "absolute_promocode_discount": 0,
+        "partial_absolute_promocode_discount": 0,
+        "discount_2035": 0,
+        "checklist_discount": 0,
+        "discount_deadline": null,
+        "partial_discount_deadline": null,
+        "promo_tariff": {},
+        "promo_tariff_partial": {},
+        "promocode": {},
+        "promocode_partial": {},
+        "certificates": [],
+        "credit_price": 8165,
+        "credit_original_price": 8165,
+        "tbank_installment_plans": [
+          {
+            "tbank_installment_payments_amount": 11,
+            "tbank_installment_price": 21500,
+            "final_tbank_installment_price": 21500
+          }
+        ],
+        "sberbank_installment_plans": [
+          {
+            "sberbank_installment_payments_amount": 11,
+            "sberbank_installment_price": 21500,
+            "final_sberbank_installment_price": 21500
+          }
+        ]
+      }
+    }
+  },
+  "squads": [
+    {
+      "id": 24039,
+      "squad_number": 40,
+      "date_begin": "2026-10-08T00:00:00Z",
+      "payment_deadline": "2026-10-11T00:00:00",
+      "subscriptions_num": 14,
+      "subscriptions_limit": 600,
+      "name": "go-developer-plus_cohort_40"
+    },
+    {
+      "id": 22897,
+      "squad_number": 41,
+      "date_begin": "2026-10-22T00:00:00Z",
+      "payment_deadline": "2026-10-21T00:00:00",
+      "subscriptions_num": 3,
+      "subscriptions_limit": 600,
+      "name": "go-developer-plus_cohort_41"
+    },
+    {
+      "id": 22898,
+      "squad_number": 42,
+      "date_begin": "2026-11-12T00:00:00Z",
+      "payment_deadline": "2026-10-29T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 600,
+      "name": "go-developer-plus_cohort_42"
+    },
+    {
+      "id": 22899,
+      "squad_number": 43,
+      "date_begin": "2026-12-17T00:00:00Z",
+      "payment_deadline": "2026-10-31T00:00:00",
+      "subscriptions_num": 1,
+      "subscriptions_limit": 600,
+      "name": "go-developer-plus_cohort_43"
+    }
+  ]
+}
