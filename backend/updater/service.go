@@ -24,11 +24,13 @@ type Service struct {
 	Worker string
 }
 type Result struct {
-	ID        int64  `json:"run_id"`
-	Published int    `json:"published"`
-	Queued    int    `json:"queued"`
-	Failed    int    `json:"failed"`
-	Status    string `json:"status"`
+	NewCourses       int    `json:"new_courses"`
+	RefreshedCourses int    `json:"refreshed_courses"`
+	ID               int64  `json:"run_id"`
+	Published        int    `json:"published"`
+	Queued           int    `json:"queued"`
+	Failed           int    `json:"failed"`
+	Status           string `json:"status"`
 }
 
 var ErrBusy = errors.New("another collection is running")
@@ -180,11 +182,16 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 		slog.Log(ctx, level, "catalog source checked", "source_id", source.CourseID, "code", code, "consecutive_failures", failures, "collection_id", result.ID)
 	}
 	if len(s.Config.Discovery) > 0 {
-		feedStats, discoveryErr := s.discover(ctx, client)
+		discoveryCtx, stopDiscovery := context.WithTimeout(ctx, 2*time.Minute)
+		feedStats, discoveryErr := s.discover(discoveryCtx, client)
+		stopDiscovery()
 		result.Failed += feedStats.Failed
 		checked += feedStats.Attempted
 		if discoveryErr != nil {
-			return result, discoveryErr
+			if ctx.Err() != nil || !errors.Is(discoveryErr, context.DeadlineExceeded) {
+				return result, discoveryErr
+			}
+			result.Failed++ // Discovery budget exhausted; existing detail jobs still run.
 		}
 		batchStats, batchErr := s.processBatch(ctx, client, s.publishDiscovered)
 		result.Queued += batchStats.Queued

@@ -14,7 +14,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const observationQueueLimit = 50000
+const observationQueueLimit = 5000
+const processedObservationRetention = 5000
 const publisherBatchLimit = 500
 
 func failureCodeAllowed(code string) bool {
@@ -289,6 +290,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 		decoder.DisallowUnknownFields()
 		valid := decoder.Decode(&e) == nil && e.validate(s.Config) == nil && e.Candidate.URL == url && e.Kind == kind && e.ObservedAt.Equal(observedAt)
 		code := "invalid_observation"
+		newCount := 0
 		n, publishErr := s.DB.UpdateVerified(ctx, []string{providerHosts[e.Candidate.Adapter]}, "automatic-catalog-publisher", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
 			var courses []catalog.Course
 			if valid {
@@ -356,19 +358,31 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 			if _, ackErr := tx.Exec(ctx, `UPDATE catalog_observations SET processed_at=now(),code=$2 WHERE id=$1 AND processed_at IS NULL`, id, code); ackErr != nil {
 				return nil, ackErr
 			}
+			known := map[string]bool{}
+			for _, c := range old {
+				known[c.ID] = true
+			}
+			for _, c := range courses {
+				if !known[c.ID] {
+					newCount++
+				}
+			}
 			return courses, nil
 		})
 		if publishErr != nil {
 			return result, publishErr
 		}
 		result.Published += n
+		result.NewCourses += newCount
+		result.RefreshedCourses += n - newCount
 		if code == "invalid_observation" {
 			result.Failed++
 			result.Status = "partial"
 		}
 		slog.Info("catalog observation processed", "event_id", id, "code", code, "published", n)
 	}
+	slog.Info("catalog publication finished", "accepted_course_updates", result.Published, "new_courses", result.NewCourses, "refreshed_courses", result.RefreshedCourses)
 	// Retain recent diagnostics while incrementally trimming old/overflow done rows.
-	_, err = s.DB.Pool.Exec(ctx, `DELETE FROM catalog_observations WHERE id IN (SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL AND (processed_at<now()-interval '7 days' OR id<(SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL ORDER BY id DESC OFFSET 25000 LIMIT 1)) ORDER BY id LIMIT 1000)`)
+	_, err = s.DB.Pool.Exec(ctx, `DELETE FROM catalog_observations WHERE id IN (SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL AND (processed_at<now()-interval '7 days' OR id<=(SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL ORDER BY id DESC OFFSET $1 LIMIT 1)) ORDER BY id LIMIT 1000)`, processedObservationRetention)
 	return result, err
 }

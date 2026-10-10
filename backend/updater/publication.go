@@ -126,6 +126,13 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 }
 
 func coverage(ctx context.Context, db *store.DB, w io.Writer) error {
+	var courseTotal, offerTotal int
+	if err := db.Pool.QueryRow(ctx, "SELECT count(DISTINCT c.id),count(o.id) FROM courses c JOIN offers o ON o.course_id=c.id WHERE c.status='published' AND NOT c.demo").Scan(&courseTotal, &offerTotal); err != nil {
+		return err
+	}
+	if err := json.NewEncoder(w).Encode(map[string]any{"catalog_totals": true, "distinct_courses": courseTotal, "offers": offerTotal}); err != nil {
+		return err
+	}
 	rows, err := db.Pool.Query(ctx, `SELECT language,provider,count(DISTINCT c.id),count(o.id),
  count(o.id) FILTER(WHERE free AND price=0 AND price_kind='exact' AND price_checked_at>now()-interval '30 days' AND (valid_until IS NULL OR valid_until>now())),
  count(o.id) FILTER(WHERE NOT free),

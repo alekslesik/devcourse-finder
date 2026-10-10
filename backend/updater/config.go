@@ -15,6 +15,8 @@ import (
 	"devcourse-finder/catalog"
 )
 
+const maxDiscoveryFeeds = 16
+
 type Source struct {
 	CourseID      string `json:"course_id"`
 	Adapter       string `json:"adapter"`
@@ -55,7 +57,7 @@ func LoadConfig(configFile, catalogFile string) (Config, error) {
 	return c, c.Validate()
 }
 func (c Config) Validate() error {
-	if len(c.Discovery) > 16 {
+	if len(c.Discovery) > maxDiscoveryFeeds {
 		return errors.New("too many discovery feeds")
 	}
 	feedIDs := map[string]bool{}

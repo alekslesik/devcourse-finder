@@ -4,6 +4,7 @@ Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
 ## [0.17.0] - 2026-10-10
+- Derive safe multi-provider lane limits, rotate discovery/detail priority, bound candidate and observation queues, and verify concurrent worker resource usage separately from distinct published coverage.
 
 - Group explicitly displayed Practicum base/plus tariffs under one canonical course, with independent verified prices, protected identities and transactional publication.
 

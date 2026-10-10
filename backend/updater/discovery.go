@@ -333,6 +333,14 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 	}
 	defer tx.Rollback(ctx)
 	var queued int
+	var providerQueued int
+	if err = tx.QueryRow(ctx, "SELECT count(*) FROM catalog_candidates WHERE adapter=$1", f.Adapter).Scan(&providerQueued); err != nil {
+		return 0, err
+	}
+	providerCap := 5000
+	if f.Adapter == "stepik" {
+		providerCap = 20000
+	}
 	if err = tx.QueryRow(ctx, "SELECT count(*) FROM catalog_candidates").Scan(&queued); err != nil {
 		return 0, err
 	}
@@ -353,13 +361,14 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 		if e != nil {
 			return 0, e
 		}
-		if tag.RowsAffected() == 0 && queued < 50000 {
+		if tag.RowsAffected() == 0 && queued < 50000 && providerQueued < providerCap {
 			tag, e = tx.Exec(ctx, `INSERT INTO catalog_candidates(adapter,external_id,canonical_url,feed_id)
    VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING`, candidate.Adapter, candidate.ExternalID, candidate.URL, candidate.FeedID)
 			if e != nil {
 				return 0, e
 			}
 			queued += int(tag.RowsAffected())
+			providerQueued += int(tag.RowsAffected())
 		}
 		count += int(tag.RowsAffected())
 	}
