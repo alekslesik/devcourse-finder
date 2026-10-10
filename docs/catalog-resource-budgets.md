@@ -77,3 +77,13 @@ After merge, use the published release in **Deploy release** manually. Run
 **Collect catalog** for an immediate extra read, then inspect `catalog-update
 status`. The twice-daily schedule continues at 09:00/21:00 Europe/Moscow. Merging
 and publishing the release do not deploy it or change production coverage.
+
+## Recorded result
+
+On October 10 the concurrent official-source check passed in 200.59 seconds:
+28 distinct courses, 46 offers, zero pending observations, no OOM, sampled worker
+peaks 13.75/28.61/12.30 MiB (API/pages/publisher). See the
+[completion record](catalog-workers-completion.md#measured-anonymous-collection--2026-10-10)
+and [JSON evidence](catalog-resource-result-2026-10-10.json). This measured one
+bounded run in a disposable database, not maximum catalog capacity or production
+coverage. Repeat it after substantial adapter/payload or resource-limit changes.
