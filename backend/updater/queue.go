@@ -123,7 +123,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		if w.Adapter == "yandex" {
 			reserve = 140 * time.Second // Page, profession, full price and cohort reads.
 		}
-		if w.Adapter == "htmlacademy" || w.Adapter == "rsschool" && !rsCatalogAttempted {
+		if w.Adapter == "javarush" || w.Adapter == "skillfactory" || w.Adapter == "htmlacademy" || w.Adapter == "rsschool" && !rsCatalogAttempted {
 			reserve = 70 * time.Second
 		}
 		if w.Adapter == "codebasics" && !policyAttempted {
@@ -167,6 +167,10 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 					record, o, parseErr = collectCodeBasics(body, basicsPolicy, w.Candidate, time.Now().UTC())
 				}
 				digest = fingerprint([]byte(digest + ":" + basicsPolicyDigest))
+			} else if w.Adapter == "javarush" {
+				record, o, digest, parseErr = fetchJavaRush(ctx, client, body, digest, w.Candidate)
+			} else if w.Adapter == "skillfactory" {
+				record, o, digest, parseErr = fetchSkillfactory(ctx, client, body, digest, w.Candidate)
 			} else if w.Adapter == "htmlacademy" {
 				record, o, digest, parseErr = fetchHTMLAcademy(ctx, client, body, digest, w.Candidate)
 			} else if w.Adapter == "yandex" {
@@ -216,7 +220,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			} else if _, err = s.DB.Pool.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
 			 (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)
              OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.adapter=$1 AND i.external_id=$2
-              AND i.adapter='purpleschool' AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
+              AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
 				return stats, err
 			}
 		}

@@ -169,6 +169,7 @@ export interface components {
             schedule: string;
             enrollment: string;
             url: string;
+            /** @description Complete course price in RUB minor units; null when the complete price is unknown, including recurring subscriptions. */
             price: number | null;
             hours: number | null;
             weeks: number | null;
@@ -181,6 +182,7 @@ export interface components {
             valid_until?: string;
             /** @description False when review/mentor evidence is unavailable; omitted for legacy curated offers. */
             support_known?: boolean;
+            billing?: components["schemas"]["Billing"];
         };
         Result: {
             course: components["schemas"]["Course"];
@@ -238,6 +240,16 @@ export interface components {
             /** @enum {string} */
             goal?: "" | "try" | "job" | "switch" | "deepen";
             total?: number;
+        };
+        /** @description Recurring fee in the original currency. amount_minor uses currency minor units; it is not a complete-course RUB price. */
+        Billing: {
+            /** @enum {string} */
+            kind: "subscription";
+            amount_minor: number;
+            /** @enum {string} */
+            currency: "USD" | "EUR" | "RUB";
+            /** @enum {string} */
+            interval: "month" | "year";
         };
     };
     responses: never;

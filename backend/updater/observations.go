@@ -19,7 +19,7 @@ const publisherBatchLimit = 500
 
 func failureCodeAllowed(code string) bool {
 	switch code {
-	case "invalid_htmlacademy_page", "invalid_htmlacademy_payment", "unsupported_htmlacademy_format", "invalid_rsschool_contract", "unverified_rsschool_free", "invalid_purpleschool_contract", "invalid_netology_page", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment", "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
+	case "invalid_javarush_contract", "invalid_skypro_contract", "invalid_skillfactory_contract", "invalid_skillbox_contract", "invalid_htmlacademy_page", "invalid_htmlacademy_payment", "unsupported_htmlacademy_format", "invalid_rsschool_contract", "unverified_rsschool_free", "invalid_purpleschool_contract", "invalid_netology_page", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment", "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
 		return true
 	default:
 		return false
@@ -83,7 +83,7 @@ func (e QueuedObservation) validate(config Config) error {
 	if e.Kind == "curated" && e.SourceID == "" || e.Kind == "discovered" && e.SourceID != "" || !evidenceDigest.MatchString(e.Digest) {
 		return ErrSource
 	}
-	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || (e.Candidate.Adapter != "purpleschool" && len(e.Record.Offers) != 1) || len(e.Record.Offers) == 0 || e.Record.Offers[0].URL != e.Candidate.URL {
+	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || (e.Candidate.Adapter != "purpleschool" && !verifiedTariffAdapter(e.Candidate.Adapter) && len(e.Record.Offers) != 1) || len(e.Record.Offers) == 0 || e.Record.Offers[0].URL != e.Candidate.URL {
 		return ErrSource
 	}
 	if e.Kind == "curated" {
@@ -96,7 +96,7 @@ func (e QueuedObservation) validate(config Config) error {
 		if len(expectedID) > 70 {
 			expectedID = e.Candidate.Adapter + "-" + fingerprint([]byte(e.Candidate.ExternalID))[:24]
 		}
-		if e.Record.ID != expectedID || (e.Candidate.Adapter != "purpleschool" && e.Record.Offers[0].ID != expectedID+"-course") {
+		if e.Record.ID != expectedID || (e.Candidate.Adapter != "purpleschool" && !verifiedTariffAdapter(e.Candidate.Adapter) && e.Record.Offers[0].ID != expectedID+"-course") {
 			return ErrSource
 		}
 	}
@@ -108,6 +108,37 @@ func (e QueuedObservation) validate(config Config) error {
 		return ErrSource
 	}
 	o := e.Observation
+	if e.Candidate.Adapter == "javarush" {
+		offer := e.Record.Offers[0]
+		if !o.Billing.Valid() || o.Billing.Currency != "USD" || o.Billing.Interval != "month" || offer.Billing == nil || *o.Billing != *offer.Billing || !o.PriceUnknown || o.Price != nil || o.Enrollment != "continuous" || o.Schedule != "flexible" || o.ValidUntil == nil || !o.ValidUntil.After(e.ObservedAt) || o.ValidUntil.After(e.ObservedAt.Add(26*time.Hour+time.Second)) || offer.Price != nil || offer.Free || offer.PriceKind != "unknown" || offer.Enrollment != o.Enrollment || offer.Schedule != o.Schedule || offer.ValidUntil == nil || !offer.ValidUntil.Equal(*o.ValidUntil) {
+			return ErrSource
+		}
+	} else {
+		if o.Billing != nil {
+			return ErrSource
+		}
+		for _, offer := range e.Record.Offers {
+			if offer.Billing != nil {
+				return ErrSource
+			}
+		}
+	}
+
+	if e.Candidate.Adapter == "skypro" {
+		offer := e.Record.Offers[0]
+		if o.SkyproProductID <= 0 || !o.PriceUnknown || o.Price != nil || (o.Enrollment != "closed" && o.Enrollment != "open") || o.Schedule != "unknown" || o.ValidUntil == nil || !o.ValidUntil.After(e.ObservedAt) || o.ValidUntil.After(e.ObservedAt.Add(26*time.Hour+time.Second)) || offer.Price != nil || offer.Free || offer.PriceKind != "unknown" || offer.Enrollment != o.Enrollment || offer.ValidUntil == nil || !offer.ValidUntil.Equal(*o.ValidUntil) {
+			return ErrSource
+		}
+	} else if o.SkyproProductID != 0 {
+		return ErrSource
+	}
+	if verifiedTariffAdapter(e.Candidate.Adapter) {
+		if !validVerifiedTariffs(e) {
+			return ErrSource
+		}
+	} else if o.VerifiedProductID != 0 || len(o.VerifiedTariffs) != 0 {
+		return ErrSource
+	}
 	if e.Candidate.Adapter == "htmlacademy" {
 		offer := e.Record.Offers[0]
 		if !strings.HasPrefix(e.Candidate.ExternalID, "intensive-") || !o.PriceUnknown || o.Price != nil || o.Enrollment != "continuous" || o.Schedule != "flexible" || o.ValidUntil == nil || !o.ValidUntil.After(e.ObservedAt) || o.ValidUntil.After(e.ObservedAt.Add(26*time.Hour+time.Second)) || offer.Price != nil || offer.Free || offer.PriceKind != "unknown" || offer.Name != "Индивидуальный формат — помесячная оплата" || offer.Enrollment != o.Enrollment || offer.Schedule != o.Schedule || offer.ValidUntil == nil || !offer.ValidUntil.Equal(*o.ValidUntil) || offer.Mentor || offer.Review || offer.SupportKnown == nil || *offer.SupportKnown {
@@ -277,7 +308,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 					switch e.Kind {
 					case "failure":
 						code = e.FailureCode
-						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2) OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.canonical_url=$2 AND i.adapter='purpleschool' AND starts_with(updater_candidates.source_id,i.course_id||':'))`, e.SourceID, url)
+						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2) OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.canonical_url=$2 AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, e.SourceID, url)
 					case "curated":
 						courses, applyErr = merge(ctx, tx, old, e.Record, e.SourceID, e.Observation, observedAt, &code)
 					case "discovered":

@@ -3,6 +3,14 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.16.0] - 2026-10-10
+
+- Add Skillbox product-bound full-card tariffs and Skillfactory course-specific public pricing verification.
+- Add Skypro product-scoped enrollment checks; preserve unknown full prices and reject newly closed courses.
+- Preserve JavaRush recurring fees in their original currency with additive API/store billing metadata and unchanged frontend files.
+- Protect multi-offer identities, interrupt failed-read confirmations, and confirm recurring fee anomalies across bounded evidence leases.
+- Add recorded source fixtures, negative and PostgreSQL tests, provider runbooks, and manual-release deployment instructions.
+
 ## [0.15.0] - 2026-10-09
 
 - Add HTML Academy discovery and independent public payment verification to the page collector.

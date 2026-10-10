@@ -102,6 +102,9 @@ func fetch(ctx context.Context, client *http.Client, raw string) ([]byte, string
 }
 
 func allowedSourceHost(host string) bool {
+	if host == "tools.skillfactory.ru" {
+		return true
+	}
 	for _, allowed := range providerHosts {
 		if host == allowed {
 			return true

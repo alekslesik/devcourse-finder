@@ -8,13 +8,13 @@ import (
 	"devcourse-finder/catalog"
 )
 
-var providerNames = map[string]string{"htmlacademy": "HTML Academy", "rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
+var providerNames = map[string]string{"javarush": "JavaRush", "skypro": "Skypro", "skillfactory": "Skillfactory", "skillbox": "Skillbox", "htmlacademy": "HTML Academy", "rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
 
 func candidateEndpoint(c Candidate) string {
 	if c.Adapter == "stepik" {
 		return "https://stepik.org/api/courses/" + c.ExternalID
 	}
-	if c.Adapter == "otus" || c.Adapter == "yandex" {
+	if c.Adapter == "skillbox" || c.Adapter == "otus" || c.Adapter == "yandex" {
 		return c.URL + "/"
 	}
 	return c.URL
@@ -22,6 +22,18 @@ func candidateEndpoint(c Candidate) string {
 func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
 		return catalog.Course{}, Observation{}, rejection("identity_mismatch")
+	}
+	if c.Adapter == "javarush" {
+		return catalog.Course{}, Observation{}, rejection("invalid_javarush_contract")
+	} // Requires monthly pricing GET.
+	if c.Adapter == "skypro" {
+		return collectSkypro(data, c, now)
+	}
+	if c.Adapter == "skillfactory" {
+		return catalog.Course{}, Observation{}, rejection("invalid_skillfactory_contract")
+	} // Requires independent pricing GET.
+	if c.Adapter == "skillbox" {
+		return collectSkillbox(data, c, now)
 	}
 	if c.Adapter == "htmlacademy" {
 		return catalog.Course{}, Observation{}, rejection("invalid_htmlacademy_payment")

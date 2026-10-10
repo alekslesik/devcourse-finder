@@ -38,8 +38,8 @@ Further providers are tracked in the [worker roadmap](catalog-workers-roadmap.md
 
 ## Discovery and source coverage
 
-`data/updater-sources.json` enables nine official discovery feeds (Stepik, OTUS,
-Yandex Practicum, Hexlet, CodeBasics, Netology, PurpleSchool, RS School and HTML Academy) and the two curated Stepik refreshes.
+`data/updater-sources.json` enables thirteen official discovery feeds (Stepik, OTUS,
+Yandex Practicum, Hexlet, CodeBasics, Netology, PurpleSchool, RS School, HTML Academy, Skillbox, Skillfactory, Skypro and JavaRush) and the two curated Stepik refreshes.
 Sitemap/catalog URLs identify candidates, not published records. CodeBasics uses
 its verified Russian catalog at `/ru` (`kind: catalog`), rather than a nonexistent
 `sitemap.xml`. Hexlet uses its robots-declared gzipped sitemap and only the
@@ -91,6 +91,14 @@ pages to anonymous public payment data. Monthly subscriptions retain unknown
 complete prices, and embedded profession bundles are excluded. See the
 [HTML Academy contract and coverage limits](htmlacademy-adapter.md).
 
+Skillbox and Skillfactory verify course-specific complete-payment tariffs in the
+page collector; their identities and tariff sets are protected by the publisher.
+Skypro scopes enrollment to the target product and keeps unverified totals
+unknown. JavaRush preserves original-currency monthly subscriptions separately
+from course prices. See [Skillbox](skillbox-adapter.md),
+[Skillfactory](skillfactory-adapter.md), [Skypro](skypro-adapter.md), and
+[JavaRush](javarush-adapter.md) for current contracts and limits.
+
 OTUS uses the recorded official JSON-LD Course/Offer full-payment contract.
 The schema reader also recognizes exact-identity Course or Online Course Product
 records from other schools, but positive prices from providers without a verified
@@ -100,7 +108,7 @@ specifications, multiple tariffs, missing availability and unbound recommendatio
 are rejected. Free access requires an explicit full-course free flag and zero RUB.
 Unsupported markup stays unpublished; no marketing-text price inference is used.
 
-Discovery is bounded to ten configured feeds, one child sitemap per feed/run,
+Discovery is bounded to sixteen configured feeds, one child sitemap per feed/run,
 8 MiB fetched/decompressed documents, 100,000 sitemap locations and a 50,000-row
 candidate queue. Persistent cursors advance across child failures. Each run checks
 at most 210 queued details: up to 120 new/retry Stepik records and 30 Stepik
