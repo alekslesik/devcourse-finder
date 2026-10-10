@@ -216,7 +216,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			} else if _, err = s.DB.Pool.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
 			 (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)
              OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.adapter=$1 AND i.external_id=$2
-              AND i.adapter='purpleschool' AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
+              AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
 				return stats, err
 			}
 		}

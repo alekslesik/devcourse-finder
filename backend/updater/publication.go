@@ -20,6 +20,9 @@ func (s *Service) publishDiscovered(ctx context.Context, candidate Candidate, re
 	return code, published, err
 }
 func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candidate Candidate, record catalog.Course, o Observation, observedAt time.Time, code *string) ([]catalog.Course, error) {
+	if verifiedTariffAdapter(candidate.Adapter) {
+		return mergeVerifiedTariffs(ctx, tx, old, candidate, record, o, observedAt, code)
+	}
 	if candidate.Adapter == "purpleschool" {
 		return mergePurpleSchool(ctx, tx, old, candidate, record, o, observedAt, code)
 	}

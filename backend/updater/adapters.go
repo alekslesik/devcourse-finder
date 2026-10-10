@@ -16,6 +16,8 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
+	VerifiedProductID int64          `json:"verified_product_id,omitempty"`
+	VerifiedTariffs   []PurpleTariff `json:"verified_tariffs,omitempty"`
 	PurpleCourseID    int64          `json:"purple_course_id,omitempty"`
 	PurpleTariffs     []PurpleTariff `json:"purple_tariffs,omitempty"`
 	NetologyFamilyID  int64          `json:"netology_family_id,omitempty"`

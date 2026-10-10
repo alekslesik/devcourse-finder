@@ -33,7 +33,7 @@ type Candidate struct {
 	FeedID     string
 }
 
-var providerHosts = map[string]string{"htmlacademy": "htmlacademy.ru", "rsschool": "rs.school", "purpleschool": "purpleschool.ru", "netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
+var providerHosts = map[string]string{"skillbox": "skillbox.ru", "htmlacademy": "htmlacademy.ru", "rsschool": "rs.school", "purpleschool": "purpleschool.ru", "netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
 var slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,99}$`)
 var stepikPath = regexp.MustCompile(`^/course/(?:[a-z0-9-]+-)?([1-9][0-9]*)/promo$`)
 
@@ -89,6 +89,11 @@ func candidateURL(adapter, raw, feedID string) (Candidate, bool) {
 		switch id {
 		case "javascript", "javascript-preschool-ru", "reactjs", "nodejs", "angular", "short-track":
 		default:
+			return Candidate{}, false
+		}
+	case "skillbox":
+		id = strings.TrimPrefix(u.Path, "/course/")
+		if id == u.Path || !slugPattern.MatchString(id) {
 			return Candidate{}, false
 		}
 	case "purpleschool":
@@ -251,6 +256,9 @@ func childSitemaps(f Feed, urls []string) []string {
 		// Stepik indexes include authors and individual exercises: only course
 		// promo maps can seed course identities.
 		if f.Adapter == "stepik" && !strings.Contains(u.Path, "sitemap-course-promo-") {
+			continue
+		}
+		if f.Adapter == "skillbox" && u.Path != "/course/sitemap.xml" {
 			continue
 		}
 		if f.Adapter == "htmlacademy" && u.Path != "/sitemap/sitemap_default.xml" {

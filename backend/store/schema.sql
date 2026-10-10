@@ -95,3 +95,5 @@ ALTER TABLE updater_runs ADD COLUMN IF NOT EXISTS queued integer NOT NULL DEFAUL
 CREATE INDEX IF NOT EXISTS updater_runs_worker_time ON updater_runs(worker,started_at DESC);
 
 ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS purple_binding jsonb;
+
+ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS verified_binding jsonb;
