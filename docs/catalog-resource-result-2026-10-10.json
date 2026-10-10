@@ -1,0 +1,561 @@
+{
+  "scope": "disposable live-source verification; not production coverage",
+  "date": "2026-10-10",
+  "image_digest": "sha256:137668c76d9c0fa7346eb8159927a7967497d7fcb368289c51df2348c0c6b52a",
+  "passed": true,
+  "duration_seconds": 200.59,
+  "configured_feeds": 13,
+  "worker_limit_bytes": 134217728,
+  "workers": {
+    "api": {
+      "sampled_peak_bytes": 14417920,
+      "oom_killed": false,
+      "exit_code": 0,
+      "running": false
+    },
+    "pages": {
+      "sampled_peak_bytes": 29999759,
+      "oom_killed": false,
+      "exit_code": 0,
+      "running": false
+    },
+    "publisher": {
+      "sampled_peak_bytes": 12897484,
+      "oom_killed": false,
+      "exit_code": 0,
+      "running": true
+    }
+  },
+  "status": [
+    {
+      "failed": 1,
+      "finished_at": "2026-10-10T07:20:40.7637Z",
+      "published": 0,
+      "queued": 8,
+      "run_id": 1,
+      "started_at": "2026-10-10T07:19:58.181546Z",
+      "status": "partial",
+      "worker": "api"
+    },
+    {
+      "failed": 34,
+      "finished_at": "2026-10-10T07:23:15.583515Z",
+      "published": 0,
+      "queued": 60,
+      "run_id": 2,
+      "started_at": "2026-10-10T07:19:58.998648Z",
+      "status": "partial",
+      "worker": "pages"
+    },
+    {
+      "last_processed_at": "2026-10-10T07:23:16.823116Z",
+      "oldest_pending_at": null,
+      "pending": 0,
+      "publication_queue": true,
+      "retained_processed": 68
+    },
+    {
+      "alive": false,
+      "heartbeat_at": null,
+      "worker": "api"
+    },
+    {
+      "alive": false,
+      "heartbeat_at": null,
+      "worker": "pages"
+    },
+    {
+      "alive": true,
+      "heartbeat_at": "2026-10-10T07:22:57.375501Z",
+      "worker": "publisher"
+    },
+    {
+      "attempted_at": "2026-10-10T07:19:58.1867Z",
+      "code": "verified",
+      "consecutive_failures": 0,
+      "source_id": "stepik-golang",
+      "verified_at": "2026-10-10T07:19:58.1867Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:02.521668Z",
+      "code": "verified",
+      "consecutive_failures": 0,
+      "source_id": "stepik-python-generation",
+      "verified_at": "2026-10-10T07:20:02.521668Z"
+    },
+    {
+      "catalog_totals": true,
+      "distinct_courses": 28,
+      "offers": 46
+    },
+    {
+      "confirmed_free_offers": 1,
+      "courses": 1,
+      "coverage": true,
+      "language": "go",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:20:56.334787Z",
+      "paid_offers": 0,
+      "provider": "CodeBasics",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "go",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:23:07.264518Z",
+      "paid_offers": 1,
+      "provider": "OTUS",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 3,
+      "coverage": true,
+      "language": "go",
+      "offers": 9,
+      "oldest_price_check": "2026-10-10T07:21:30.775855Z",
+      "paid_offers": 9,
+      "provider": "PurpleSchool",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 1,
+      "courses": 1,
+      "coverage": true,
+      "language": "go",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:19:58.1867Z",
+      "paid_offers": 0,
+      "provider": "Stepik",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "go",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:21:27.872941Z",
+      "paid_offers": 1,
+      "provider": "Нетология",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 2,
+      "coverage": true,
+      "language": "go",
+      "offers": 3,
+      "oldest_price_check": "2026-10-10T07:20:32.646014Z",
+      "paid_offers": 3,
+      "provider": "Яндекс Практикум",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 1,
+      "courses": 1,
+      "coverage": true,
+      "language": "java",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:21:23.709152Z",
+      "paid_offers": 0,
+      "provider": "CodeBasics",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "java",
+      "offers": 1,
+      "oldest_price_check": null,
+      "paid_offers": 1,
+      "provider": "JavaRush",
+      "unknown_or_stale_prices": 1
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "java",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:22:02.810058Z",
+      "paid_offers": 1,
+      "provider": "OTUS",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "java",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:22:00.773452Z",
+      "paid_offers": 1,
+      "provider": "Нетология",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "java",
+      "offers": 2,
+      "oldest_price_check": "2026-10-10T07:20:39.192353Z",
+      "paid_offers": 2,
+      "provider": "Яндекс Практикум",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 2,
+      "courses": 2,
+      "coverage": true,
+      "language": "javascript",
+      "offers": 2,
+      "oldest_price_check": "2026-10-10T07:21:39.127492Z",
+      "paid_offers": 0,
+      "provider": "CodeBasics",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 2,
+      "coverage": true,
+      "language": "javascript",
+      "offers": 2,
+      "oldest_price_check": null,
+      "paid_offers": 2,
+      "provider": "HTML Academy",
+      "unknown_or_stale_prices": 2
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 2,
+      "coverage": true,
+      "language": "javascript",
+      "offers": 6,
+      "oldest_price_check": "2026-10-10T07:22:29.167546Z",
+      "paid_offers": 6,
+      "provider": "PurpleSchool",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "javascript",
+      "offers": 3,
+      "oldest_price_check": "2026-10-10T07:22:52.194149Z",
+      "paid_offers": 3,
+      "provider": "Skillbox",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "javascript",
+      "offers": 1,
+      "oldest_price_check": null,
+      "paid_offers": 1,
+      "provider": "Skypro",
+      "unknown_or_stale_prices": 1
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 2,
+      "coverage": true,
+      "language": "javascript",
+      "offers": 3,
+      "oldest_price_check": "2026-10-10T07:20:24.781992Z",
+      "paid_offers": 3,
+      "provider": "Яндекс Практикум",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 1,
+      "courses": 1,
+      "coverage": true,
+      "language": "python",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:21:55.996368Z",
+      "paid_offers": 0,
+      "provider": "CodeBasics",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "python",
+      "offers": 3,
+      "oldest_price_check": "2026-10-10T07:23:13.851144Z",
+      "paid_offers": 3,
+      "provider": "Skillfactory",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 1,
+      "courses": 1,
+      "coverage": true,
+      "language": "python",
+      "offers": 1,
+      "oldest_price_check": "2026-10-10T07:20:02.521668Z",
+      "paid_offers": 0,
+      "provider": "Stepik",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "confirmed_free_offers": 0,
+      "courses": 1,
+      "coverage": true,
+      "language": "python",
+      "offers": 2,
+      "oldest_price_check": "2026-10-10T07:20:18.482961Z",
+      "paid_offers": 2,
+      "provider": "Яндекс Практикум",
+      "unknown_or_stale_prices": 0
+    },
+    {
+      "pending": 104,
+      "protected": 0,
+      "published": 26,
+      "queue": true,
+      "rejected": 40
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:38.805294Z",
+      "candidates_seen": 5,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "codebasics-catalog",
+      "verified_at": "2026-10-10T07:20:38.805294Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:34.627146Z",
+      "candidates_seen": 44,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "hexlet-sitemap",
+      "verified_at": "2026-10-10T07:20:34.627146Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:22.60868Z",
+      "candidates_seen": 12,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "htmlacademy-sitemap",
+      "verified_at": "2026-10-10T07:20:22.60868Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:03.519883Z",
+      "candidates_seen": 1,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "javarush-prices",
+      "verified_at": "2026-10-10T07:20:03.519883Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:43.303755Z",
+      "candidates_seen": 10,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "netology-catalog",
+      "verified_at": "2026-10-10T07:20:43.303755Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:30.321619Z",
+      "candidates_seen": 23,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "otus-sitemap",
+      "verified_at": "2026-10-10T07:20:30.321619Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:49.140287Z",
+      "candidates_seen": 18,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "purpleschool-sitemap",
+      "verified_at": "2026-10-10T07:20:49.140287Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:53.324547Z",
+      "candidates_seen": 6,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "rsschool-catalog",
+      "verified_at": "2026-10-10T07:20:53.324547Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:18.144971Z",
+      "candidates_seen": 21,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "skillbox-sitemap",
+      "verified_at": "2026-10-10T07:20:18.144971Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:12.85105Z",
+      "candidates_seen": 11,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "skillfactory-catalog",
+      "verified_at": "2026-10-10T07:20:12.85105Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:07.564934Z",
+      "candidates_seen": 6,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "skypro-catalog",
+      "verified_at": "2026-10-10T07:20:07.564934Z"
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:06.328728Z",
+      "candidates_seen": 0,
+      "code": "feed_unavailable",
+      "consecutive_failures": 1,
+      "feed_id": "stepik-sitemap",
+      "verified_at": null
+    },
+    {
+      "attempted_at": "2026-10-10T07:20:12.822185Z",
+      "candidates_seen": 13,
+      "code": "verified",
+      "consecutive_failures": 0,
+      "feed_id": "yandex-sitemap",
+      "verified_at": "2026-10-10T07:20:12.822185Z"
+    }
+  ],
+  "retained_log_candidate_codes": [
+    {
+      "adapter": "codebasics",
+      "code": "queued",
+      "count": 5
+    },
+    {
+      "adapter": "hexlet",
+      "code": "invalid_structured_payload",
+      "count": 3
+    },
+    {
+      "adapter": "hexlet",
+      "code": "missing_course_schema",
+      "count": 2
+    },
+    {
+      "adapter": "hexlet",
+      "code": "source_unavailable",
+      "count": 1
+    },
+    {
+      "adapter": "htmlacademy",
+      "code": "invalid_htmlacademy_page",
+      "count": 2
+    },
+    {
+      "adapter": "htmlacademy",
+      "code": "queued",
+      "count": 2
+    },
+    {
+      "adapter": "htmlacademy",
+      "code": "unsupported_or_ambiguous_language",
+      "count": 2
+    },
+    {
+      "adapter": "javarush",
+      "code": "queued",
+      "count": 1
+    },
+    {
+      "adapter": "netology",
+      "code": "invalid_netology_payload",
+      "count": 2
+    },
+    {
+      "adapter": "netology",
+      "code": "queued",
+      "count": 2
+    },
+    {
+      "adapter": "netology",
+      "code": "unverified_enrollment",
+      "count": 2
+    },
+    {
+      "adapter": "otus",
+      "code": "missing_course_schema",
+      "count": 4
+    },
+    {
+      "adapter": "otus",
+      "code": "queued",
+      "count": 2
+    },
+    {
+      "adapter": "purpleschool",
+      "code": "invalid_purpleschool_contract",
+      "count": 1
+    },
+    {
+      "adapter": "purpleschool",
+      "code": "queued",
+      "count": 5
+    },
+    {
+      "adapter": "rsschool",
+      "code": "queued",
+      "count": 1
+    },
+    {
+      "adapter": "rsschool",
+      "code": "unsupported_content_language",
+      "count": 4
+    },
+    {
+      "adapter": "rsschool",
+      "code": "unverified_enrollment",
+      "count": 1
+    },
+    {
+      "adapter": "skillbox",
+      "code": "invalid_skillbox_contract",
+      "count": 5
+    },
+    {
+      "adapter": "skillbox",
+      "code": "queued",
+      "count": 1
+    },
+    {
+      "adapter": "skillfactory",
+      "code": "invalid_skillfactory_contract",
+      "count": 4
+    },
+    {
+      "adapter": "skillfactory",
+      "code": "queued",
+      "count": 1
+    },
+    {
+      "adapter": "skillfactory",
+      "code": "source_unavailable",
+      "count": 1
+    },
+    {
+      "adapter": "skypro",
+      "code": "queued",
+      "count": 6
+    },
+    {
+      "adapter": "yandex",
+      "code": "queued",
+      "count": 6
+    }
+  ]
+}

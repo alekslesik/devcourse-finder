@@ -64,7 +64,7 @@ func TestQueueBalancesProvidersAndRefreshWithoutStarvation(t *testing.T) {
 		}
 	}
 	// Full production provider coverage still fits in the global budget.
-	for _, adapter := range []string{"yandex", "hexlet", "codebasics"} {
+	for _, adapter := range []string{"yandex", "hexlet", "codebasics", "netology", "purpleschool", "rsschool", "htmlacademy", "skillbox", "skillfactory", "skypro", "javarush"} {
 		service.Config.Discovery = append(service.Config.Discovery, Feed{ID: adapter, Adapter: adapter})
 		for i := 0; i < 10; i++ {
 			for _, state := range []string{"pending", "published"} {
@@ -76,14 +76,14 @@ func TestQueueBalancesProvidersAndRefreshWithoutStarvation(t *testing.T) {
 		}
 	}
 	all, err := service.queueWork(ctx)
-	if err != nil || len(all) != 198 || len(all) > batchLimit {
+	if err != nil || len(all) != 294 || len(all) > batchLimit {
 		t.Fatal("global provider budget", len(all), err)
 	}
 	lanes := map[string]bool{}
-	for _, w := range all[:10] {
+	for _, w := range all[:26] {
 		lanes[w.Adapter+"-"+w.State] = true
 	}
-	if len(lanes) != 10 {
+	if len(lanes) != 26 {
 		t.Fatal("provider missed first round", lanes)
 	}
 	// Claimed but interrupted work becomes eligible after its lease expires.

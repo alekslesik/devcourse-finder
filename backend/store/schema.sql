@@ -101,3 +101,5 @@ ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS verified_binding jsonb;
 ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS skypro_product_id bigint;
 
 ALTER TABLE offers ADD COLUMN IF NOT EXISTS billing jsonb;
+
+ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS practicum_tariffs jsonb;

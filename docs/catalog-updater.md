@@ -111,13 +111,13 @@ Unsupported markup stays unpublished; no marketing-text price inference is used.
 Discovery is bounded to sixteen configured feeds, one child sitemap per feed/run,
 8 MiB fetched/decompressed documents, 100,000 sitemap locations and a 50,000-row
 candidate queue. Persistent cursors advance across child failures. Each run checks
-at most 210 queued details: up to 120 new/retry Stepik records and 30 Stepik
+at most 330 queued details (294 with all 13 current providers): up to 120 new/retry Stepik records and 30 Stepik
 refreshes, plus six refreshes and six new/retry records per other provider.
-Ranks are interleaved so every provider and refresh lane gets an early turn.
+Ranks are interleaved and rotate by oldest attempt so every provider and refresh lane gets an early turn. Discovery has a two-minute sub-budget; cheaper detail jobs can run after an expensive job is skipped.
 These are ceilings, not guaranteed throughput; slow responses reduce the batch. The two curated refreshes run first. Requests are sequential; a
 15-minute persisted claim allows recovery after process termination. Runs retain a
 10-minute deadline and stop claiming work when less than 35 seconds remain (70 seconds for the first CodeBasics detail plus
-pricing-policy read; 140 seconds for a Practicum page and its three API reads).
+pricing-policy read; 350 seconds for a Practicum landing and up to three independently verified tariffs).
 
 Normal detail refresh/retry is due after 12 hours. Repeated failures back off to
 24, 48 and at most 72 hours; protected identities are rechecked after seven days.
@@ -317,3 +317,7 @@ record queue status. The older binary ignores remaining observation tables;
 rollback does not delete them or replay them, and schema migration is additive.
 Deployment remains manual through Deploy release; neither merge nor release
 publication deploys the host.
+
+See [Multi-provider worker budgets](catalog-resource-budgets.md) for per-provider
+insertion quotas, observation backpressure, retention, distinct coverage counters
+and the disposable concurrent-process resource check.

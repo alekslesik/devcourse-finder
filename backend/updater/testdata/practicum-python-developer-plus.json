@@ -1,0 +1,121 @@
+{
+  "profession": [
+    {
+      "id": "fd93a443-833a-42b2-9d0e-42e483171592",
+      "slug": "python-developer-plus",
+      "name": "Python-разработчик расширенный",
+      "description": "В дополнение к базовому курсу пройдёте ещё 4 темы: парсинг, альтернативные фреймворки Flask и FastAPI, Python для бизнеса.",
+      "price": 181000,
+      "currency": "RUB",
+      "landing_path": "",
+      "type": "default",
+      "able_to_purchase": true,
+      "hidden_type": null,
+      "is_demand_test": false,
+      "is_interactive_textbook": false,
+      "tariff": "plus"
+    }
+  ],
+  "prices": {
+    "python-developer-plus": {
+      "RUB": {
+        "profession_product_id": "fd93a443-833a-42b2-9d0e-42e483171592",
+        "profession_is_regular_charge": false,
+        "profession_partial_payments_amount": 14,
+        "profession_price": 181000,
+        "profession_final_price": 181000,
+        "profession_partial_price": 16000,
+        "profession_final_partial_price": 16000,
+        "profession_b2b_price": 181000,
+        "bank_installment_price": 0,
+        "final_bank_installment_price": 0,
+        "percent_discount": 0,
+        "total_absolute_discount": 0,
+        "partial_percent_discount": 0,
+        "absolute_promocode_discount": 0,
+        "partial_absolute_promocode_discount": 0,
+        "discount_2035": 0,
+        "checklist_discount": 0,
+        "discount_deadline": null,
+        "partial_discount_deadline": null,
+        "promo_tariff": {},
+        "promo_tariff_partial": {},
+        "promocode": {},
+        "promocode_partial": {},
+        "certificates": [],
+        "credit_price": 7389,
+        "credit_original_price": 7389,
+        "tbank_installment_plans": [
+          {
+            "tbank_installment_payments_amount": 14,
+            "tbank_installment_price": 16000,
+            "final_tbank_installment_price": 16000
+          }
+        ],
+        "sberbank_installment_plans": [
+          {
+            "sberbank_installment_payments_amount": 14,
+            "sberbank_installment_price": 16000,
+            "final_sberbank_installment_price": 16000
+          }
+        ]
+      }
+    }
+  },
+  "squads": [
+    {
+      "id": 22942,
+      "squad_number": 152,
+      "date_begin": "2026-10-08T00:00:00Z",
+      "payment_deadline": "2026-10-11T00:00:00",
+      "subscriptions_num": 57,
+      "subscriptions_limit": 600,
+      "name": "python-developer-plus_cohort_152"
+    },
+    {
+      "id": 22944,
+      "squad_number": 153,
+      "date_begin": "2026-10-22T00:00:00Z",
+      "payment_deadline": "2026-10-21T00:00:00",
+      "subscriptions_num": 15,
+      "subscriptions_limit": 600,
+      "name": "python-developer-plus_cohort_153"
+    },
+    {
+      "id": 22943,
+      "squad_number": 154,
+      "date_begin": "2026-11-05T00:00:00Z",
+      "payment_deadline": "2026-10-22T00:00:00",
+      "subscriptions_num": 2,
+      "subscriptions_limit": 600,
+      "name": "python-developer-plus_cohort_154"
+    },
+    {
+      "id": 22945,
+      "squad_number": 155,
+      "date_begin": "2026-11-19T00:00:00Z",
+      "payment_deadline": "2026-10-31T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 600,
+      "name": "python-developer-plus_cohort_155"
+    },
+    {
+      "id": 22946,
+      "squad_number": 156,
+      "date_begin": "2026-12-03T00:00:00Z",
+      "payment_deadline": "2026-10-31T00:00:00",
+      "subscriptions_num": 0,
+      "subscriptions_limit": 600,
+      "name": "python-developer-plus_cohort_156"
+    },
+    {
+      "id": 22947,
+      "squad_number": 157,
+      "date_begin": "2026-12-17T00:00:00Z",
+      "payment_deadline": "2026-10-31T00:00:00",
+      "subscriptions_num": 1,
+      "subscriptions_limit": 600,
+      "name": "python-developer-plus_cohort_157"
+    }
+  ]
+}

@@ -5,13 +5,14 @@ import (
 	"github.com/jackc/pgx/v5"
 	"log/slog"
 	"net/http"
+	"sort"
 	"time"
 
 	"devcourse-finder/catalog"
 )
 
 // The sum of all configured provider lanes fits below the global cap.
-const batchLimit = 210
+const batchLimit = stepikNewLimit + stepikRefreshLimit + (maxDiscoveryFeeds-1)*2*providerLaneLimit
 const stepikNewLimit = 120
 const stepikRefreshLimit = 30
 const providerLaneLimit = 6
@@ -26,11 +27,26 @@ type publishCandidate func(context.Context, Candidate, catalog.Course, Observati
 
 func (s *Service) discover(ctx context.Context, client *http.Client) (BatchStats, error) {
 	stats := BatchStats{}
-	for _, feed := range s.Config.Discovery {
+	feeds := append([]Feed(nil), s.Config.Discovery...)
+	last := map[string]time.Time{}
+	for _, f := range feeds {
+		var at *time.Time
+		if err := s.DB.Pool.QueryRow(ctx, "SELECT attempted_at FROM discovery_feeds WHERE feed_id=$1", f.ID).Scan(&at); err != nil && err != pgx.ErrNoRows {
+			return stats, err
+		}
+		if at != nil {
+			last[f.ID] = *at
+		}
+	}
+	sort.SliceStable(feeds, func(i, j int) bool { return last[feeds[i].ID].Before(last[feeds[j].ID]) })
+	for _, feed := range feeds {
 		if ctx.Err() != nil {
 			return stats, ctx.Err()
 		}
 		stats.Attempted++
+		if _, err := s.DB.Pool.Exec(ctx, "INSERT INTO discovery_feeds(feed_id,attempted_at) VALUES($1,now()) ON CONFLICT(feed_id) DO UPDATE SET attempted_at=now()", feed.ID); err != nil {
+			return stats, err
+		}
 		count, err := s.discoverFeed(ctx, client, feed)
 		code := "verified"
 		fail := 0
@@ -69,12 +85,12 @@ func (s *Service) queueWork(ctx context.Context) ([]QueueWork, error) {
 		return nil, nil
 	}
 	rows, err := s.DB.Pool.Query(ctx, `WITH lanes AS (
-  SELECT adapter,external_id,canonical_url,feed_id,state,failures,
+  SELECT adapter,external_id,canonical_url,feed_id,state,failures,attempted_at,
    row_number() OVER(PARTITION BY adapter,(state='published') ORDER BY attempted_at NULLS FIRST,first_seen_at,external_id) AS rank
   FROM catalog_candidates WHERE next_attempt_at<=now() AND adapter=ANY($1::text[])
  ) SELECT adapter,external_id,canonical_url,feed_id,state,failures FROM lanes
  WHERE rank<=CASE WHEN adapter='stepik' THEN CASE WHEN state='published' THEN $3::bigint ELSE $4::bigint END ELSE $2::bigint END
- ORDER BY rank,adapter,(state='published') DESC LIMIT $5`, adapters, providerLaneLimit, stepikRefreshLimit, stepikNewLimit, batchLimit)
+ ORDER BY rank,attempted_at NULLS FIRST,(state='published') DESC,adapter LIMIT $5`, adapters, providerLaneLimit, stepikRefreshLimit, stepikNewLimit, batchLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +137,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		// Do not claim work that cannot reasonably finish within this run's budget.
 		reserve := 35 * time.Second
 		if w.Adapter == "yandex" {
-			reserve = 140 * time.Second // Page, profession, full price and cohort reads.
+			reserve = 350 * time.Second // Parent plus two displayed tariffs: at most ten reads.
 		}
 		if w.Adapter == "javarush" || w.Adapter == "skillfactory" || w.Adapter == "htmlacademy" || w.Adapter == "rsschool" && !rsCatalogAttempted {
 			reserve = 70 * time.Second
@@ -130,7 +146,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			reserve = 70 * time.Second // One detail plus one pricing-policy fetch.
 		}
 		if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < reserve {
-			break
+			continue
 		}
 		if _, err = s.DB.Pool.Exec(ctx, `UPDATE catalog_candidates SET attempted_at=now(),next_attempt_at=now()+interval '15 minutes' WHERE adapter=$1 AND external_id=$2`, w.Adapter, w.ExternalID); err != nil {
 			return stats, err
@@ -174,7 +190,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			} else if w.Adapter == "htmlacademy" {
 				record, o, digest, parseErr = fetchHTMLAcademy(ctx, client, body, digest, w.Candidate)
 			} else if w.Adapter == "yandex" {
-				record, o, digest, parseErr = fetchPracticum(ctx, client, body, digest, w.Candidate)
+				record, o, digest, parseErr = fetchPracticumGroup(ctx, client, body, digest, w.Candidate)
 			} else {
 				record, o, parseErr = collectCandidate(body, w.Candidate, time.Now().UTC())
 			}
@@ -197,7 +213,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 				case "queued":
 					stats.Queued++
 					state = w.State
-				case "verified":
+				case "verified", "partial_tariffs":
 					state = "published"
 				case "pending_confirmation":
 					state = w.State
@@ -220,7 +236,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 			} else if _, err = s.DB.Pool.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id IN
 			 (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)
              OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.adapter=$1 AND i.external_id=$2
-              AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
+              AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro','yandex') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, w.Adapter, w.ExternalID); err != nil {
 				return stats, err
 			}
 		}

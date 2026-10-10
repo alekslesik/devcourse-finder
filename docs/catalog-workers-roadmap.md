@@ -44,3 +44,9 @@ a verified full-course price. Manual imports and edited identities remain protec
 Each implementation task has its own commit. Reviewable stages use combined PRs
 with an incremented VERSION and English changelog. Deployment remains the manual
 Deploy release workflow; merges and release publication never deploy production.
+
+## Completion
+
+The v0.17.0 implementation covers all roadmap tasks, including the shared-landing
+Practicum follow-up. See [the completion record](catalog-workers-completion.md)
+for delivered contracts, evidence, limits and manual release/deployment steps.

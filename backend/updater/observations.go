@@ -14,7 +14,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const observationQueueLimit = 50000
+const observationQueueLimit = 5000
+const processedObservationRetention = 5000
 const publisherBatchLimit = 500
 
 func failureCodeAllowed(code string) bool {
@@ -83,7 +84,7 @@ func (e QueuedObservation) validate(config Config) error {
 	if e.Kind == "curated" && e.SourceID == "" || e.Kind == "discovered" && e.SourceID != "" || !evidenceDigest.MatchString(e.Digest) {
 		return ErrSource
 	}
-	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || (e.Candidate.Adapter != "purpleschool" && !verifiedTariffAdapter(e.Candidate.Adapter) && len(e.Record.Offers) != 1) || len(e.Record.Offers) == 0 || e.Record.Offers[0].URL != e.Candidate.URL {
+	if e.Record.Source != e.Candidate.URL || e.Record.Status != "published" || e.Record.Demo || (e.Candidate.Adapter != "purpleschool" && !(e.Candidate.Adapter == "yandex" && len(e.Observation.PracticumTariffs) > 0) && !verifiedTariffAdapter(e.Candidate.Adapter) && len(e.Record.Offers) != 1) || len(e.Record.Offers) == 0 || e.Record.Offers[0].URL != e.Candidate.URL {
 		return ErrSource
 	}
 	if e.Kind == "curated" {
@@ -96,7 +97,7 @@ func (e QueuedObservation) validate(config Config) error {
 		if len(expectedID) > 70 {
 			expectedID = e.Candidate.Adapter + "-" + fingerprint([]byte(e.Candidate.ExternalID))[:24]
 		}
-		if e.Record.ID != expectedID || (e.Candidate.Adapter != "purpleschool" && !verifiedTariffAdapter(e.Candidate.Adapter) && e.Record.Offers[0].ID != expectedID+"-course") {
+		if e.Record.ID != expectedID || (e.Candidate.Adapter != "purpleschool" && !(e.Candidate.Adapter == "yandex" && len(e.Observation.PracticumTariffs) > 0) && !verifiedTariffAdapter(e.Candidate.Adapter) && e.Record.Offers[0].ID != expectedID+"-course") {
 			return ErrSource
 		}
 	}
@@ -163,6 +164,14 @@ func (e QueuedObservation) validate(config Config) error {
 			return ErrSource
 		}
 	} else if o.NetologyFamilyID != 0 || o.NetologyProgramID != 0 {
+		return ErrSource
+	}
+	if len(o.PracticumTariffs) > 0 {
+		if !validPracticumGroup(e) {
+			return ErrSource
+		}
+	}
+	if e.Candidate.Adapter != "yandex" && len(o.PracticumTariffs) > 0 {
 		return ErrSource
 	}
 	if e.Candidate.Adapter == "yandex" {
@@ -281,6 +290,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 		decoder.DisallowUnknownFields()
 		valid := decoder.Decode(&e) == nil && e.validate(s.Config) == nil && e.Candidate.URL == url && e.Kind == kind && e.ObservedAt.Equal(observedAt)
 		code := "invalid_observation"
+		newCount := 0
 		n, publishErr := s.DB.UpdateVerified(ctx, []string{providerHosts[e.Candidate.Adapter]}, "automatic-catalog-publisher", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
 			var courses []catalog.Course
 			if valid {
@@ -308,7 +318,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 					switch e.Kind {
 					case "failure":
 						code = e.FailureCode
-						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2) OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.canonical_url=$2 AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, e.SourceID, url)
+						_, applyErr = tx.Exec(ctx, `DELETE FROM updater_candidates WHERE source_id=$1 OR source_id IN (SELECT course_id FROM catalog_identities WHERE canonical_url=$2) OR EXISTS (SELECT 1 FROM catalog_identities i WHERE i.canonical_url=$2 AND i.adapter IN ('purpleschool','skillbox','skillfactory','skypro','yandex') AND starts_with(updater_candidates.source_id,i.course_id||':'))`, e.SourceID, url)
 					case "curated":
 						courses, applyErr = merge(ctx, tx, old, e.Record, e.SourceID, e.Observation, observedAt, &code)
 					case "discovered":
@@ -325,7 +335,7 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 					state := "rejected"
 					delay := 72 * time.Hour
 					switch code {
-					case "verified":
+					case "verified", "partial_tariffs":
 						state = "published"
 						delay = 12 * time.Hour
 					case "pending_confirmation":
@@ -348,19 +358,31 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 			if _, ackErr := tx.Exec(ctx, `UPDATE catalog_observations SET processed_at=now(),code=$2 WHERE id=$1 AND processed_at IS NULL`, id, code); ackErr != nil {
 				return nil, ackErr
 			}
+			known := map[string]bool{}
+			for _, c := range old {
+				known[c.ID] = true
+			}
+			for _, c := range courses {
+				if !known[c.ID] {
+					newCount++
+				}
+			}
 			return courses, nil
 		})
 		if publishErr != nil {
 			return result, publishErr
 		}
 		result.Published += n
+		result.NewCourses += newCount
+		result.RefreshedCourses += n - newCount
 		if code == "invalid_observation" {
 			result.Failed++
 			result.Status = "partial"
 		}
 		slog.Info("catalog observation processed", "event_id", id, "code", code, "published", n)
 	}
+	slog.Info("catalog publication finished", "accepted_course_updates", result.Published, "new_courses", result.NewCourses, "refreshed_courses", result.RefreshedCourses)
 	// Retain recent diagnostics while incrementally trimming old/overflow done rows.
-	_, err = s.DB.Pool.Exec(ctx, `DELETE FROM catalog_observations WHERE id IN (SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL AND (processed_at<now()-interval '7 days' OR id<(SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL ORDER BY id DESC OFFSET 25000 LIMIT 1)) ORDER BY id LIMIT 1000)`)
+	_, err = s.DB.Pool.Exec(ctx, `DELETE FROM catalog_observations WHERE id IN (SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL AND (processed_at<now()-interval '7 days' OR id<=(SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL ORDER BY id DESC OFFSET $1 LIMIT 1)) ORDER BY id LIMIT 1000)`, processedObservationRetention)
 	return result, err
 }
