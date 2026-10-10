@@ -16,6 +16,7 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
+	SkyproProductID   int64          `json:"skypro_product_id,omitempty"`
 	VerifiedProductID int64          `json:"verified_product_id,omitempty"`
 	VerifiedTariffs   []PurpleTariff `json:"verified_tariffs,omitempty"`
 	PurpleCourseID    int64          `json:"purple_course_id,omitempty"`

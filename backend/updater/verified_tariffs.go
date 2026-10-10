@@ -11,7 +11,7 @@ import (
 )
 
 func verifiedTariffAdapter(a string) bool {
-	return a == "skillbox" || a == "skillfactory" || a == "skypro"
+	return a == "skillbox" || a == "skillfactory"
 }
 func validVerifiedTariffs(e QueuedObservation) bool {
 	o := e.Observation

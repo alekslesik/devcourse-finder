@@ -33,7 +33,7 @@ type Candidate struct {
 	FeedID     string
 }
 
-var providerHosts = map[string]string{"skillfactory": "skillfactory.ru", "skillbox": "skillbox.ru", "htmlacademy": "htmlacademy.ru", "rsschool": "rs.school", "purpleschool": "purpleschool.ru", "netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
+var providerHosts = map[string]string{"skypro": "sky.pro", "skillfactory": "skillfactory.ru", "skillbox": "skillbox.ru", "htmlacademy": "htmlacademy.ru", "rsschool": "rs.school", "purpleschool": "purpleschool.ru", "netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
 var slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,99}$`)
 var stepikPath = regexp.MustCompile(`^/course/(?:[a-z0-9-]+-)?([1-9][0-9]*)/promo$`)
 
@@ -91,6 +91,11 @@ func candidateURL(adapter, raw, feedID string) (Candidate, bool) {
 		default:
 			return Candidate{}, false
 		}
+	case "skypro":
+		id = strings.TrimPrefix(u.Path, "/course/programming/")
+		if id == u.Path || !slugPattern.MatchString(id) {
+			return Candidate{}, false
+		}
 	case "skillfactory":
 		id = strings.TrimPrefix(u.Path, "/")
 		if !slugPattern.MatchString(id) {
@@ -140,7 +145,7 @@ func validateFeed(f Feed) error {
 		return errors.New("invalid official sitemap feed")
 	}
 	if f.Kind == "catalog" {
-		if !(f.Adapter == "skillfactory" && u.Path == "/courses/programmirovanie" || f.Adapter == "codebasics" && u.Path == "/ru" || f.Adapter == "netology" && u.Path == "/development" || f.Adapter == "rsschool" && u.Path == "/courses") {
+		if !(f.Adapter == "skypro" && u.Path == "/course/programming" || f.Adapter == "skillfactory" && u.Path == "/courses/programmirovanie" || f.Adapter == "codebasics" && u.Path == "/ru" || f.Adapter == "netology" && u.Path == "/development" || f.Adapter == "rsschool" && u.Path == "/courses") {
 			return errors.New("unsupported official HTML catalog")
 		}
 	} else {

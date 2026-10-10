@@ -38,6 +38,21 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 		*code = "insufficient_initial_evidence"
 		return nil, nil
 	}
+	if candidate.Adapter == "skypro" {
+		if o.SkyproProductID <= 0 {
+			return nil, ErrSource
+		}
+		var product *int64
+		err := tx.QueryRow(ctx, "SELECT skypro_product_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID).Scan(&product)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		if product != nil && *product != o.SkyproProductID {
+			*code = "protected_identity"
+			_, err = tx.Exec(ctx, "DELETE FROM updater_candidates WHERE source_id IN (SELECT course_id FROM catalog_identities WHERE adapter=$1 AND external_id=$2)", candidate.Adapter, candidate.ExternalID)
+			return nil, err
+		}
+	}
 	if candidate.Adapter == "yandex" {
 		if !productUUID.MatchString(o.ProductID) || !productUUID.MatchString(o.ProfessionID) {
 			return nil, ErrSource
@@ -84,11 +99,11 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 		return nil, err
 	}
 	mergeObservation := o
-	if candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" {
+	if candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" {
 		mergeObservation.ValidUntil = nil
 	} // Rolling lease must not prevent closure confirmation.
 	courses, err := merge(ctx, tx, old, resolved, resolved.ID, mergeObservation, observedAt, code)
-	if (candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy") && len(courses) > 0 {
+	if (candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro") && len(courses) > 0 {
 		for i := range courses[0].Offers {
 			if courses[0].Offers[i].ID == resolved.Offers[0].ID {
 				courses[0].Offers[i].ValidUntil = o.ValidUntil
@@ -100,6 +115,9 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 	}
 	if err == nil && len(courses) > 0 && candidate.Adapter == "netology" {
 		_, err = tx.Exec(ctx, "UPDATE catalog_identities SET netology_family_id=$3,netology_program_id=$4 WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID, o.NetologyFamilyID, o.NetologyProgramID)
+	}
+	if err == nil && len(courses) > 0 && candidate.Adapter == "skypro" {
+		_, err = tx.Exec(ctx, "UPDATE catalog_identities SET skypro_product_id=$3 WHERE adapter=$1 AND external_id=$2", candidate.Adapter, candidate.ExternalID, o.SkyproProductID)
 	}
 	return courses, err
 }

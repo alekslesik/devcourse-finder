@@ -97,3 +97,5 @@ CREATE INDEX IF NOT EXISTS updater_runs_worker_time ON updater_runs(worker,start
 ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS purple_binding jsonb;
 
 ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS verified_binding jsonb;
+
+ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS skypro_product_id bigint;
