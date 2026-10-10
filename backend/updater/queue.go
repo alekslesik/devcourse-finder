@@ -123,7 +123,7 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 		if w.Adapter == "yandex" {
 			reserve = 140 * time.Second // Page, profession, full price and cohort reads.
 		}
-		if w.Adapter == "rsschool" && !rsCatalogAttempted {
+		if w.Adapter == "htmlacademy" || w.Adapter == "rsschool" && !rsCatalogAttempted {
 			reserve = 70 * time.Second
 		}
 		if w.Adapter == "codebasics" && !policyAttempted {
@@ -167,6 +167,8 @@ func (s *Service) processBatch(ctx context.Context, client *http.Client, publish
 					record, o, parseErr = collectCodeBasics(body, basicsPolicy, w.Candidate, time.Now().UTC())
 				}
 				digest = fingerprint([]byte(digest + ":" + basicsPolicyDigest))
+			} else if w.Adapter == "htmlacademy" {
+				record, o, digest, parseErr = fetchHTMLAcademy(ctx, client, body, digest, w.Candidate)
 			} else if w.Adapter == "yandex" {
 				record, o, digest, parseErr = fetchPracticum(ctx, client, body, digest, w.Candidate)
 			} else {

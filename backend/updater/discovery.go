@@ -33,7 +33,7 @@ type Candidate struct {
 	FeedID     string
 }
 
-var providerHosts = map[string]string{"rsschool": "rs.school", "purpleschool": "purpleschool.ru", "netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
+var providerHosts = map[string]string{"htmlacademy": "htmlacademy.ru", "rsschool": "rs.school", "purpleschool": "purpleschool.ru", "netology": "netology.ru", "stepik": "stepik.org", "otus": "otus.ru", "yandex": "practicum.yandex.ru", "hexlet": "ru.hexlet.io", "codebasics": "code-basics.com"}
 var slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,99}$`)
 var stepikPath = regexp.MustCompile(`^/course/(?:[a-z0-9-]+-)?([1-9][0-9]*)/promo$`)
 
@@ -78,6 +78,12 @@ func candidateURL(adapter, raw, feedID string) (Candidate, bool) {
 		if id == u.Path || !slugPattern.MatchString(id) {
 			return Candidate{}, false
 		}
+	case "htmlacademy":
+		parts := strings.Split(strings.TrimPrefix(u.Path, "/"), "/")
+		if len(parts) != 2 || (parts[0] != "intensive" && parts[0] != "profession") || !slugPattern.MatchString(parts[1]) {
+			return Candidate{}, false
+		}
+		id = parts[0] + "-" + parts[1]
 	case "rsschool":
 		id = strings.TrimPrefix(u.Path, "/courses/")
 		switch id {
@@ -247,6 +253,9 @@ func childSitemaps(f Feed, urls []string) []string {
 		if f.Adapter == "stepik" && !strings.Contains(u.Path, "sitemap-course-promo-") {
 			continue
 		}
+		if f.Adapter == "htmlacademy" && u.Path != "/sitemap/sitemap_default.xml" {
+			continue
+		}
 		if f.Adapter == "hexlet" && !strings.HasSuffix(u.Path, "/programs.xml.gz") {
 			continue
 		}
@@ -311,7 +320,7 @@ func (s *Service) discoverFeed(ctx context.Context, client *http.Client, f Feed)
 		}
 		// Official path hints limit large general-provider sitemaps; the detail
 		// parser independently checks the actual language before publishing.
-		if f.Adapter != "stepik" && f.Adapter != "rsschool" && languageHint(candidate.ExternalID) == "" {
+		if f.Adapter != "stepik" && f.Adapter != "rsschool" && f.Adapter != "htmlacademy" && languageHint(candidate.ExternalID) == "" {
 			continue
 		}
 		// Count the queue once, not once per sitemap entry. Existing identities

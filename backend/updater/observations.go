@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"regexp"
+	"strings"
 	"time"
 
 	"devcourse-finder/catalog"
@@ -18,7 +19,7 @@ const publisherBatchLimit = 500
 
 func failureCodeAllowed(code string) bool {
 	switch code {
-	case "invalid_rsschool_contract", "unverified_rsschool_free", "invalid_purpleschool_contract", "invalid_netology_page", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment", "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
+	case "invalid_htmlacademy_page", "invalid_htmlacademy_payment", "unsupported_htmlacademy_format", "invalid_rsschool_contract", "unverified_rsschool_free", "invalid_purpleschool_contract", "invalid_netology_page", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment", "invalid_practicum_page", "invalid_practicum_payload", "invalid_practicum_price", "source_unavailable", "invalid_course", "invalid_source", "identity_mismatch", "invalid_payload", "unsupported_content_language", "insufficient_curriculum", "missing_visibility_or_price_flags", "private_or_censored_course", "inactive_course", "invalid_price_evidence", "unverified_enrollment", "invalid_course_text", "unsupported_or_ambiguous_language", "invalid_structured_payload", "missing_course_schema", "unverified_course_offer", "ambiguous_course_schema":
 		return true
 	default:
 		return false
@@ -107,6 +108,12 @@ func (e QueuedObservation) validate(config Config) error {
 		return ErrSource
 	}
 	o := e.Observation
+	if e.Candidate.Adapter == "htmlacademy" {
+		offer := e.Record.Offers[0]
+		if !strings.HasPrefix(e.Candidate.ExternalID, "intensive-") || !o.PriceUnknown || o.Price != nil || o.Enrollment != "continuous" || o.Schedule != "flexible" || o.ValidUntil == nil || !o.ValidUntil.After(e.ObservedAt) || o.ValidUntil.After(e.ObservedAt.Add(26*time.Hour+time.Second)) || offer.Price != nil || offer.Free || offer.PriceKind != "unknown" || offer.Name != "Индивидуальный формат — помесячная оплата" || offer.Enrollment != o.Enrollment || offer.Schedule != o.Schedule || offer.ValidUntil == nil || !offer.ValidUntil.Equal(*o.ValidUntil) || offer.Mentor || offer.Review || offer.SupportKnown == nil || *offer.SupportKnown {
+			return ErrSource
+		}
+	}
 	if e.Candidate.Adapter == "rsschool" {
 		offer := e.Record.Offers[0]
 		if o.Price == nil || *o.Price != 0 || o.PriceUnknown || o.Schedule != "scheduled" || (o.Enrollment != "open" && o.Enrollment != "closed") || o.ValidUntil == nil || !o.ValidUntil.After(e.ObservedAt) || o.ValidUntil.After(e.ObservedAt.Add(26*time.Hour+time.Second)) || !offer.Free || offer.Price == nil || *offer.Price != 0 || offer.Mentor || offer.Review || offer.SupportKnown == nil || *offer.SupportKnown {

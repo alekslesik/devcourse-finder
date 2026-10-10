@@ -15,6 +15,11 @@
   ],
   "discovery": [
     {
+      "id": "htmlacademy-sitemap",
+      "adapter": "htmlacademy",
+      "url": "https://htmlacademy.ru/sitemap.xml"
+    },
+    {
       "id": "stepik-sitemap",
       "adapter": "stepik",
       "url": "https://stepik.org/sitemap.xml"

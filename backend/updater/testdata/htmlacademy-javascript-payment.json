@@ -1,0 +1,85 @@
+{
+  "offers": [
+    {
+      "id": "default",
+      "title": "Индивидуальный формат",
+      "fulltitle": "Курс «JavaScript. Профессиональная разработка веб-интерфейсов». Индивидуальный формат",
+      "productType": "intensiveext",
+      "productCode": "839",
+      "productSubtype": "javascript-individual",
+      "amount": 12000,
+      "currency": "RUB",
+      "dates": [],
+      "places": null,
+      "recurrent": {
+        "period": "monthly"
+      },
+      "order": {
+        "settings": {
+          "recurrent": true
+        }
+      },
+      "paymentWays": [
+        {
+          "type": "ru.card.sbp"
+        },
+        {
+          "type": "ru.card.gazprombank"
+        },
+        {
+          "type": "world.card.payanyway"
+        },
+        {
+          "type": "ru.other.yoomoney"
+        },
+        {
+          "type": "corporate"
+        }
+      ]
+    },
+    {
+      "id": "lite",
+      "title": "Лайт-формат",
+      "fulltitle": "Профессия «Фронтенд-разработчик». Лайт-формат",
+      "productType": "profession",
+      "productCode": "221",
+      "productSubtype": "frontender-lite",
+      "amount": 29000,
+      "currency": "RUB",
+      "dates": [],
+      "places": null,
+      "paymentWays": [
+        {
+          "type": "ru.installment.tinkoffbank"
+        },
+        {
+          "type": "ru.installment.sberbank"
+        },
+        {
+          "type": "ru.installment.freshcredit"
+        },
+        {
+          "type": "ru.card.sbp"
+        },
+        {
+          "type": "ru.card.gazprombank"
+        },
+        {
+          "type": "world.card.payanyway"
+        },
+        {
+          "type": "ru.other.yoomoney"
+        },
+        {
+          "type": "ru.bnpl.dolyame"
+        },
+        {
+          "type": "ru.bnpl.platichastyami"
+        },
+        {
+          "type": "corporate"
+        }
+      ]
+    }
+  ]
+}
