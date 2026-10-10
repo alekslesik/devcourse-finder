@@ -70,6 +70,10 @@ ordinary container updates; deleting that volume deletes the database.
 - [PurpleSchool tariffs and free-access contract](docs/purpleschool-adapter.md)
 - [RS School free courses and cohort verification](docs/rsschool-adapter.md)
 - [HTML Academy individual courses and recurring-price boundaries](docs/htmlacademy-adapter.md)
+- [Skillbox product-bound payment tariffs](docs/skillbox-adapter.md)
+- [Skillfactory course-specific tariffs](docs/skillfactory-adapter.md)
+- [Skypro product-scoped enrollment and pricing limits](docs/skypro-adapter.md)
+- [JavaRush original-currency recurring subscriptions](docs/javarush-adapter.md)
 - [Automatic discovery and catalog expansion plan](docs/catalog-expansion-spec.md)
 - [Manual catalog import runbook](docs/catalog-operations.md)
 - [20 real programs, reviewed sources and explicit publication](docs/real-catalog.md)
@@ -481,7 +485,7 @@ CLI failures exit with code 1 and write JSON diagnostics to stderr: command, run
 
 Production includes a separate catalog updater that checks official sources at
 09:00 and 21:00 Europe/Moscow and automatically publishes verified changes without
-data PRs or manual imports. Discovery feeds cover Stepik, OTUS, Yandex Practicum, Hexlet, CodeBasics, Netology, PurpleSchool, RS School and HTML Academy.
+data PRs or manual imports. Discovery feeds cover Stepik, OTUS, Yandex Practicum, Hexlet, CodeBasics, Netology, PurpleSchool, RS School, HTML Academy, Skillbox, Skillfactory, Skypro and JavaRush.
 Only candidates meeting the adapter evidence rules are published; source
 availability and actual coverage are reported from PostgreSQL. See
 [coverage, safeguards and operational status](docs/catalog-updater.md).

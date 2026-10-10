@@ -23,7 +23,22 @@ type Course struct {
 	Offers    []Offer   `json:"offers"`
 	Demo      bool      `json:"demo"`
 }
+
+// Billing preserves a recurring fee in its original currency. It is never a
+// verified complete-course RUB price and cannot satisfy a price budget.
+type Billing struct {
+	Kind        string `json:"kind"`
+	AmountMinor int64  `json:"amount_minor"`
+	Currency    string `json:"currency"`
+	Interval    string `json:"interval"`
+}
+
+func (b *Billing) Valid() bool {
+	return b != nil && b.Kind == "subscription" && b.AmountMinor > 0 && b.AmountMinor <= 1000000000 && (b.Currency == "USD" || b.Currency == "EUR" || b.Currency == "RUB") && (b.Interval == "month" || b.Interval == "year")
+}
+
 type Offer struct {
+	Billing        *Billing   `json:"billing,omitempty"`
 	SupportKnown   *bool      `json:"support_known,omitempty"`
 	ID             string     `json:"id"`
 	Name           string     `json:"name"`
@@ -56,7 +71,7 @@ type Result struct {
 }
 
 func EffectivePrice(o Offer, now time.Time) *int64 {
-	if o.Price == nil || o.PriceKind != "exact" || o.PriceCheckedAt.IsZero() || now.Sub(o.PriceCheckedAt) > 30*24*time.Hour || (o.ValidUntil != nil && !now.Before(*o.ValidUntil)) {
+	if o.Billing != nil || o.Price == nil || o.PriceKind != "exact" || o.PriceCheckedAt.IsZero() || now.Sub(o.PriceCheckedAt) > 30*24*time.Hour || (o.ValidUntil != nil && !now.Before(*o.ValidUntil)) {
 		return nil
 	}
 	return o.Price

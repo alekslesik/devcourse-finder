@@ -99,11 +99,11 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 		return nil, err
 	}
 	mergeObservation := o
-	if candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" {
+	if candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" || candidate.Adapter == "javarush" {
 		mergeObservation.ValidUntil = nil
 	} // Rolling lease must not prevent closure confirmation.
 	courses, err := merge(ctx, tx, old, resolved, resolved.ID, mergeObservation, observedAt, code)
-	if (candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro") && len(courses) > 0 {
+	if (candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" || candidate.Adapter == "javarush") && len(courses) > 0 {
 		for i := range courses[0].Offers {
 			if courses[0].Offers[i].ID == resolved.Offers[0].ID {
 				courses[0].Offers[i].ValidUntil = o.ValidUntil

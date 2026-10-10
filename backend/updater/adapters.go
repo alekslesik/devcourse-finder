@@ -2,6 +2,7 @@ package updater
 
 import (
 	"bytes"
+	"devcourse-finder/catalog"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,20 +17,21 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
-	SkyproProductID   int64          `json:"skypro_product_id,omitempty"`
-	VerifiedProductID int64          `json:"verified_product_id,omitempty"`
-	VerifiedTariffs   []PurpleTariff `json:"verified_tariffs,omitempty"`
-	PurpleCourseID    int64          `json:"purple_course_id,omitempty"`
-	PurpleTariffs     []PurpleTariff `json:"purple_tariffs,omitempty"`
-	NetologyFamilyID  int64          `json:"netology_family_id,omitempty"`
-	NetologyProgramID int64          `json:"netology_program_id,omitempty"`
-	ProductID         string         `json:"product_id,omitempty"`
-	ProfessionID      string         `json:"profession_id,omitempty"`
-	ValidUntil        *time.Time     `json:"valid_until,omitempty"`
-	PriceUnknown      bool           `json:"price_unknown,omitempty"`
-	Price             *int64         `json:"price,omitempty"`
-	Enrollment        string         `json:"enrollment,omitempty"`
-	Schedule          string         `json:"schedule,omitempty"`
+	Billing           *catalog.Billing `json:"billing,omitempty"`
+	SkyproProductID   int64            `json:"skypro_product_id,omitempty"`
+	VerifiedProductID int64            `json:"verified_product_id,omitempty"`
+	VerifiedTariffs   []PurpleTariff   `json:"verified_tariffs,omitempty"`
+	PurpleCourseID    int64            `json:"purple_course_id,omitempty"`
+	PurpleTariffs     []PurpleTariff   `json:"purple_tariffs,omitempty"`
+	NetologyFamilyID  int64            `json:"netology_family_id,omitempty"`
+	NetologyProgramID int64            `json:"netology_program_id,omitempty"`
+	ProductID         string           `json:"product_id,omitempty"`
+	ProfessionID      string           `json:"profession_id,omitempty"`
+	ValidUntil        *time.Time       `json:"valid_until,omitempty"`
+	PriceUnknown      bool             `json:"price_unknown,omitempty"`
+	Price             *int64           `json:"price,omitempty"`
+	Enrollment        string           `json:"enrollment,omitempty"`
+	Schedule          string           `json:"schedule,omitempty"`
 }
 
 func decodeJSON(data []byte, v any) error {

@@ -281,6 +281,10 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 		current.Free = false
 		// No price was verified: never advance price_checked_at.
 	}
+	if o.Billing != nil {
+		current.Billing = o.Billing
+		current.Name = template.Offers[0].Name
+	}
 	if o.Enrollment != "" {
 		current.Enrollment = o.Enrollment
 	}
@@ -292,6 +296,12 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 	return []catalog.Course{c}, nil
 }
 func needsConfirmation(old catalog.Offer, o Observation) bool {
+	if o.Billing != nil && old.Billing != nil {
+		a, b := old.Billing, o.Billing
+		if a.Currency != b.Currency || a.Interval != b.Interval || b.AmountMinor*2 < a.AmountMinor || b.AmountMinor*2 > a.AmountMinor*3 {
+			return true
+		}
+	}
 	if o.Enrollment == "closed" && old.Enrollment != "closed" {
 		return true
 	}

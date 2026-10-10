@@ -1,0 +1,40 @@
+{
+  "JR40_PREMIUM_JAVA_UNIV_PRO": {
+    "prices": {
+      "MONTH": {
+        "uah": null,
+        "rub": null,
+        "usd": 105,
+        "eur": null,
+        "cny": null,
+        "inr": null,
+        "pln": null,
+        "brl": null,
+        "mxn": null,
+        "clp": null,
+        "pen": null
+      }
+    },
+    "preferredCurrency": "USD",
+    "discountInfo": null
+  },
+  "JR40_PREMIUM_JAVA_SELF": {
+    "prices": {
+      "MONTH": {
+        "uah": null,
+        "rub": null,
+        "usd": 30,
+        "eur": null,
+        "cny": null,
+        "inr": null,
+        "pln": null,
+        "brl": null,
+        "mxn": null,
+        "clp": null,
+        "pen": null
+      }
+    },
+    "preferredCurrency": "USD",
+    "discountInfo": null
+  }
+}

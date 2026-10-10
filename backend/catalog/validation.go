@@ -97,6 +97,9 @@ func Decode(r io.Reader) (Dataset, error) {
 			if o.PriceKind == "unknown" && o.Price != nil || o.PriceKind != "unknown" && o.Price == nil {
 				return d, fail("price and kind inconsistent")
 			}
+			if o.Billing != nil && (!o.Billing.Valid() || o.PriceKind != "unknown" || o.Price != nil || o.Free) {
+				return d, fail("subscription cannot establish a complete course price")
+			}
 			if o.Free && (o.Price == nil || *o.Price != 0 || o.PriceKind != "exact") {
 				return d, fail("free must have exact zero price")
 			}

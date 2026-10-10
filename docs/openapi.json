@@ -799,7 +799,8 @@
             "type": [
               "integer",
               "null"
-            ]
+            ],
+            "description": "Complete course price in RUB minor units; null when the complete price is unknown, including recurring subscriptions."
           },
           "hours": {
             "type": [
@@ -833,6 +834,9 @@
           "support_known": {
             "type": "boolean",
             "description": "False when review/mentor evidence is unavailable; omitted for legacy curated offers."
+          },
+          "billing": {
+            "$ref": "#/components/schemas/Billing"
           }
         },
         "required": [
@@ -1093,6 +1097,44 @@
           "kind"
         ],
         "additionalProperties": false
+      },
+      "Billing": {
+        "type": "object",
+        "description": "Recurring fee in the original currency. amount_minor uses currency minor units; it is not a complete-course RUB price.",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "subscription"
+            ]
+          },
+          "amount_minor": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000000
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "EUR",
+              "RUB"
+            ]
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "month",
+              "year"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "amount_minor",
+          "currency",
+          "interval"
+        ]
       }
     }
   },
