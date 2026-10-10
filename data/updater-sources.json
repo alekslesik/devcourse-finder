@@ -14,6 +14,7 @@
     }
   ],
   "discovery": [
+ {"id":"skillfactory-catalog","adapter":"skillfactory","url":"https://skillfactory.ru/courses/programmirovanie","kind":"catalog"},
  {"id":"skillbox-sitemap","adapter":"skillbox","url":"https://skillbox.ru/sitemap.xml"},
     {
       "id": "htmlacademy-sitemap",

@@ -55,7 +55,7 @@ func LoadConfig(configFile, catalogFile string) (Config, error) {
 	return c, c.Validate()
 }
 func (c Config) Validate() error {
-	if len(c.Discovery) > 10 {
+	if len(c.Discovery) > 16 {
 		return errors.New("too many discovery feeds")
 	}
 	feedIDs := map[string]bool{}

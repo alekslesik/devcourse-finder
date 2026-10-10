@@ -8,7 +8,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-var providerNames = map[string]string{"skillbox": "Skillbox", "htmlacademy": "HTML Academy", "rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
+var providerNames = map[string]string{"skillfactory": "Skillfactory", "skillbox": "Skillbox", "htmlacademy": "HTML Academy", "rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
 
 func candidateEndpoint(c Candidate) string {
 	if c.Adapter == "stepik" {
@@ -23,6 +23,9 @@ func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, 
 	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
 		return catalog.Course{}, Observation{}, rejection("identity_mismatch")
 	}
+	if c.Adapter == "skillfactory" {
+		return catalog.Course{}, Observation{}, rejection("invalid_skillfactory_contract")
+	} // Requires independent pricing GET.
 	if c.Adapter == "skillbox" {
 		return collectSkillbox(data, c, now)
 	}
