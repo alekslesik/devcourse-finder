@@ -1,0 +1,358 @@
+{
+  "schema_version": 1,
+  "installation": "project-local skill-only snapshots",
+  "sources": [
+    {
+      "repository": "https://github.com/pbakaus/impeccable",
+      "commit": "c63b8dd7dd5a5f3c32eaabe1af76d0694f863ed2",
+      "license": "Apache-2.0",
+      "skills": [
+        {
+          "name": "impeccable",
+          "source_path": ".agents/skills/impeccable",
+          "installed_path": ".agents/skills/impeccable",
+          "files_sha256": {
+            "LICENSE": "02bb8c3b4e70190e3986c0404ad2fd8d639b4f534252d82379cc1b502b6d1812",
+            "SKILL.md": "58c0252bca04521de87007aeb495f7ec99dc4c7341bc890fe82b6d577573af91",
+            "agents/impeccable_asset_producer.toml": "4dbdb0cfdc2466961da6b22d200f3ec7bf8bb47c27448a2e6e3c03cdbf589831",
+            "agents/impeccable_documenter.toml": "2feb3768125ba6469c92a50d516727e6d42f44579165ddfd33409948e2a3803d",
+            "agents/impeccable_finish_reviewer.toml": "d57c3e0453f601ad688911fca4471057c7b46b561fcd42a1e12a581101c5186c",
+            "agents/impeccable_manual_edit_applier.toml": "6c9ce3e27ec4520ead001da3aad2a2ebba481c4e5cd22873db8890259ee579fe",
+            "agents/openai.yaml": "cbd8bd68fa00935dd0f179adb169252629cf7ee443ea9dc7db77e7ef2cf77446",
+            "reference/adapt.md": "871a8e4d749b807c693ebabd83defbd6c76e1bd2a0f53a28a460cb1308ba8634",
+            "reference/adapt.native.md": "6acc0bf221a4ddc6e5c6438348920b2ca2393b29c4314dbde2cdc23f2b1a9639",
+            "reference/android.md": "058f81f256134841875fd3183e06b37a023de0c877fd2b9eecd97011640791fe",
+            "reference/animate.md": "d658c48ffbe0031e8e3b318996cad6ceafe29e40aa50d5bb25e4bf1d6839dc7c",
+            "reference/audit.md": "41764be7bf974b95ee469f11c496714b4b3cf2ba594c0b8f838a0742680229a9",
+            "reference/audit.native.md": "960cb922bc934adbf9192e9428ff6bec1f382038166f02a785939c93b7391067",
+            "reference/bolder.md": "f964506c0fae87b3c2c1db7016ddc9be9ef970bbcf5548d684b997b5d5991586",
+            "reference/clarify.md": "173dd66abe65633910dcb04a51f40d6ff2a793f87088f022a02fc4cad24dd133",
+            "reference/colorize.md": "bc5f71f1129d0f2c310d913d07c8dc609a1d25644121bd78c308f42d52a0b9e9",
+            "reference/component-review.md": "10489e5265e49a4ef2737cd0e674c149ed41e1f703efe922e53ea3c91e833427",
+            "reference/craft-floor.md": "e802e4f7bdc89050a9c0f2ca506e1d493a2316e6e810c0336c57aa073717ef3e",
+            "reference/craft.md": "9205e222bc6565b37fb504ceec93233c2d2a456802b69d16e6b1c44723907c4c",
+            "reference/critique.md": "cb8caddbb3919e5bf7f252143b519fb16db28a244642d937b186cb89962d9201",
+            "reference/degraded/asset-producer.md": "877d274f41500c780bad25b2bca7fa95eff1a32a7b95397dd388c72848e86a6c",
+            "reference/degraded/documenter.md": "bcc05ea92faebb5c74037a9d4263a5ce9a56f5ab07c8ab3c59ee704d8cade745",
+            "reference/degraded/finish-reviewer.md": "275dd1b6e63bbd30d2713227c4f79b880a8bc4e01cc48d392068bb86939d3afa",
+            "reference/degraded/manual-edit-applier.md": "5fae7f8a2fc3ddd49ad0a413446dc44daedef5b6b7de5eb935bd2fbfad646d58",
+            "reference/delight.md": "098a891028ce59c212b747d3c70468dd750aff7053a703d1336045ed31e0da7c",
+            "reference/distill.md": "ea8432c90c30ecb0426662a681ead5c0941113079704e1a766cda09e85b15b4f",
+            "reference/doctor.md": "3dbef3fe606de4de0f1b5cab5f19902799e05cf566eb8223e9aa1632eeb04698",
+            "reference/document.md": "3673248740bcdd1122ccc610093ba2fe52f3943a61ce0b7170b74dc49e5b6098",
+            "reference/extract.md": "31b90048c0b540daec46762a10c2b6b6434737a89af005054d8b848d829d003b",
+            "reference/generate.md": "53628d05b7eff0d4f48b95e48fad40266452fe1b42f398bd88dd9328353e0dd8",
+            "reference/harden.md": "16ba7fca1973c5faf53dd2ca523559129c0fe9e5f8d50b645f527afa78186cd2",
+            "reference/hooks.md": "3e3209e6b45497c7aee8234f5be880399ed6d99db442dcf3e024f061cd2027ba",
+            "reference/init.md": "da813ff325f84cefa1d01698caa093c78bca804d7e9746af14db925351266110",
+            "reference/ios.md": "40c87038b5f75147a5952a96237acf312a327bf70c1bcd8e0a5f064625ae9668",
+            "reference/layout.md": "0bc7d7971b3edf2acd0580e847458dc6d84129d90715b452799ace3bed815c7c",
+            "reference/live-setup.md": "2b5b2fbf5f658f34ea1997fb1aeebe01604d05187f75c6a4f1f55a5bc78520a4",
+            "reference/live.md": "68c5636a7858dd0b5137a9229c15e25fdc2ee40a0f8a4e9d809f78e809256262",
+            "reference/mode-operate.md": "7a52dd7a94ee75f6ae89542c86a1b6e1d306812b16e0d9dbf12d4acad44d148b",
+            "reference/mode-persuade.md": "21e78c8a77badb3f83290cd4577ed3b24bd4dd3b57136d7da75733d4f3ee9ac0",
+            "reference/mode-read.md": "a569989e6a3d6453b4c45e9474e162a15cc54e11732ac6baa7990a6e7cccc0b5",
+            "reference/new-work.md": "73f06ccc5ba8d1cd5324ed98f51d24273e5795170dc92332fe2b68c6a10ce50b",
+            "reference/onboard.md": "ef2dde00030580ed2765cbf7be9b2ea4a6f64cb915b804fd6f6abcf38051c7b9",
+            "reference/operate.md": "a9d2203acd45ca33a13d5c68b02b23ed512425ac15f0e8438318ed124b43729d",
+            "reference/optimize.md": "f672ef8251a3ed4051a053d30819664951b17540b2899acd27d20e500c234abc",
+            "reference/overdrive.md": "fce6688138d2ceb1e3d2cde5231f54b1d8dc8748b4c95a7919aa83b6f924cf96",
+            "reference/polish.md": "81666fc7f783b4e3514db6554e713dc0479bd9cdedb06e93d15f8b579aae869a",
+            "reference/quieter.md": "190a4e642ca362d7499f3c3ab123e21f18f75457d11f072b545a183f296e6495",
+            "reference/region-map.md": "778cedc9199b407d3e23fa1041e38d548b00b1101a33517aa2a2eb299f9d0edc",
+            "reference/routing.md": "77ae09542fbc10aa4e8b119d6fd19359908a47c13c30068d6a150bfdb50e3e10",
+            "reference/shape.md": "a55f016c046cb6a27c55bd7f346375aeb506a755c4fbca19a5f92dbd42309c23",
+            "reference/typeset.md": "442749aed338f51c1a3ccfb182c6ade9b74b90590b67984062ac94a5b100e914",
+            "reference/visualize.md": "2bcec5b8d22e9f87799529a41b984d27b4379ab1b70e1dd4f63b6d6390275730",
+            "scripts/VERSION": "9940d4b5219de8404015bc18af844c88d7e9e9105682a5d47b1d369d027dbd25",
+            "scripts/command-metadata.json": "e8720f3aa41135211cc58cc299a39eeda86c75651f4279cc1ede8db10dcc0584",
+            "scripts/data/font-index-failures.json": "835f19a0a3812f3652dd6979a2ce5597f654fd01f26e1b420b92d5f42b997ce4",
+            "scripts/data/font-index.json": "47edbdfaf27073c47033d1ac7dfee881be49e2dcbda7671d1157300481dde6da",
+            "scripts/impeccable": "39d9600489073e227e4f4d55c451ce4252a6632ed7ae37923efbbcbc91f16d07",
+            "scripts/impeccable.cmd": "69cad1ae7355825ef320ac9638a1c9675ba9fda01c9a0fa12244cc4a1973e550",
+            "scripts/live-browser-dom.js": "24f09f2597b9b55a1e2c4acd2ae5c95db5c8615cfc20aa07d1a3950538ad5c4a",
+            "scripts/live-browser-ignores.js": "c1cb6877ca99a0c1b38ba0c7d59f32702d3022f6821d8045f7133f7c40b6362f",
+            "scripts/live-browser-session.js": "42831c3cd874346d8e7f120808d91e6ed3cda5c3eca6eefd76b126659536bc87",
+            "scripts/live-browser.js": "d7f1ee3fdfc423e90268e9c666dce61b2180b62431dbb6ecfc48bca65398a1f8",
+            "scripts/modern-screenshot.umd.js": "bb36665889124a0b6e15f16045265737449c3bdcf2712cdb08af3cfa01563e2b"
+          }
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/Leonxlnx/taste-skill",
+      "commit": "717446e07a78d4e6d7918b1fde1a263378eebac9",
+      "license": "MIT",
+      "skills": [
+        {
+          "name": "brandkit",
+          "source_path": "skills/brandkit",
+          "installed_path": ".agents/skills/brandkit",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "b0c4837e1bd140ca816ae54948754ddd2ac1e2a4d3619363777a80caf00b2ede"
+          }
+        },
+        {
+          "name": "industrial-brutalist-ui",
+          "source_path": "skills/brutalist-skill",
+          "installed_path": ".agents/skills/industrial-brutalist-ui",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "fffbaac8597f07679e9d87145533567658aedba3b5eca6f16a7075a333048caa"
+          }
+        },
+        {
+          "name": "gpt-taste",
+          "source_path": "skills/gpt-tasteskill",
+          "installed_path": ".agents/skills/gpt-taste",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "2e64c269953f2656c21bf5a0fa6b4568e82fe0c72b36e8f84758e090349966a5"
+          }
+        },
+        {
+          "name": "image-to-code",
+          "source_path": "skills/image-to-code-skill",
+          "installed_path": ".agents/skills/image-to-code",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "4c060a8064a8b13380bc2ef3d6e6a1d0b1e316aa093cd9807d0ce9e4eeb037fa"
+          }
+        },
+        {
+          "name": "imagegen-frontend-mobile",
+          "source_path": "skills/imagegen-frontend-mobile",
+          "installed_path": ".agents/skills/imagegen-frontend-mobile",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "8a33389979f3074fa0926678e266ad2eb9234624472254469fc1ad916b9caa24"
+          }
+        },
+        {
+          "name": "imagegen-frontend-web",
+          "source_path": "skills/imagegen-frontend-web",
+          "installed_path": ".agents/skills/imagegen-frontend-web",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "6b5c2256522fdba1e3313eafa3d743b960a7b13ec029d3e6586e04b23327c1f8"
+          }
+        },
+        {
+          "name": "minimalist-ui",
+          "source_path": "skills/minimalist-skill",
+          "installed_path": ".agents/skills/minimalist-ui",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "36bc7328f085405f43b476938e62460fa573bf7e984e949e072bcf014831a44c"
+          }
+        },
+        {
+          "name": "full-output-enforcement",
+          "source_path": "skills/output-skill",
+          "installed_path": ".agents/skills/full-output-enforcement",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "e5bf48b1ae561511439cf71672209a10a88cee0968cc925909ff861dfa0a96a7"
+          }
+        },
+        {
+          "name": "redesign-existing-projects",
+          "source_path": "skills/redesign-skill",
+          "installed_path": ".agents/skills/redesign-existing-projects",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "98ad3e5b051bfb71b2795f7e8a6aa0d32b51ee095606c098a4b2822ac07926c9"
+          }
+        },
+        {
+          "name": "high-end-visual-design",
+          "source_path": "skills/soft-skill",
+          "installed_path": ".agents/skills/high-end-visual-design",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "e1e32f5e2d420872c6c7332b53d5ff7721946766b78c4822b424c2d512c8fdbc"
+          }
+        },
+        {
+          "name": "stitch-design-taste",
+          "source_path": "skills/stitch-skill",
+          "installed_path": ".agents/skills/stitch-design-taste",
+          "files_sha256": {
+            "DESIGN.md": "0ab6740c4ebb1966dbceddb823a66d4bf027e960efbd73faca56cbf8370ae2ad",
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "46bdb08fee2dded38b6ba0a051230a502d6ac6e4044afd47592cb40c256028b5"
+          }
+        },
+        {
+          "name": "design-taste-frontend",
+          "source_path": "skills/taste-skill",
+          "installed_path": ".agents/skills/design-taste-frontend",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "aa194351b246b8b4799099d4ed7b033d29eab6e6e3d58d8d2172978be7b3ec89"
+          }
+        },
+        {
+          "name": "design-taste-frontend-v1",
+          "source_path": "skills/taste-skill-v1",
+          "installed_path": ".agents/skills/design-taste-frontend-v1",
+          "files_sha256": {
+            "LICENSE": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df",
+            "SKILL.md": "033d45af1ed23832730642f95f40ab49db7fb5222848489a6c5656144bfc6dae"
+          }
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/emilkowalski/skills",
+      "commit": "2d228630ba1446365f614a108cb8252f1feda202",
+      "license": "MIT",
+      "skills": [
+        {
+          "name": "animate",
+          "source_path": "skills/animate",
+          "installed_path": ".agents/skills/animate",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "RECIPES.md": "21ff63d84391db8d96ecdf9170095f55a42c836ccc36fd3269c4772bab031ba2",
+            "SKILL.md": "b8ede161270458e6ae2e45e8a1985373515d4c63de5568ddb0f9012d7634356c"
+          }
+        },
+        {
+          "name": "animate-expo",
+          "source_path": "skills/animate-expo",
+          "installed_path": ".agents/skills/animate-expo",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "RECIPES.md": "1193cb71334da2e2341778dd92bec9ac79d989cb07fd55d661f324ed5871e718",
+            "SKILL.md": "9a01a91701e6563c67677dde6b66ab30f066a5341d42c21a90ba51d99679274a"
+          }
+        },
+        {
+          "name": "animation-performance",
+          "source_path": "skills/animation-performance",
+          "installed_path": ".agents/skills/animation-performance",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "ceb9dd3fe912615830f725a0120ccf8d012d15a6218001a5cd6c15d38e39a957"
+          }
+        },
+        {
+          "name": "animation-vocabulary",
+          "source_path": "skills/animation-vocabulary",
+          "installed_path": ".agents/skills/animation-vocabulary",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "40d2b27adfdfeb0570a9f20e7d0255109d9233c50603878bcd0dcd04c923fd94"
+          }
+        },
+        {
+          "name": "apple-design",
+          "source_path": "skills/apple-design",
+          "installed_path": ".agents/skills/apple-design",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "77bb63b7043bb93aca2ff4ab040c249484eef35682bb6ff7163433c31d30adc7"
+          }
+        },
+        {
+          "name": "ask-sonner",
+          "source_path": "skills/ask-sonner",
+          "installed_path": ".agents/skills/ask-sonner",
+          "files_sha256": {
+            "API.md": "4bb06f482c5757529e3d7a672a30fbeed42d24919a63e2571384a9ce1549aa7f",
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "39f3ee185b3aa2cf70a689052ff078953ce7ba5915ed7a9391d232e9d4dcf57f"
+          }
+        },
+        {
+          "name": "break-ui",
+          "source_path": "skills/break-ui",
+          "installed_path": ".agents/skills/break-ui",
+          "files_sha256": {
+            "CATALOG.md": "7358efcc6bb48e35187be1c064cf60022dcb18c72c18fab58b606dfc5f421f15",
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "e7eec1d70ac56a04255e9c0dbe98084ea3d544cc04aaad34f32c95d6fa9dff5e"
+          }
+        },
+        {
+          "name": "emil-design-eng",
+          "source_path": "skills/emil-design-eng",
+          "installed_path": ".agents/skills/emil-design-eng",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "ffbe68e6007fb42cb8149f089b400a1ca007d59ba23e8948e2be4476f3175939"
+          }
+        },
+        {
+          "name": "find-animation-opportunities",
+          "source_path": "skills/find-animation-opportunities",
+          "installed_path": ".agents/skills/find-animation-opportunities",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "d52a377819b84a71930f0c822cfe2849f40301605a2d5c7eccbfa3b257700df2"
+          }
+        },
+        {
+          "name": "improve-animations",
+          "source_path": "skills/improve-animations",
+          "installed_path": ".agents/skills/improve-animations",
+          "files_sha256": {
+            "AUDIT.md": "551c8473e20e5f4774680bc24d45e1c68e50992582720905c6b077756b7b5a55",
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "PLAN-TEMPLATE.md": "0a08ac8e23fd2082d7ffb86aeed7b789de77328c3cf874b16f1a755f2ef0a6ad",
+            "SKILL.md": "73962447464433476343e2c12cd08ab39cc99a9e5f3c118c5fb54ed897574ef6"
+          }
+        },
+        {
+          "name": "mobile-native",
+          "source_path": "skills/mobile-native",
+          "installed_path": ".agents/skills/mobile-native",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "888b7651d66d66dbac4e72b7c554638eb19bd971d686d6cbdf030a5ef3788f55"
+          }
+        },
+        {
+          "name": "pick-ui-library",
+          "source_path": "skills/pick-ui-library",
+          "installed_path": ".agents/skills/pick-ui-library",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "675fdce308683256ed617351a9b74d23457a5fbd0a562d9831b9c764b8c5e682"
+          }
+        },
+        {
+          "name": "prototype",
+          "source_path": "skills/prototype",
+          "installed_path": ".agents/skills/prototype",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "PICKER.md": "31a55eec94715cc79942e91e172e539e3031dcd5e2e5ee7c1446cf2caee960a6",
+            "SKILL.md": "bba39c955eb1871c5a02733976ceec5d0324198e0812e667604756489c89f7b9"
+          }
+        },
+        {
+          "name": "review-animations",
+          "source_path": "skills/review-animations",
+          "installed_path": ".agents/skills/review-animations",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "6ff590d29e436766135aa3d137be1fac2a867165c7257fc315b189361f1873af",
+            "STANDARDS.md": "e7d3605034acda54ca13e43aec9e64d65b53de20f75b11b8d694e373012fbe07"
+          }
+        },
+        {
+          "name": "write-swift",
+          "source_path": "skills/write-swift",
+          "installed_path": ".agents/skills/write-swift",
+          "files_sha256": {
+            "LICENSE": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b",
+            "SKILL.md": "16a4b6adb74e338e55e704ce5753ad54d825438b8a63930eeaede9f3c04c9447"
+          }
+        }
+      ]
+    }
+  ]
+}
