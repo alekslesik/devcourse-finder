@@ -92,7 +92,7 @@ func collectSkypro(data []byte, c Candidate, now time.Time) (catalog.Course, Obs
 		enrollment = "open"
 	}
 	lease := now.Add(26 * time.Hour)
-	o := Observation{SkyproProductID: product, PriceUnknown: true, Enrollment: enrollment, Schedule: "unknown", ValidUntil: &lease}
+	o := Observation{LearningObserved: true, LearningConditions: skyproLearning(data, doc, block, c, now), SkyproProductID: product, PriceUnknown: true, Enrollment: enrollment, Schedule: "unknown", ValidUntil: &lease}
 	r, e := normalizedRecord(c, title, summary+" Полная стоимость обучения не подтверждена; месячный платёж рассрочки не является полной ценой.", "Skypro", o, now)
 	if e != nil {
 		return catalog.Course{}, Observation{}, e
