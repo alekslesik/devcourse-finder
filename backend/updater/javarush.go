@@ -86,7 +86,7 @@ func collectJavaRush(data, prices []byte, c Candidate, now time.Time) (catalog.C
 	}
 	lease := now.Add(26 * time.Hour)
 	billing := &catalog.Billing{Kind: "subscription", AmountMinor: amount, Currency: "USD", Interval: "month"}
-	o := Observation{PriceUnknown: true, Enrollment: "continuous", Schedule: "flexible", ValidUntil: &lease, Billing: billing}
+	o := Observation{LearningObserved: true, LearningConditions: javaRushLearning(data, card, c, now), PriceUnknown: true, Enrollment: "continuous", Schedule: "flexible", ValidUntil: &lease, Billing: billing}
 	summary := "Самостоятельный интерактивный курс Java по подписке Premium, без привязки к расписанию. Регулярный платёж в исходной валюте; полная стоимость обучения зависит от длительности подписки и неизвестна. University и обучение с ментором — отдельные программы."
 	r, e := normalizedRecord(c, "JavaRush: Java Premium — самостоятельное обучение", summary, "JavaRush", o, now)
 	if e != nil {
