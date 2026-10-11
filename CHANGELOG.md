@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.21.0] - 2026-10-11
+
+- Collect evidence-bound course profiles and explain confirmed and unknown filter results.
+
 ## [0.20.0] - 2026-10-11
 
 - Add opt-in contextual filter diagnostics and treat a zero lower budget as unrestricted.

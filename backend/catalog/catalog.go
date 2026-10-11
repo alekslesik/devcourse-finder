@@ -1,27 +1,28 @@
 package catalog
 
 import (
-	"slices"
 	"sort"
 	"time"
 )
 
 type Course struct {
-	ID        string    `json:"id"`
-	Slug      string    `json:"slug"`
-	Title     string    `json:"title"`
-	Provider  string    `json:"provider"`
-	Language  string    `json:"language"`
-	Direction string    `json:"direction"`
-	Summary   string    `json:"summary"`
-	Audience  []string  `json:"audience"`
-	Goals     []string  `json:"goals"`
-	Topics    []string  `json:"topics"`
-	Source    string    `json:"source"`
-	CheckedAt time.Time `json:"checked_at"`
-	Status    string    `json:"status"`
-	Offers    []Offer   `json:"offers"`
-	Demo      bool      `json:"demo"`
+	Profile          *CourseProfile `json:"profile,omitempty"`
+	ProfileOwnership int            `json:"-"`
+	ID               string         `json:"id"`
+	Slug             string         `json:"slug"`
+	Title            string         `json:"title"`
+	Provider         string         `json:"provider"`
+	Language         string         `json:"language"`
+	Direction        string         `json:"direction"`
+	Summary          string         `json:"summary"`
+	Audience         []string       `json:"audience"`
+	Goals            []string       `json:"goals"`
+	Topics           []string       `json:"topics"`
+	Source           string         `json:"source"`
+	CheckedAt        time.Time      `json:"checked_at"`
+	Status           string         `json:"status"`
+	Offers           []Offer        `json:"offers"`
+	Demo             bool           `json:"demo"`
 }
 
 // Billing preserves a recurring fee in its original currency. It is never a
@@ -84,13 +85,10 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 	out := []Result{}
 	hasPriceBounds := f.Min != nil && *f.Min > 0 || f.Max != nil
 	for _, c := range courses {
-		if c.Status != "published" || (f.Language != "" && c.Language != f.Language) || (f.Direction != "" && c.Direction != f.Direction) {
+		if c.Status != "published" || (f.Language != "" && c.Language != f.Language) {
 			continue
 		}
-		if f.Experience != "" && !matchesExperience(c.Audience, f.Experience) {
-			continue
-		}
-		if f.Goal != "" && !slices.Contains(c.Goals, f.Goal) {
+		if MatchProfile(c, "experience", f.Experience) != "confirmed" || MatchProfile(c, "goal", f.Goal) != "confirmed" || MatchProfile(c, "direction", f.Direction) != "confirmed" {
 			continue
 		}
 		candidates := []Result{}

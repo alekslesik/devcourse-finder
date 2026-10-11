@@ -140,3 +140,6 @@ END $$;
 
 ALTER TABLE offers ADD COLUMN IF NOT EXISTS learning_conditions jsonb;
 ALTER TABLE offers ADD COLUMN IF NOT EXISTS learning_ownership integer NOT NULL DEFAULT 0 CHECK (learning_ownership BETWEEN 0 AND 31);
+
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS profile jsonb;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS profile_ownership integer NOT NULL DEFAULT 0;

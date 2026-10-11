@@ -33,7 +33,7 @@ type Querier interface {
 }
 
 func load(ctx context.Context, q Querier) ([]catalog.Course, error) {
-	rows, e := q.Query(ctx, "SELECT id,slug,title,provider,language,direction,summary,audience,goals,topics,source,checked_at,status,demo FROM courses ORDER BY id")
+	rows, e := q.Query(ctx, "SELECT id,slug,title,provider,language,direction,summary,audience,goals,topics,source,checked_at,status,demo,profile,profile_ownership FROM courses ORDER BY id")
 	if e != nil {
 		return nil, e
 	}
@@ -41,10 +41,17 @@ func load(ctx context.Context, q Querier) ([]catalog.Course, error) {
 	idx := map[string]int{}
 	for rows.Next() {
 		var c catalog.Course
-		e = rows.Scan(&c.ID, &c.Slug, &c.Title, &c.Provider, &c.Language, &c.Direction, &c.Summary, &c.Audience, &c.Goals, &c.Topics, &c.Source, &c.CheckedAt, &c.Status, &c.Demo)
+		var profile []byte
+		e = rows.Scan(&c.ID, &c.Slug, &c.Title, &c.Provider, &c.Language, &c.Direction, &c.Summary, &c.Audience, &c.Goals, &c.Topics, &c.Source, &c.CheckedAt, &c.Status, &c.Demo, &profile, &c.ProfileOwnership)
 		if e != nil {
 			rows.Close()
 			return nil, e
+		}
+		if len(profile) > 0 && string(profile) != "null" {
+			if e = json.Unmarshal(profile, &c.Profile); e != nil {
+				rows.Close()
+				return nil, e
+			}
 		}
 		c.Offers = []catalog.Offer{}
 		idx[c.ID] = len(cs)
@@ -178,7 +185,8 @@ func (d *DB) UpdateVerified(ctx context.Context, domains []string, operator stri
 func importTx(ctx context.Context, tx pgx.Tx, old []catalog.Course, data catalog.Dataset, operator string) error {
 	var e error
 	for _, c := range data.Courses {
-		_, e = tx.Exec(ctx, `INSERT INTO courses VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT(id) DO UPDATE SET slug=EXCLUDED.slug,title=EXCLUDED.title,provider=EXCLUDED.provider,language=EXCLUDED.language,direction=EXCLUDED.direction,summary=EXCLUDED.summary,audience=EXCLUDED.audience,goals=EXCLUDED.goals,topics=EXCLUDED.topics,source=EXCLUDED.source,checked_at=EXCLUDED.checked_at,status=EXCLUDED.status,demo=EXCLUDED.demo`, c.ID, c.Slug, c.Title, c.Provider, c.Language, c.Direction, c.Summary, c.Audience, c.Goals, c.Topics, c.Source, c.CheckedAt, c.Status, c.Demo)
+		profile, _ := json.Marshal(c.Profile)
+		_, e = tx.Exec(ctx, `INSERT INTO courses(id,slug,title,provider,language,direction,summary,audience,goals,topics,source,checked_at,status,demo,profile,profile_ownership) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16) ON CONFLICT(id) DO UPDATE SET slug=EXCLUDED.slug,title=EXCLUDED.title,provider=EXCLUDED.provider,language=EXCLUDED.language,direction=EXCLUDED.direction,summary=EXCLUDED.summary,audience=EXCLUDED.audience,goals=EXCLUDED.goals,topics=EXCLUDED.topics,source=EXCLUDED.source,checked_at=EXCLUDED.checked_at,status=EXCLUDED.status,demo=EXCLUDED.demo,profile=EXCLUDED.profile,profile_ownership=EXCLUDED.profile_ownership`, c.ID, c.Slug, c.Title, c.Provider, c.Language, c.Direction, c.Summary, c.Audience, c.Goals, c.Topics, c.Source, c.CheckedAt, c.Status, c.Demo, profile, c.ProfileOwnership)
 		if e != nil {
 			return e
 		}

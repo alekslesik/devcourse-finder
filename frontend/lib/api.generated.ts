@@ -161,6 +161,7 @@ export interface components {
             checked_at: string;
             demo: boolean;
             offers: components["schemas"]["Offer"][];
+            profile?: components["schemas"]["CourseProfile"];
         };
         Offer: {
             id: string;
@@ -304,6 +305,29 @@ export interface components {
             counts: {
                 [key: string]: number;
             };
+        };
+        ProfileValue: {
+            /** @enum {string} */
+            value: "basics" | "backend" | "frontend" | "fullstack" | "automation" | "none" | "projects" | "working";
+            evidence: components["schemas"]["LearningEvidence"];
+        };
+        ProfileTags: {
+            values: ("none" | "basics" | "projects" | "working" | "switch" | "try" | "job" | "deepen")[];
+            evidence: components["schemas"]["LearningEvidence"];
+        };
+        ProfileRequirement: {
+            /** @enum {string} */
+            level: "none" | "basics" | "projects" | "working";
+            /** @enum {string} */
+            scope: "programming" | "course_language";
+            evidence: components["schemas"]["LearningEvidence"];
+        };
+        CourseProfile: {
+            prerequisites?: components["schemas"]["ProfileRequirement"];
+            audience?: components["schemas"]["ProfileTags"];
+            goals?: components["schemas"]["ProfileTags"];
+            direction?: components["schemas"]["ProfileValue"];
+            target_level?: components["schemas"]["ProfileValue"];
         };
     };
     responses: never;

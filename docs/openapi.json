@@ -764,6 +764,9 @@
             "items": {
               "$ref": "#/components/schemas/Offer"
             }
+          },
+          "profile": {
+            "$ref": "#/components/schemas/CourseProfile"
           }
         },
         "required": [
@@ -1343,6 +1346,110 @@
           "selected",
           "counts"
         ]
+      },
+      "ProfileValue": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "enum": [
+              "basics",
+              "backend",
+              "frontend",
+              "fullstack",
+              "automation",
+              "none",
+              "projects",
+              "working"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "value",
+          "evidence"
+        ]
+      },
+      "ProfileTags": {
+        "type": "object",
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "none",
+                "basics",
+                "projects",
+                "working",
+                "switch",
+                "try",
+                "job",
+                "deepen"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "values",
+          "evidence"
+        ]
+      },
+      "ProfileRequirement": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "basics",
+              "projects",
+              "working"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "programming",
+              "course_language"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "level",
+          "scope",
+          "evidence"
+        ]
+      },
+      "CourseProfile": {
+        "type": "object",
+        "properties": {
+          "prerequisites": {
+            "$ref": "#/components/schemas/ProfileRequirement"
+          },
+          "audience": {
+            "$ref": "#/components/schemas/ProfileTags"
+          },
+          "goals": {
+            "$ref": "#/components/schemas/ProfileTags"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/ProfileValue"
+          },
+          "target_level": {
+            "$ref": "#/components/schemas/ProfileValue"
+          }
+        }
       }
     }
   },
