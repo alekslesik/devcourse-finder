@@ -124,6 +124,6 @@ func normalizedRecord(candidate Candidate, title, summary, provider string, o Ob
 	if o.ValidUntil != nil {
 		offer.ValidUntil = o.ValidUntil
 	}
-	c := catalog.Course{ID: id, Slug: id, Title: title, Provider: provider, Language: language, Direction: direction, Summary: summary, Audience: []string{"unknown"}, Goals: []string{"unknown"}, Topics: []string{}, Source: candidate.URL, CheckedAt: now, Status: "published", Offers: []catalog.Offer{offer}}
+	c := catalog.Course{Profile: o.Profile, ID: id, Slug: id, Title: title, Provider: provider, Language: language, Direction: direction, Summary: summary, Audience: []string{"unknown"}, Goals: []string{"unknown"}, Topics: []string{}, Source: candidate.URL, CheckedAt: now, Status: "published", Offers: []catalog.Offer{offer}}
 	return c, nil
 }
