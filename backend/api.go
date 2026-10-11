@@ -60,7 +60,11 @@ func newHandler(db catalogRepository) http.Handler {
 		if end > total {
 			end = total
 		}
-		write(w, 200, map[string]any{"items": items[start:end], "total": total, "page": f.Page, "page_size": f.PageSize, "data_as_of": now, "applied_filters": r.URL.Query()})
+		response := map[string]any{"items": items[start:end], "total": total, "page": f.Page, "page_size": f.PageSize, "data_as_of": now, "applied_filters": r.URL.Query()}
+		if f.Diagnostics {
+			response["diagnostics"] = catalog.ProfileFacets(cs, f, now)
+		}
+		write(w, 200, response)
 	})
 	mux.HandleFunc("GET /api/v1/courses/{slug}", func(w http.ResponseWriter, r *http.Request) {
 		cs, e := db.Load(r.Context())

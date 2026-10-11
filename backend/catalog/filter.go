@@ -47,7 +47,7 @@ func Parse(q url.Values) (Filter, error) {
 			f.PageSize = int(n)
 		}
 	}
-	for _, k := range []string{"include_free", "include_closed"} {
+	for _, k := range []string{"include_free", "include_closed", "diagnostics"} {
 		v := q.Get(k)
 		if v != "" && v != "true" && v != "false" {
 			return f, fmt.Errorf("invalid %s", k)
@@ -55,6 +55,7 @@ func Parse(q url.Values) (Filter, error) {
 	}
 	f.IncludeFree = q.Get("include_free") == "true"
 	f.IncludeClosed = q.Get("include_closed") == "true"
+	f.Diagnostics = q.Get("diagnostics") == "true"
 	if f.Min != nil && f.Max != nil && *f.Min > *f.Max {
 		return f, fmt.Errorf("min exceeds max")
 	}

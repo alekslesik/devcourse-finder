@@ -63,7 +63,7 @@ type Filter struct {
 	Language, Direction, Experience, Goal, Budget, Support, Schedule, Sort string
 	Min, Max                                                               *int64
 	Hours                                                                  *int
-	IncludeFree, IncludeClosed                                             bool
+	IncludeFree, IncludeClosed, Diagnostics                                bool
 	Page, PageSize                                                         int
 }
 type Result struct {
@@ -82,24 +82,13 @@ func EffectivePrice(o Offer, now time.Time) *int64 {
 }
 func Search(courses []Course, f Filter, now time.Time) []Result {
 	out := []Result{}
+	hasPriceBounds := f.Min != nil && *f.Min > 0 || f.Max != nil
 	for _, c := range courses {
 		if c.Status != "published" || (f.Language != "" && c.Language != f.Language) || (f.Direction != "" && c.Direction != f.Direction) {
 			continue
 		}
-		if f.Experience != "" {
-			if f.Experience == "experienced" {
-				ok := false
-				for _, a := range c.Audience {
-					if a != "none" && a != "unknown" {
-						ok = true
-					}
-				}
-				if !ok {
-					continue
-				}
-			} else if !slices.Contains(c.Audience, f.Experience) {
-				continue
-			}
+		if f.Experience != "" && !matchesExperience(c.Audience, f.Experience) {
+			continue
 		}
 		if f.Goal != "" && !slices.Contains(c.Goals, f.Goal) {
 			continue
@@ -116,7 +105,7 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			if f.Budget == "paid" && o.Free && !f.IncludeFree {
 				continue
 			}
-			if f.Min != nil || f.Max != nil {
+			if hasPriceBounds {
 				if !(f.IncludeFree && o.Free && price != nil && *price == 0) {
 					if price == nil || (f.Min != nil && *price < *f.Min) || (f.Max != nil && *price > *f.Max) {
 						continue
@@ -139,7 +128,7 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			if f.Experience != "" {
 				reasons = append(reasons, "Подходит вашему опыту")
 			}
-			if f.Min != nil || f.Max != nil {
+			if hasPriceBounds {
 				reasons = append(reasons, "В пределах бюджета")
 			}
 			if f.Support == "review" {

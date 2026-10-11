@@ -220,6 +220,12 @@ export interface components {
             };
             /** Format: date-time */
             data_as_of: string;
+            /** @description Included only when diagnostics=true. */
+            diagnostics?: {
+                experience: components["schemas"]["ProfileFacet"];
+                goal: components["schemas"]["ProfileFacet"];
+                direction: components["schemas"]["ProfileFacet"];
+            };
         };
         Error: {
             error: string;
@@ -287,6 +293,17 @@ export interface components {
             review?: components["schemas"]["LearningSupport"];
             mentor?: components["schemas"]["LearningSupport"];
             community?: components["schemas"]["LearningSupport"];
+        };
+        ProfileFacet: {
+            /** @description Eligible distinct courses with only this facet filter removed. */
+            eligible: number;
+            /** @description Eligible courses with no confirmed value for this facet. */
+            unknown: number;
+            selected: string;
+            /** @description Confirmed distinct-course counts; values can overlap. */
+            counts: {
+                [key: string]: number;
+            };
         };
     };
     responses: never;
@@ -376,6 +393,8 @@ export interface operations {
                 page_size?: number;
                 include_free?: boolean;
                 include_closed?: boolean;
+                /** @description Include contextual experience, goal and direction counts. Each facet removes only its own filter; other constraints and offer eligibility remain. Counts refer to distinct courses before pagination. Unknown profiles are not matches. */
+                diagnostics?: boolean;
             };
             header?: never;
             path?: never;

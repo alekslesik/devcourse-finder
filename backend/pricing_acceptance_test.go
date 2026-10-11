@@ -135,9 +135,11 @@ func TestAcceptanceAC04UnconfirmedPrices(t *testing.T) {
 	known := acceptanceCourse("confirmed-price", now)
 	known.Offers[0].Price = value(int64(2500000))
 	search := acceptanceSearch(t, []catalog.Course{from, unknown, known})
-	for _, query := range []string{"max=3000000", "min=0", "min=1000000&max=3000000", "budget=paid&max=3000000"} {
+	for _, query := range []string{"max=3000000", "min=1", "min=1000000&max=3000000", "budget=paid&max=3000000"} {
 		acceptanceOffers(t, search(query), "confirmed-price-full")
 	}
+	// Zero is no price restriction; positive and upper bounds above remain strict.
+	acceptanceOffers(t, search("min=0"), "starting-price-full", "unknown-price-full", "confirmed-price-full")
 	results := search("sort=price_asc")
 	acceptanceOffers(t, results, "starting-price-full", "unknown-price-full", "confirmed-price-full")
 	if results[0].Offer.ID != "confirmed-price-full" {
