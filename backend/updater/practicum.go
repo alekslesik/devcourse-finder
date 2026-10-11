@@ -104,6 +104,9 @@ func practicumSquadsURL(slug string) string {
 }
 
 type practicumProfession struct {
+	Duration       json.RawMessage `json:"duration"`
+	DurationUnit   *string         `json:"catalog_duration_unit"`
+	DurationAmount json.RawMessage `json:"catalog_duration_amount"`
 	ID             string          `json:"id"`
 	Slug           string          `json:"slug"`
 	Name           string          `json:"name"`
@@ -249,6 +252,7 @@ func collectPracticumTariff(page, profession, prices, squads []byte, c Candidate
 	if o.Enrollment == "open" && (o.ValidUntil == nil || lastDeadline.Before(*o.ValidUntil)) {
 		o.ValidUntil = &lastDeadline
 	}
+	o.DurationMonths = practicumDurationMonths(p)
 	o.Price = &final
 	o.Schedule = "scheduled"
 	o.ProductID = price.ProductID
@@ -279,4 +283,23 @@ func fetchPracticum(ctx context.Context, client *http.Client, page []byte, pageD
 	}
 	record, o, err := collectPracticum(page, bodies[0], bodies[1], bodies[2], c, time.Now().UTC())
 	return record, o, fingerprint([]byte(strings.Join(digests, ":"))), err
+}
+
+// The profession API's legacy duration is in months. Explicit catalog units
+// override it; do not interpret weeks, hours, ranges or access periods as months.
+func practicumDurationMonths(p practicumProfession) *int {
+	raw := p.Duration
+	if p.DurationUnit != nil {
+		if *p.DurationUnit != "month" && *p.DurationUnit != "months" {
+			return nil
+		}
+		raw = p.DurationAmount
+	} else if len(p.DurationAmount) > 0 && !emptyJSON(p.DurationAmount, "null") {
+		return nil
+	}
+	var months int
+	if json.Unmarshal(raw, &months) != nil || months < 1 || months > 120 {
+		return nil
+	}
+	return &months
 }

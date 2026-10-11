@@ -124,3 +124,20 @@ PRACTICUM_LIVE_CHECK=1 TEST_DATABASE_URL='<disposable database ending in _test>'
 
 It performs four bounded official GETs and publishes only into an isolated test
 schema. Network or contract failures fail the check; it does not bypass challenges.
+
+## Course duration
+
+The identity-bound profession response supplies `duration` in months (legacy
+field). Explicit `catalog_duration_unit` of `month` or `months` uses
+`catalog_duration_amount` instead. Only positive integers up to 120 are accepted;
+other units, ambiguous metadata, fractions and ranges remain unknown. Missing
+metadata does not reject an otherwise verified course or erase curated duration.
+The anonymous React profession response checked on 2026-10-11 returned
+`duration: 3` with both explicit catalog-duration fields null.
+
+Duration is stored per offer as optional `duration_months`, including independently
+verified plus SKUs. Refresh updates the matched offer; operator-only tariffs stay
+untouched. Months are displayed as months in cards, details and comparison;
+average-month conversion is used only for duration sorting. Existing weekly
+records continue to use `weeks`. After deploying this version, a successful
+catalog collection/publication is needed to populate existing Practicum offers.

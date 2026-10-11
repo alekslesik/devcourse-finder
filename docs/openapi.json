@@ -837,6 +837,15 @@
           },
           "billing": {
             "$ref": "#/components/schemas/Billing"
+          },
+          "duration_months": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 120,
+            "description": "Verified course duration in months; absent when unknown. Mutually exclusive with weeks."
           }
         },
         "required": [

@@ -17,6 +17,10 @@ func TestPracticumCollectorQueuesAllEvidenceAndPublisherProtectsProducts(t *test
 	config.Sources = nil
 	config.Discovery = []Feed{{ID: "yandex-sitemap", Adapter: "yandex", URL: practicumOrigin + "/lang-static/sitemap/"}}
 	page, f, c := practicumData(t, "backend-developer")
+	var programs []map[string]any
+	json.Unmarshal(f.Profession, &programs)
+	programs[0]["duration"] = 10
+	f.Profession, _ = json.Marshal(programs)
 	// Cohorts remain current during integration runs without making the recorded
 	// API snapshot's actual dates a permanent time dependency.
 	var cohorts []map[string]any
@@ -76,7 +80,7 @@ func TestPracticumCollectorQueuesAllEvidenceAndPublisherProtectsProducts(t *test
 		t.Fatal(product, profession, err)
 	}
 	old, _ = db.Load(ctx)
-	if len(old) != 1 || old[0].Offers[0].Price == nil || *old[0].Offers[0].Price != 13700000 {
+	if len(old) != 1 || old[0].Offers[0].Price == nil || *old[0].Offers[0].Price != 13700000 || old[0].Offers[0].DurationMonths == nil || *old[0].Offers[0].DurationMonths != 10 {
 		t.Fatal(old)
 	}
 	event.ObservedAt = time.Now().UTC()

@@ -109,6 +109,9 @@ func (e QueuedObservation) validate(config Config) error {
 		return ErrSource
 	}
 	o := e.Observation
+	if e.Candidate.Adapter == "yandex" && !sameOptionalInt(o.DurationMonths, e.Record.Offers[0].DurationMonths) || o.DurationMonths != nil && (e.Candidate.Adapter != "yandex" || *o.DurationMonths < 1 || *o.DurationMonths > 120) {
+		return ErrSource
+	}
 	if e.Candidate.Adapter == "javarush" {
 		offer := e.Record.Offers[0]
 		if !o.Billing.Valid() || o.Billing.Currency != "USD" || o.Billing.Interval != "month" || offer.Billing == nil || *o.Billing != *offer.Billing || !o.PriceUnknown || o.Price != nil || o.Enrollment != "continuous" || o.Schedule != "flexible" || o.ValidUntil == nil || !o.ValidUntil.After(e.ObservedAt) || o.ValidUntil.After(e.ObservedAt.Add(26*time.Hour+time.Second)) || offer.Price != nil || offer.Free || offer.PriceKind != "unknown" || offer.Enrollment != o.Enrollment || offer.Schedule != o.Schedule || offer.ValidUntil == nil || !offer.ValidUntil.Equal(*o.ValidUntil) {
