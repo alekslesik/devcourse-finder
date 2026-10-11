@@ -33,7 +33,7 @@ func TestPurpleSchoolRecordedTariffs(t *testing.T) {
 					t.Fatal(r)
 				}
 			} else {
-				if len(r.Offers) != 3 || *r.Offers[0].Price != 399900 || *r.Offers[1].Price != 549900 || *r.Offers[2].Price != 1299900 || r.Offers[1].Mentor || !r.Offers[2].Mentor || !r.Offers[2].Review {
+				if len(r.Offers) != 3 || *r.Offers[0].Price != 399900 || *r.Offers[1].Price != 549900 || *r.Offers[2].Price != 1299900 || r.Offers[1].Mentor || r.Offers[2].Mentor || !r.Offers[2].Review {
 					t.Fatal(r)
 				}
 			}

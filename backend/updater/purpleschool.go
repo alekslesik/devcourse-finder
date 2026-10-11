@@ -385,7 +385,7 @@ func collectPurpleSchool(data []byte, c Candidate, now time.Time) (catalog.Cours
 				return reject()
 			}
 			review = true
-			mentor = true
+			mentor = false
 		}
 		o.PurpleTariffs = append(o.PurpleTariffs, PurpleTariff{ID: t.ID, Category: t.Type, Name: t.Name, Price: price, Review: review, Mentor: mentor})
 	}
@@ -399,9 +399,10 @@ func collectPurpleSchool(data []byte, c Candidate, now time.Time) (catalog.Cours
 	}
 	record.Offers = nil
 	for _, t := range o.PurpleTariffs {
-		known := true
+		known := false
 		amount := t.Price
 		record.Offers = append(record.Offers, catalog.Offer{ID: record.ID + "-t" + strconv.FormatInt(t.ID, 10), Name: t.Name, Price: &amount, PriceKind: "exact", Free: amount == 0, PriceCheckedAt: now, ValidUntil: &deadline, SupportKnown: &known, Review: t.Review, Mentor: t.Mentor, Schedule: "flexible", Enrollment: "continuous", URL: c.URL})
 	}
+	record, o = purpleLearning(data, doc, p, record, o, c, now)
 	return record, o, nil
 }

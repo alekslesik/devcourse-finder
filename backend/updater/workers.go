@@ -103,5 +103,5 @@ func observationStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 			return err
 		}
 	}
-	return nil
+	return learningStatus(ctx, db, w)
 }

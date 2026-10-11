@@ -20,7 +20,7 @@ func validPurpleRecord(e QueuedObservation) bool {
 	categories := map[string]bool{}
 	for i, t := range o.PurpleTariffs {
 		r := e.Record.Offers[i]
-		if t.ID <= 0 || ids[t.ID] || categories[t.Category] || t.Name == "" || t.Price < 0 || r.ID != e.Record.ID+"-t"+strconv.FormatInt(t.ID, 10) || r.URL != e.Candidate.URL || r.Name != t.Name || r.Price == nil || *r.Price != t.Price || r.PriceKind != "exact" || r.Free != (t.Price == 0) || r.SupportKnown == nil || !*r.SupportKnown || r.Review != t.Review || r.Mentor != t.Mentor || r.Enrollment != o.Enrollment || r.Schedule != o.Schedule || r.ValidUntil == nil || !r.ValidUntil.Equal(*o.ValidUntil) {
+		if t.ID <= 0 || ids[t.ID] || categories[t.Category] || t.Name == "" || t.Price < 0 || r.ID != e.Record.ID+"-t"+strconv.FormatInt(t.ID, 10) || r.URL != e.Candidate.URL || r.Name != t.Name || r.Price == nil || *r.Price != t.Price || r.PriceKind != "exact" || r.Free != (t.Price == 0) || r.SupportKnown == nil || *r.SupportKnown || r.Review != t.Review || r.Mentor != t.Mentor || r.Enrollment != o.Enrollment || r.Schedule != o.Schedule || r.ValidUntil == nil || !r.ValidUntil.Equal(*o.ValidUntil) {
 			return false
 		}
 		switch t.Category {
@@ -33,7 +33,7 @@ func validPurpleRecord(e QueuedObservation) bool {
 				return false
 			}
 		case "teamProject":
-			if t.Price <= 0 || !t.Review || !t.Mentor {
+			if t.Price <= 0 || !t.Review || t.Mentor {
 				return false
 			}
 		default:
@@ -105,7 +105,10 @@ func mergePurpleSchool(ctx context.Context, tx pgx.Tx, old []catalog.Course, can
 	} else if saved != nil {
 		return protect()
 	}
-	working := append([]catalog.Course(nil), old...)
+	working, err := restorePurpleLearningOwnership(ctx, tx, old)
+	if err != nil {
+		return nil, err
+	}
 	var result []catalog.Course
 	pending := false
 	for i, tariff := range o.PurpleTariffs {

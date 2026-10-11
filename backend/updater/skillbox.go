@@ -156,5 +156,10 @@ func collectSkillbox(data []byte, c Candidate, now time.Time) (catalog.Course, O
 			o.VerifiedTariffs[0], o.VerifiedTariffs[i] = o.VerifiedTariffs[i], o.VerifiedTariffs[0]
 		}
 	}
-	return verifiedTariffRecord(c, landing.Title, summary, o, now)
+	r, o, err := verifiedTariffRecord(c, landing.Title, summary, o, now)
+	if err != nil {
+		return r, o, err
+	}
+	r, o = skillboxLearning(data, doc, r, o, c, now)
+	return r, o, nil
 }

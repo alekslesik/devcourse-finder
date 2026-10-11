@@ -368,6 +368,11 @@ func collectNetology(data []byte, c Candidate, now time.Time) (catalog.Course, O
 			}
 		}
 	}
+	o.LearningObserved = true
+	o.LearningConditions = netologyLearning(data, doc, plans, c, name, now)
+	if o.LearningConditions != nil && len(o.LearningConditions.Evidence()) == 0 {
+		o.LearningConditions = nil
+	}
 	o.Price = &price
 	o.NetologyFamilyID = p.FamilyID
 	o.NetologyProgramID = p.ID

@@ -53,6 +53,8 @@ func decodeJSON(data []byte, v any) error {
 }
 
 type stepikCourse struct {
+	Workload        string          `json:"workload"`
+	Description     string          `json:"description"`
 	Summary         string          `json:"summary"`
 	Lessons         int             `json:"lessons_count"`
 	Units           int             `json:"total_units"`
@@ -138,6 +140,12 @@ func parseStepik(data []byte, s Source, now time.Time) (Observation, error) {
 	// can_be_enrolled=false can mean account restrictions, not a closed course.
 	if o.Price == nil && !o.PriceUnknown && o.Enrollment == "" {
 		return o, rejection("unverified_enrollment")
+	}
+	o.LearningObserved = true
+	candidate := Candidate{Adapter: "stepik", ExternalID: strconv.Itoa(c.ID), URL: "https://stepik.org/course/" + strconv.Itoa(c.ID) + "/promo"}
+	o.LearningConditions = stepikLearning(data, c, candidate, now)
+	if len(o.LearningConditions.Evidence()) == 0 {
+		o.LearningConditions = nil
 	}
 	return o, nil
 }

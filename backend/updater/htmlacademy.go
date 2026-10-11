@@ -177,7 +177,7 @@ func collectHTMLAcademy(data, paymentData []byte, c Candidate, now time.Time) (c
 	// No fixed total exists for this recurring product. Never multiply the monthly
 	// payment by a suggested duration or borrow the full cost of a bundle.
 	lease := now.Add(26 * time.Hour)
-	o := Observation{PriceUnknown: true, Enrollment: "continuous", Schedule: "flexible", ValidUntil: &lease}
+	o := Observation{LearningObserved: true, LearningConditions: academyLearning(data, c, now), PriceUnknown: true, Enrollment: "continuous", Schedule: "flexible", ValidUntil: &lease}
 	record, err := normalizedRecord(c, title, summary+" Индивидуальный формат: помесячная оплата; полная стоимость зависит от продолжительности обучения и неизвестна.", "HTML Academy", o, now)
 	if err != nil {
 		return empty, Observation{}, err

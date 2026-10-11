@@ -50,7 +50,7 @@ func TestPurpleSchoolQueueMultipleTariffsAndConfirmation(t *testing.T) {
 		t.Fatal(result, err)
 	}
 	old, _ = db.Load(ctx)
-	if len(old) != 1 || len(old[0].Offers) != 3 || old[0].Offers[0].Free || old[0].Offers[1].Mentor || !old[0].Offers[2].Mentor {
+	if len(old) != 1 || len(old[0].Offers) != 3 || old[0].Offers[0].Free || old[0].Offers[1].Mentor || old[0].Offers[2].Mentor {
 		t.Fatal(old)
 	}
 	// A large price change needs another window; ordinary tariffs still refresh.
@@ -59,7 +59,7 @@ func TestPurpleSchoolQueueMultipleTariffsAndConfirmation(t *testing.T) {
 	event.Observation.Price = &event.Observation.PurpleTariffs[0].Price
 	event.Record.Offers[0].Price = event.Observation.Price
 	event.ObservedAt = time.Now().UTC()
-	if err = collector.enqueue(ctx, event); err != nil {
+	if err = collector.enqueue(ctx, reobserveLearning(t, event, event.ObservedAt)); err != nil {
 		t.Fatal(err)
 	}
 	result, err = publisher.Run(ctx)
@@ -90,7 +90,7 @@ func TestPurpleSchoolQueueMultipleTariffsAndConfirmation(t *testing.T) {
 		event.Record.Offers[i].ValidUntil = &deadline
 	}
 	event.ObservedAt = time.Now().UTC()
-	if err = collector.enqueue(ctx, event); err != nil {
+	if err = collector.enqueue(ctx, reobserveLearning(t, event, event.ObservedAt)); err != nil {
 		t.Fatal(err)
 	}
 	result, err = publisher.Run(ctx)
@@ -122,7 +122,7 @@ func TestPurpleSchoolQueueMultipleTariffsAndConfirmation(t *testing.T) {
 	// Rebinding a page to another provider course cannot replace the old course.
 	event.Observation.PurpleCourseID++
 	event.ObservedAt = time.Now().UTC()
-	if err = collector.enqueue(ctx, event); err != nil {
+	if err = collector.enqueue(ctx, reobserveLearning(t, event, event.ObservedAt)); err != nil {
 		t.Fatal(err)
 	}
 	result, err = publisher.Run(ctx)
@@ -135,10 +135,13 @@ func TestPurpleSchoolQueueMultipleTariffsAndConfirmation(t *testing.T) {
 		t.Fatal(code)
 	}
 	event.Observation.PurpleCourseID--
+	delete(event.Observation.LearningByOffer, event.Record.Offers[0].ID)
+	event.Record.Offers[0].LearningConditions = nil
 	event.Observation.PurpleTariffs[0].ID += 1000
 	event.Record.Offers[0].ID = event.Record.ID + "-t" + strconv.FormatInt(event.Observation.PurpleTariffs[0].ID, 10)
+	event.Observation.LearningByOffer[event.Record.Offers[0].ID] = nil
 	event.ObservedAt = time.Now().UTC()
-	if err = collector.enqueue(ctx, event); err != nil {
+	if err = collector.enqueue(ctx, reobserveLearning(t, event, event.ObservedAt)); err != nil {
 		t.Fatal(err)
 	}
 	result, err = publisher.Run(ctx)
