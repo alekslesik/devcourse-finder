@@ -13,3 +13,28 @@
 - Keep passwords and production `.env` out of Git and logs. Keep the pinned public
   SSH host key in `.github/vds_known_hosts`; change it only after verifying a host
   key change with the user.
+
+# Frontend design skills
+
+- This workspace is for frontend work. Keep backend code outside the scope unless
+  the maintainer explicitly requests a backend change.
+- Project-local skills are installed under `.agents/skills/`. See
+  `.agents/skills/README.md` for the catalog and `.agents/skills/sources.json` for
+  pinned upstream revisions, licenses and file checksums.
+- For interface design, critique, responsive layout, accessibility and polish,
+  read `.agents/skills/impeccable/SKILL.md` and the relevant command reference.
+- For requested visual direction or a redesign, read
+  `.agents/skills/design-taste-frontend/SKILL.md` or
+  `.agents/skills/redesign-existing-projects/SKILL.md` as appropriate. The existing
+  liquid glass identity and user-provided designs take precedence over generic
+  aesthetic defaults or bans. Routine fixes should preserve the approved design.
+- For UI details, read `.agents/skills/emil-design-eng/SKILL.md`; for mobile web
+  interaction, read `.agents/skills/mobile-native/SKILL.md`; for motion, use
+  `.agents/skills/animate/SKILL.md`, `review-animations/SKILL.md` or
+  `animation-performance/SKILL.md` under the same directory as needed.
+- Load only skills relevant to the current task. Do not install UI libraries,
+  change the stack or apply alternative visual styles solely because a skill
+  mentions them. Use the existing project tools and honor the user's scope.
+- After creating a PR, wait approximately 30 seconds and read both conversation
+  comments and inline review threads. Address actionable feedback within scope
+  and report the outcome; do not merge or deploy without authorization.

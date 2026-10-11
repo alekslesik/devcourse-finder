@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.19.1] - 2026-10-11
+
+- Install pinned project-local frontend design skills from Impeccable, Taste Skill and Emil Kowalski, including references, licenses, provenance and repository usage guidance.
+
 ## [0.19.0] - 2026-10-11
 
 - Collect evidence-bound calendar duration, explicit weekly workload and independent human review, personal mentor and community facts for all 13 supported providers; retain unknown values when official evidence is absent or ambiguous.
