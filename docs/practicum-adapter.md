@@ -134,7 +134,12 @@ other units, ambiguous metadata, fractions and ranges remain unknown. Missing
 metadata does not reject an otherwise verified course. A successful read marks
 duration as observed even when unknown: publication clears an older scraper-owned
 value (`offers.duration_collected`) while preserving genuinely curated duration.
-A failed source read does not clear or reconfirm existing facts.
+A failed source read does not clear or reconfirm existing facts. On first schema
+upgrade, identity-bound base/plus durations recover ownership from the import
+history: duration-changing automatic writes qualify, while later operator imports
+win. Unchanged automatic writes cannot reclassify retained curated values. The
+backfill runs only when the ownership column is first created; later migrations
+cannot overwrite current ownership.
 The anonymous React profession response checked on 2026-10-11 returned
 `duration: 3` with both explicit catalog-duration fields null.
 

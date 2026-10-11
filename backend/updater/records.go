@@ -108,7 +108,7 @@ func normalizedRecord(candidate Candidate, title, summary, provider string, o Ob
 		direction = "frontend"
 	}
 	unknownSupport := false
-	offer := catalog.Offer{DurationMonths: o.DurationMonths, ID: id + "-course", Name: "Полная программа", PriceKind: "unknown", Schedule: "unknown", Enrollment: o.Enrollment, URL: candidate.URL, SupportKnown: &unknownSupport}
+	offer := catalog.Offer{LearningConditions: o.LearningConditions, DurationMonths: o.DurationMonths, ID: id + "-course", Name: "Полная программа", PriceKind: "unknown", Schedule: "unknown", Enrollment: o.Enrollment, URL: candidate.URL, SupportKnown: &unknownSupport}
 	if o.Price != nil {
 		offer.Price = o.Price
 		offer.Free = *o.Price == 0

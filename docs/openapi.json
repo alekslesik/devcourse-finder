@@ -846,6 +846,10 @@
             "minimum": 1,
             "maximum": 120,
             "description": "Verified course duration in months; absent when unknown. Mutually exclusive with weeks."
+          },
+          "learning_conditions": {
+            "$ref": "#/components/schemas/LearningConditions",
+            "description": "Independently evidenced learning facts. Missing facts are unknown, not confirmed absence; source units and ranges are preserved."
           }
         },
         "required": [
@@ -1144,6 +1148,139 @@
           "currency",
           "interval"
         ]
+      },
+      "LearningEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "source",
+          "locator",
+          "digest",
+          "checked_at"
+        ]
+      },
+      "LearningDuration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "min": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 3660
+          },
+          "max": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 3660
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "unit",
+          "evidence"
+        ]
+      },
+      "LearningWorkload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "min": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 168
+          },
+          "max": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 168
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "hours_per_week"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "unit",
+          "evidence"
+        ]
+      },
+      "LearningSupport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "available",
+          "evidence"
+        ]
+      },
+      "LearningConditions": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "$ref": "#/components/schemas/LearningDuration"
+          },
+          "weekly_workload": {
+            "$ref": "#/components/schemas/LearningWorkload"
+          },
+          "review": {
+            "$ref": "#/components/schemas/LearningSupport"
+          },
+          "mentor": {
+            "$ref": "#/components/schemas/LearningSupport"
+          },
+          "community": {
+            "$ref": "#/components/schemas/LearningSupport"
+          }
+        },
+        "required": []
       }
     }
   },

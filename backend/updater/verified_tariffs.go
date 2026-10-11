@@ -114,7 +114,8 @@ func mergeVerifiedTariffs(ctx context.Context, tx pgx.Tx, old []catalog.Course, 
 		template.Offers[0], template.Offers[i] = template.Offers[i], template.Offers[0]
 		// The rolling verification lease is excluded from the confirmation hash;
 		// otherwise a second scheduled read could never confirm the same price.
-		observation := Observation{Price: &tariff.Price, Enrollment: o.Enrollment, Schedule: o.Schedule}
+		learning := learningObservationForOffer(o, template.Offers[0].ID)
+		observation := Observation{LearningObserved: learning.LearningObserved, LearningConditions: learning.LearningConditions, Price: &tariff.Price, Enrollment: o.Enrollment, Schedule: o.Schedule}
 		local := "verified"
 		courses, err := merge(ctx, tx, working, template, record.ID+":"+strconv.FormatInt(tariff.ID, 10), observation, now, &local)
 		if err != nil {
@@ -134,9 +135,11 @@ func mergeVerifiedTariffs(ctx context.Context, tx pgx.Tx, old []catalog.Course, 
 				if c.Offers[j].ID == template.Offers[0].ID {
 					c.Offers[j].ValidUntil = o.ValidUntil
 					c.Offers[j].Name = tariff.Name
-					c.Offers[j].SupportKnown = template.Offers[0].SupportKnown
-					c.Offers[j].Review = tariff.Review
-					c.Offers[j].Mentor = tariff.Mentor
+					if !learning.LearningObserved {
+						c.Offers[j].SupportKnown = template.Offers[0].SupportKnown
+						c.Offers[j].Review = tariff.Review
+						c.Offers[j].Mentor = tariff.Mentor
+					}
 				}
 			}
 			result = []catalog.Course{c}

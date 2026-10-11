@@ -106,6 +106,14 @@ func Decode(r io.Reader) (Dataset, error) {
 			if o.Price != nil && (o.PriceCheckedAt.IsZero() || o.PriceCheckedAt.After(time.Now().Add(24*time.Hour))) {
 				return d, fail("price verification date required")
 			}
+			for _, evidence := range o.LearningConditions.Evidence() {
+				if !SafeURL(evidence.Source, d.Domains) {
+					return d, fail("learning source domain not approved")
+				}
+			}
+			if !o.LearningConditions.Valid() {
+				return d, fail("invalid learning conditions")
+			}
 			if o.DurationMonths != nil && (*o.DurationMonths <= 0 || *o.DurationMonths > 120 || o.Weeks != nil) {
 				return d, fail("duration_months must be 1..120 and cannot coexist with weeks")
 			}

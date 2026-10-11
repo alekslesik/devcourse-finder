@@ -285,6 +285,7 @@ func mergePracticumGroup(ctx context.Context, tx pgx.Tx, old []catalog.Course, c
 			continue
 		}
 		incoming := r.Offers[index]
+		learning := learningObservationForOffer(o, incoming.ID)
 		index++
 		if t.ValidUntil != nil && !time.Now().Before(*t.ValidUntil) {
 			*code = "partial_tariffs"
@@ -340,6 +341,11 @@ func mergePracticumGroup(ctx context.Context, tx pgx.Tx, old []catalog.Course, c
 				slog.Warn("Practicum tariff retained", "slug", t.Slug, "code", "protected_offer")
 				continue
 			}
+			incoming.DurationCollected = t.DurationObserved && t.DurationMonths != nil
+			if learning.LearningObserved {
+				incoming.LearningConditions = nil
+				applyLearningConditions(&incoming, learning.LearningConditions)
+			}
 			current.Offers = append(current.Offers, incoming)
 			bindings[t.Slug] = practicumTariffBinding{t.ProductID, t.ProfessionID, offerID}
 			changed = true
@@ -348,7 +354,7 @@ func mergePracticumGroup(ctx context.Context, tx pgx.Tx, old []catalog.Course, c
 		template := current
 		template.Offers = []catalog.Offer{incoming}
 		local := "verified"
-		obs := Observation{DurationObserved: t.DurationObserved, DurationMonths: t.DurationMonths, Price: &t.Price, Enrollment: t.Enrollment, Schedule: "scheduled"}
+		obs := Observation{LearningObserved: learning.LearningObserved, LearningConditions: learning.LearningConditions, DurationObserved: t.DurationObserved, DurationMonths: t.DurationMonths, Price: &t.Price, Enrollment: t.Enrollment, Schedule: "scheduled"}
 		merged, e := merge(ctx, tx, []catalog.Course{current}, template, key, obs, now, &local)
 		if e != nil {
 			return nil, e

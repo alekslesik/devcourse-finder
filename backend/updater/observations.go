@@ -109,6 +109,9 @@ func (e QueuedObservation) validate(config Config) error {
 		return ErrSource
 	}
 	o := e.Observation
+	if !validLearningEnvelope(e) {
+		return ErrSource
+	}
 	if o.DurationObserved && e.Candidate.Adapter != "yandex" || o.DurationMonths != nil && !o.DurationObserved || e.Candidate.Adapter == "yandex" && !sameOptionalInt(o.DurationMonths, e.Record.Offers[0].DurationMonths) || o.DurationMonths != nil && (e.Candidate.Adapter != "yandex" || *o.DurationMonths < 1 || *o.DurationMonths > 120) {
 		return ErrSource
 	}

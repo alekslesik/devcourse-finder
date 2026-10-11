@@ -303,6 +303,16 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 		current.Weeks = nil
 		current.DurationCollected = o.DurationMonths != nil
 	}
+	if o.LearningObserved {
+		if !found {
+			current.LearningConditions = nil
+			current.LearningOwnership = 0
+			unknown := false
+			current.SupportKnown = &unknown
+			current.Review, current.Mentor = false, false
+		}
+		applyLearningConditions(&current, o.LearningConditions)
+	}
 	c.CheckedAt = now
 	c.Offers[offerIndex] = current
 	return []catalog.Course{c}, nil
@@ -326,6 +336,11 @@ func needsConfirmation(old catalog.Offer, o Observation) bool {
 	return a == 0 || b == 0 || b*2 < a || b*2 > a*3
 }
 func confirm(ctx context.Context, tx pgx.Tx, id string, o Observation, now time.Time) (bool, error) {
+	// Fresh learning evidence timestamps/digests cannot prevent repeated price or
+	// enrollment evidence from confirming an anomaly in the next scheduled window.
+	o.LearningObserved = false
+	o.LearningConditions = nil
+	o.LearningByOffer = nil
 	raw, _ := json.Marshal(o)
 	sum := sha256.Sum256(raw)
 	fingerprint := hex.EncodeToString(sum[:])

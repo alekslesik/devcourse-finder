@@ -101,6 +101,7 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 	if err != nil {
 		return nil, err
 	}
+	o = learningObservationForOffer(o, record.Offers[0].ID)
 	mergeObservation := o
 	if candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" || candidate.Adapter == "javarush" {
 		mergeObservation.ValidUntil = nil

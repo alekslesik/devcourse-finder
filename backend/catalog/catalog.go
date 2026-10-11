@@ -38,24 +38,26 @@ func (b *Billing) Valid() bool {
 }
 
 type Offer struct {
-	DurationCollected bool       `json:"-"`
-	DurationMonths    *int       `json:"duration_months,omitempty"`
-	Billing           *Billing   `json:"billing,omitempty"`
-	SupportKnown      *bool      `json:"support_known,omitempty"`
-	ID                string     `json:"id"`
-	Name              string     `json:"name"`
-	Price             *int64     `json:"price"`
-	PriceKind         string     `json:"price_kind"`
-	Free              bool       `json:"free"`
-	PriceCheckedAt    time.Time  `json:"price_checked_at"`
-	ValidUntil        *time.Time `json:"valid_until,omitempty"`
-	Hours             *int       `json:"hours"`
-	Weeks             *int       `json:"weeks"`
-	Review            bool       `json:"review"`
-	Mentor            bool       `json:"mentor"`
-	Schedule          string     `json:"schedule"`
-	Enrollment        string     `json:"enrollment"`
-	URL               string     `json:"url"`
+	LearningConditions *LearningConditions `json:"learning_conditions,omitempty"`
+	LearningOwnership  int                 `json:"-"`
+	DurationCollected  bool                `json:"-"`
+	DurationMonths     *int                `json:"duration_months,omitempty"`
+	Billing            *Billing            `json:"billing,omitempty"`
+	SupportKnown       *bool               `json:"support_known,omitempty"`
+	ID                 string              `json:"id"`
+	Name               string              `json:"name"`
+	Price              *int64              `json:"price"`
+	PriceKind          string              `json:"price_kind"`
+	Free               bool                `json:"free"`
+	PriceCheckedAt     time.Time           `json:"price_checked_at"`
+	ValidUntil         *time.Time          `json:"valid_until,omitempty"`
+	Hours              *int                `json:"hours"`
+	Weeks              *int                `json:"weeks"`
+	Review             bool                `json:"review"`
+	Mentor             bool                `json:"mentor"`
+	Schedule           string              `json:"schedule"`
+	Enrollment         string              `json:"enrollment"`
+	URL                string              `json:"url"`
 }
 type Filter struct {
 	Language, Direction, Experience, Goal, Budget, Support, Schedule, Sort string
@@ -121,13 +123,10 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 					}
 				}
 			}
-			if f.Hours != nil && (o.Hours == nil || *o.Hours > *f.Hours) {
+			if f.Hours != nil && !o.WithinWeeklyHours(*f.Hours) {
 				continue
 			}
-			if f.Support != "" && o.SupportKnown != nil && !*o.SupportKnown {
-				continue
-			}
-			if f.Support == "review" && !o.Review || f.Support == "mentor" && !o.Mentor || f.Support == "self" && (o.Review || o.Mentor) {
+			if !o.MatchesSupport(f.Support) {
 				continue
 			}
 			if f.Schedule != "" && o.Schedule != f.Schedule {
@@ -142,9 +141,6 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			}
 			if f.Min != nil || f.Max != nil {
 				reasons = append(reasons, "В пределах бюджета")
-			}
-			if f.Support != "" && o.SupportKnown != nil && !*o.SupportKnown {
-				continue
 			}
 			if f.Support == "review" {
 				reasons = append(reasons, "Проверка кода человеком")
@@ -215,6 +211,19 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 
 // Months remain months in public data; the average month is used only for sorting.
 func durationDays(o Offer) float64 {
+	if o.LearningConditions != nil && o.LearningConditions.Duration != nil {
+		d := o.LearningConditions.Duration
+		switch d.Unit {
+		case "day":
+			return d.Max
+		case "week":
+			return d.Max * 7
+		case "month":
+			return d.Max * 365.25 / 12
+		case "year":
+			return d.Max * 365.25
+		}
+	}
 	if o.DurationMonths != nil {
 		return float64(*o.DurationMonths) * 365.25 / 12
 	}
