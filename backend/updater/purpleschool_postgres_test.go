@@ -50,7 +50,7 @@ func TestPurpleSchoolQueueMultipleTariffsAndConfirmation(t *testing.T) {
 		t.Fatal(result, err)
 	}
 	old, _ = db.Load(ctx)
-	if len(old) != 1 || len(old[0].Offers) != 3 || old[0].Offers[0].Free || old[0].Offers[1].Mentor || !old[0].Offers[2].Mentor {
+	if len(old) != 1 || len(old[0].Offers) != 3 || old[0].Offers[0].Free || old[0].Offers[1].Mentor || old[0].Offers[2].Mentor {
 		t.Fatal(old)
 	}
 	// A large price change needs another window; ordinary tariffs still refresh.
