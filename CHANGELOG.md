@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.18.1] - 2026-10-11
+
+- Keep mobile route filters open, scroll language shortcuts to the route form, hide the mobile hero catalog link and align the language tiles and diagonal scene captions.
+
 ## [0.18.0] - 2026-10-11
 
 - Introduce evidence-bearing duration ranges, explicit weekly workload and independent review, mentor and community facts with per-field collector ownership and conservative search filters.
