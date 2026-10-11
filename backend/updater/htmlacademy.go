@@ -131,7 +131,7 @@ func academyHasAttr(n *html.Node, key string) bool {
 func academyPaymentPath(c Candidate) string {
 	return "/api/payment-data/intensive/" + strings.TrimPrefix(c.ExternalID, "intensive-") + "/individual"
 }
-func collectHTMLAcademy(data, paymentData []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectHTMLAcademyRecord(data, paymentData []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	var empty catalog.Course
 	title, summary, rate, err := academyPage(data, c)
 	if err != nil {
@@ -196,4 +196,13 @@ func fetchHTMLAcademy(ctx context.Context, client *http.Client, data []byte, dig
 	}
 	record, o, err := collectHTMLAcademy(data, payment, c, time.Now().UTC())
 	return record, o, fingerprint([]byte(digest + ":" + paymentDigest)), err
+}
+
+func collectHTMLAcademy(data, paymentData []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectHTMLAcademyRecord(data, paymentData, c, now)
+	if err != nil {
+		return r, o, err
+	}
+	r, o = attachHTMLProfile(data, c, r, o, now)
+	return r, o, nil
 }

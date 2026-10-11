@@ -11,7 +11,7 @@ type profileHeadings struct{ Audience, Requirements, Outcomes []string }
 
 func profileBlockedNode(n *html.Node) bool {
 	for p := n; p != nil; p = p.Parent {
-		if p.Data == "nav" || p.Data == "footer" || p.Data == "script" || p.Data == "template" || p.Data == "noscript" {
+		if p.Data == "head" || p.Data == "style" || p.Data == "nav" || p.Data == "footer" || p.Data == "script" || p.Data == "template" || p.Data == "noscript" {
 			return true
 		}
 		cls := strings.ToLower(nodeAttr(p, "class"))
