@@ -224,6 +224,13 @@ func collectStructured(data []byte, c Candidate, now time.Time) (catalog.Course,
 		return catalog.Course{}, Observation{}, rejection("ambiguous_course_schema")
 	}
 	v := accepted[0]
+	if c.Adapter == "hexlet" {
+		v.o.LearningObserved = true
+		v.o.LearningConditions = hexletLearning(data, v.node, c, now)
+		if len(v.o.LearningConditions.Evidence()) == 0 {
+			v.o.LearningConditions = nil
+		}
+	}
 	if c.Adapter == "otus" {
 		v.o.LearningObserved = true
 		v.o.LearningConditions = otusLearning(data, v.node, c, now)

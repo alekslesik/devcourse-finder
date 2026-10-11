@@ -61,7 +61,7 @@ var learningWeeklyText = regexp.MustCompile(`(?:^|[^0-9])(?:от )?([0-9]+(?:[.,
 func learningTextRange(text string, weekly bool, evidence catalog.LearningEvidence) *catalog.LearningRange {
 	text = strings.ToLower(strings.Join(strings.Fields(text), " "))
 	// Negated claims, access/subscription/billing and video runtime are never facts.
-	for _, s := range []string{"рассроч", "доступ", "подписк", "кредит", "видеоурок", "не потребуется", "не нужно", "не более", "до ", "от " + "0"} {
+	for _, s := range []string{"рассроч", "доступ", "подписк", "кредит", "видеоурок", "не потребуется", "не нужно", "не более", "до ", "от " + "0", "~", "≈", "примерно"} {
 		// 'от X до Y' is a genuine range, 'до X' alone is not an exact duration.
 		if s == "до " {
 			if strings.HasPrefix(text, s) {
