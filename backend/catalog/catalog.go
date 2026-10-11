@@ -38,6 +38,7 @@ func (b *Billing) Valid() bool {
 }
 
 type Offer struct {
+	DurationMonths *int       `json:"duration_months,omitempty"`
 	Billing        *Billing   `json:"billing,omitempty"`
 	SupportKnown   *bool      `json:"support_known,omitempty"`
 	ID             string     `json:"id"`
@@ -188,14 +189,15 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 				return *a.Price < *b.Price
 			}
 		} else if f.Sort == "duration" {
-			if a.Offer.Weeks == nil && b.Offer.Weeks != nil {
+			aDuration, bDuration := durationDays(a.Offer), durationDays(b.Offer)
+			if aDuration == 0 && bDuration != 0 {
 				return false
 			}
-			if a.Offer.Weeks != nil && b.Offer.Weeks == nil {
+			if aDuration != 0 && bDuration == 0 {
 				return true
 			}
-			if a.Offer.Weeks != nil && b.Offer.Weeks != nil && *a.Offer.Weeks != *b.Offer.Weeks {
-				return *a.Offer.Weeks < *b.Offer.Weeks
+			if aDuration != bDuration {
+				return aDuration < bDuration
 			}
 		} else {
 			if a.Stale != b.Stale {
@@ -208,4 +210,15 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 		return a.Course.ID < b.Course.ID
 	})
 	return out
+}
+
+// Months remain months in public data; the average month is used only for sorting.
+func durationDays(o Offer) float64 {
+	if o.DurationMonths != nil {
+		return float64(*o.DurationMonths) * 365.25 / 12
+	}
+	if o.Weeks != nil {
+		return float64(*o.Weeks) * 7
+	}
+	return 0
 }

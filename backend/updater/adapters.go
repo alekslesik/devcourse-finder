@@ -17,6 +17,7 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
+	DurationMonths    *int              `json:"duration_months,omitempty"`
 	PracticumTariffs  []PracticumTariff `json:"practicum_tariffs,omitempty"`
 	Billing           *catalog.Billing  `json:"billing,omitempty"`
 	SkyproProductID   int64             `json:"skypro_product_id,omitempty"`

@@ -67,16 +67,33 @@ test('discovered courses do not invent support when evidence is unknown',async({
   await route.fulfill({json:{...body,items:[item],total:1}});
  });
  await page.goto('/courses');
- await expect(page.locator('.card .facts')).toContainText('Поддержка не подтверждена');
+ await expect(page.locator('.card')).not.toContainText('Поддержка не подтверждена');
  await expect(page.locator('.card .facts')).not.toContainText('Самостоятельно');
  await page.route('**/api/v1/compare*',async route=>{
   const response=await route.fetch();
   const body=await response.json();
-  for(const item of body){if(!item.unavailable){item.offer.support_known=false;item.offer.review=false;item.offer.mentor=false}}
+  for(const item of body){if(!item.unavailable){item.offer.support_known=false;item.offer.review=false;item.offer.mentor=false;item.offer.duration_months=3;item.offer.weeks=null}}
   await route.fulfill({json:body});
  });
  await page.goto('/courses?compare=demo-go-1-standard');
  await expect(page.getByRole('dialog').getByRole('table')).toBeVisible();
- await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Проверка кода',exact:true})})).toContainText('Не подтверждено');
- await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Не подтверждено');
+ await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Длительность',exact:true})})).toContainText('3 мес.');
+ await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Проверка кода',exact:true})})).toContainText('Уточните у школы');
+ await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Уточните у школы');
 });
+
+for(const months of [null,3]){
+ test(`course card shows only available facts (months: ${months})`,async({page})=>{
+  await page.route('**/api/v1/courses*',async route=>{
+   const body=await (await route.fetch()).json(); const item=body.items[0];
+   item.offer.weeks=null; item.offer.duration_months=months; item.offer.hours=20;
+   item.offer.support_known=false; item.course.direction='unknown'; item.offer.schedule='unknown';
+   await route.fulfill({json:{...body,items:[item],total:1}});
+  });
+  await page.goto('/courses'); const card=page.locator('.card');
+  await expect(card).toHaveCount(1);
+  await expect(card).not.toContainText(/Нагрузка|ч\/нед\.|Срок не указан|Поддержка не подтверждена|Самостоятельно|Направление уточняется|Расписание уточняется/);
+  if(months)await expect(card.locator('.facts')).toHaveText('◷ 3 мес.');
+  else await expect(card.locator('.facts')).toHaveCount(0);
+ });
+}

@@ -18,13 +18,14 @@ import (
 // A parent landing has at most a base program and two explicitly displayed plus
 // programs. Failed tariffs carry only a fixed failure code, never source content.
 type PracticumTariff struct {
-	Slug         string     `json:"slug"`
-	ProductID    string     `json:"product_id,omitempty"`
-	ProfessionID string     `json:"profession_id,omitempty"`
-	Price        int64      `json:"price,omitempty"`
-	Enrollment   string     `json:"enrollment,omitempty"`
-	ValidUntil   *time.Time `json:"valid_until,omitempty"`
-	FailureCode  string     `json:"failure_code,omitempty"`
+	DurationMonths *int       `json:"duration_months,omitempty"`
+	Slug           string     `json:"slug"`
+	ProductID      string     `json:"product_id,omitempty"`
+	ProfessionID   string     `json:"profession_id,omitempty"`
+	Price          int64      `json:"price,omitempty"`
+	Enrollment     string     `json:"enrollment,omitempty"`
+	ValidUntil     *time.Time `json:"valid_until,omitempty"`
+	FailureCode    string     `json:"failure_code,omitempty"`
 }
 type practicumTariffBinding struct {
 	ProductID    string `json:"product_id"`
@@ -124,7 +125,7 @@ func fetchPracticumGroup(ctx context.Context, client *http.Client, page []byte, 
 	if len(slugs) == 0 {
 		return record, o, digest, nil
 	}
-	o.PracticumTariffs = []PracticumTariff{{Slug: c.ExternalID, ProductID: o.ProductID, ProfessionID: o.ProfessionID, Price: *o.Price, Enrollment: o.Enrollment, ValidUntil: o.ValidUntil}}
+	o.PracticumTariffs = []PracticumTariff{{DurationMonths: o.DurationMonths, Slug: c.ExternalID, ProductID: o.ProductID, ProfessionID: o.ProfessionID, Price: *o.Price, Enrollment: o.Enrollment, ValidUntil: o.ValidUntil}}
 	now := record.CheckedAt
 	lease := now.Add(26 * time.Hour)
 	if o.ValidUntil == nil || lease.Before(*o.ValidUntil) {
@@ -155,6 +156,7 @@ func fetchPracticumGroup(ctx context.Context, client *http.Client, page []byte, 
 					obs.ValidUntil = &lease
 					r.Offers[0].ValidUntil = &lease
 				}
+				t.DurationMonths = obs.DurationMonths
 				t.ProductID, t.ProfessionID, t.Price, t.Enrollment, t.ValidUntil = obs.ProductID, obs.ProfessionID, *obs.Price, obs.Enrollment, obs.ValidUntil
 				offer := r.Offers[0]
 				offer.ID = record.ID + "-" + slug
@@ -183,7 +185,7 @@ func validPracticumGroup(e QueuedObservation) bool {
 		}
 		seen[t.Slug] = true
 		if t.FailureCode != "" {
-			if j == 0 || !failureCodeAllowed(t.FailureCode) || t.ProductID != "" || t.ProfessionID != "" || t.Price != 0 || t.Enrollment != "" || t.ValidUntil != nil {
+			if j == 0 || !failureCodeAllowed(t.FailureCode) || t.ProductID != "" || t.ProfessionID != "" || t.Price != 0 || t.Enrollment != "" || t.ValidUntil != nil || t.DurationMonths != nil {
 				return false
 			}
 			continue
@@ -200,6 +202,9 @@ func validPracticumGroup(e QueuedObservation) bool {
 			if o.ProductID != t.ProductID || o.ProfessionID != t.ProfessionID || o.Price == nil || *o.Price != t.Price || o.Enrollment != t.Enrollment {
 				return false
 			}
+		}
+		if !sameOptionalInt(r.DurationMonths, t.DurationMonths) || j == 0 && !sameOptionalInt(o.DurationMonths, t.DurationMonths) {
+			return false
 		}
 		if r.ID != id || r.URL != e.Candidate.URL || r.Price == nil || *r.Price != t.Price || r.PriceKind != "exact" || r.Free || r.Enrollment != t.Enrollment || r.Schedule != "scheduled" || r.Mentor || r.Review || r.SupportKnown == nil || *r.SupportKnown {
 			return false
@@ -341,7 +346,7 @@ func mergePracticumGroup(ctx context.Context, tx pgx.Tx, old []catalog.Course, c
 		template := current
 		template.Offers = []catalog.Offer{incoming}
 		local := "verified"
-		obs := Observation{Price: &t.Price, Enrollment: t.Enrollment, Schedule: "scheduled"}
+		obs := Observation{DurationMonths: t.DurationMonths, Price: &t.Price, Enrollment: t.Enrollment, Schedule: "scheduled"}
 		merged, e := merge(ctx, tx, []catalog.Course{current}, template, key, obs, now, &local)
 		if e != nil {
 			return nil, e
@@ -379,3 +384,5 @@ func mergePracticumGroup(ctx context.Context, tx pgx.Tx, old []catalog.Course, c
 	}
 	return []catalog.Course{current}, nil
 }
+
+func sameOptionalInt(a, b *int) bool { return a == nil && b == nil || a != nil && b != nil && *a == *b }

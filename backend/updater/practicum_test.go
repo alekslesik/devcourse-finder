@@ -142,3 +142,46 @@ func TestPracticumOfficialExtensionlessSitemapOnly(t *testing.T) {
 		}
 	}
 }
+
+func TestPracticumDurationMetadata(t *testing.T) {
+	for _, tc := range []struct {
+		name, duration, unit, amount string
+		want                         int
+	}{
+		{"legacy-months", "3", "", "", 3},
+		{"explicit-months", "10", "months", "4", 4},
+		{"unknown-unit", "3", "weeks", "12", 0},
+		{"unit-without-amount", "3", "month", "null", 0},
+		{"ambiguous-amount", "3", "", "4", 0},
+		{"missing", "null", "", "", 0},
+		{"fraction", "3.5", "", "", 0},
+		{"range", `"3–6"`, "", "", 0},
+		{"unbounded", "121", "", "", 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			page, f, c := practicumData(t, "backend-developer")
+			var programs []map[string]any
+			json.Unmarshal(f.Profession, &programs)
+			programs[0]["duration"] = json.RawMessage(tc.duration)
+			if tc.unit != "" {
+				programs[0]["catalog_duration_unit"] = tc.unit
+			}
+			if tc.amount != "" {
+				programs[0]["catalog_duration_amount"] = json.RawMessage(tc.amount)
+			}
+			b, _ := json.Marshal(programs)
+			r, o, err := collectPracticum(page, b, f.Prices, f.Squads, c, practicumNow())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.want == 0 {
+				if o.DurationMonths != nil || r.Offers[0].DurationMonths != nil {
+					t.Fatal("invented duration")
+				}
+			}
+			if tc.want > 0 && (o.DurationMonths == nil || *o.DurationMonths != tc.want || !sameOptionalInt(o.DurationMonths, r.Offers[0].DurationMonths) || r.Offers[0].Weeks != nil) {
+				t.Fatal(r, o)
+			}
+		})
+	}
+}

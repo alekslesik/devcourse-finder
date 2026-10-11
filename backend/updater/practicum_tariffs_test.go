@@ -20,7 +20,12 @@ func sharedPracticum(t *testing.T) ([]byte, practicumFixture, practicumFixture, 
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, f := range []*practicumFixture{&base, &plus} {
+	for i, f := range []*practicumFixture{&base, &plus} {
+		var programs []map[string]any
+		json.Unmarshal(f.Profession, &programs)
+		// Synthetic distinct durations exercise SKU isolation, not a live claim.
+		programs[0]["duration"] = 10 + i*4
+		f.Profession, _ = json.Marshal(programs)
 		var cohorts []map[string]any
 		json.Unmarshal(f.Squads, &cohorts)
 		for _, x := range cohorts {
@@ -74,7 +79,7 @@ func TestPracticumSharedLandingDoesNotUseGlobalPriceMapAsBinding(t *testing.T) {
 			t.Fatal(r)
 		}
 		if expected == 2 {
-			if *r.Offers[0].Price == *r.Offers[1].Price || r.Offers[1].URL != c.URL || r.Offers[1].Name != "Расширенная программа" {
+			if r.Offers[0].DurationMonths == nil || *r.Offers[0].DurationMonths != 10 || r.Offers[1].DurationMonths == nil || *r.Offers[1].DurationMonths != 14 || *r.Offers[0].Price == *r.Offers[1].Price || r.Offers[1].URL != c.URL || r.Offers[1].Name != "Расширенная программа" {
 				t.Fatal("collapsed tariff", r)
 			}
 			e := QueuedObservation{Version: 1, Kind: "discovered", Candidate: c, Record: r, Observation: o, ObservedAt: r.CheckedAt, Digest: fingerprint(raw)}
@@ -127,6 +132,7 @@ func TestPracticumSharedTariffPublicationIsolationIdentityAndAtomicAck(t *testin
 	curated.Slug = curated.ID
 	curated.Offers = append([]catalog.Offer(nil), r.Offers[:1]...)
 	curated.Offers[0].ID = "operator-python-full"
+	curated.Offers[0].DurationMonths = nil
 	curated.Offers[0].PriceCheckedAt = now.Add(-24 * time.Hour)
 	curated.CheckedAt = now.Add(-24 * time.Hour)
 	if err = db.Import(ctx, catalog.Dataset{Domains: []string{"practicum.yandex.ru"}, Courses: []catalog.Course{curated}}, "operator", false); err != nil {
@@ -144,6 +150,13 @@ func TestPracticumSharedTariffPublicationIsolationIdentityAndAtomicAck(t *testin
 		t.Fatal("curated identity lost", courses)
 	}
 	for _, offer := range courses[0].Offers {
+		want := 14
+		if offer.ID == "operator-python-full" {
+			want = 10
+		}
+		if offer.DurationMonths == nil || *offer.DurationMonths != want {
+			t.Fatal("SKU duration lost or mixed", offer)
+		}
 		if offer.ID == "operator-python-full" && offer.ValidUntil == nil {
 			t.Fatal("curated verification lease lost")
 		}

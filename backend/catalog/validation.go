@@ -106,6 +106,9 @@ func Decode(r io.Reader) (Dataset, error) {
 			if o.Price != nil && (o.PriceCheckedAt.IsZero() || o.PriceCheckedAt.After(time.Now().Add(24*time.Hour))) {
 				return d, fail("price verification date required")
 			}
+			if o.DurationMonths != nil && (*o.DurationMonths <= 0 || *o.DurationMonths > 120 || o.Weeks != nil) {
+				return d, fail("duration_months must be 1..120 and cannot coexist with weeks")
+			}
 			if o.Hours != nil && *o.Hours <= 0 || o.Weeks != nil && *o.Weeks <= 0 {
 				return d, fail("hours/weeks must be positive")
 			}

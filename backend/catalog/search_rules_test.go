@@ -185,3 +185,23 @@ func TestSearchOrderingAndStaleness(t *testing.T) {
 		t.Fatal("conditions older than 90 days must be marked")
 	}
 }
+
+func TestDurationSortMixedUnits(t *testing.T) {
+	now := time.Now().UTC()
+	var courses []Course
+	for _, tc := range []struct {
+		id            string
+		weeks, months *int
+	}{
+		{"unknown", nil, nil}, {"three-months", nil, ptr(3)}, {"two-weeks", ptr(2), nil}, {"four-weeks", ptr(4), nil},
+	} {
+		courses = append(courses, Course{ID: tc.id, Status: "published", Offers: []Offer{{ID: tc.id, Enrollment: "open", Weeks: tc.weeks, DurationMonths: tc.months}}})
+	}
+	got := Search(courses, Filter{Sort: "duration"}, now)
+	want := []string{"two-weeks", "four-weeks", "three-months", "unknown"}
+	for i, r := range got {
+		if r.Course.ID != want[i] {
+			t.Fatal(got)
+		}
+	}
+}

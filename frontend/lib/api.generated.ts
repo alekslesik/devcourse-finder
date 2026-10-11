@@ -183,6 +183,8 @@ export interface components {
             /** @description False when review/mentor evidence is unavailable; omitted for legacy curated offers. */
             support_known?: boolean;
             billing?: components["schemas"]["Billing"];
+            /** @description Verified course duration in months; absent when unknown. Mutually exclusive with weeks. */
+            duration_months?: number | null;
         };
         Result: {
             course: components["schemas"]["Course"];

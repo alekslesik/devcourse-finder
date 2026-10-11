@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.17.1] - 2026-10-11
+
+- Simplify course cards by hiding unknown facts and weekly workload; preserve verified Practicum duration in months across collection, storage, API and course views.
+
 ## [0.17.0] - 2026-10-10
 - Complete the catalog-ingestion roadmap with an adapter acceptance matrix, measured coverage/resource evidence and explicit manual-release operation instructions.
 - Derive safe multi-provider lane limits, rotate discovery/detail priority, bound candidate and observation queues, and verify concurrent worker resource usage separately from distinct published coverage.

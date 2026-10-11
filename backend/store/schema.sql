@@ -103,3 +103,5 @@ ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS skypro_product_id bigint
 ALTER TABLE offers ADD COLUMN IF NOT EXISTS billing jsonb;
 
 ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS practicum_tariffs jsonb;
+
+ALTER TABLE offers ADD COLUMN IF NOT EXISTS duration_months integer CHECK (duration_months BETWEEN 1 AND 120);
