@@ -63,7 +63,7 @@ type Filter struct {
 	Language, Direction, Experience, Goal, Budget, Support, Schedule, Sort string
 	Min, Max                                                               *int64
 	Hours                                                                  *int
-	IncludeFree, IncludeClosed                                             bool
+	IncludeFree, IncludeClosed, Diagnostics                                bool
 	Page, PageSize                                                         int
 }
 type Result struct {
@@ -86,20 +86,8 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 		if c.Status != "published" || (f.Language != "" && c.Language != f.Language) || (f.Direction != "" && c.Direction != f.Direction) {
 			continue
 		}
-		if f.Experience != "" {
-			if f.Experience == "experienced" {
-				ok := false
-				for _, a := range c.Audience {
-					if a != "none" && a != "unknown" {
-						ok = true
-					}
-				}
-				if !ok {
-					continue
-				}
-			} else if !slices.Contains(c.Audience, f.Experience) {
-				continue
-			}
+		if f.Experience != "" && !matchesExperience(c.Audience, f.Experience) {
+			continue
 		}
 		if f.Goal != "" && !slices.Contains(c.Goals, f.Goal) {
 			continue

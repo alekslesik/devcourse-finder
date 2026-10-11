@@ -253,6 +253,16 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "name": "diagnostics",
+            "in": "query",
+            "required": false,
+            "description": "Include contextual experience, goal and direction counts. Each facet removes only its own filter; other constraints and offer eligibility remain. Counts refer to distinct courses before pagination. Unknown profiles are not matches.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -988,6 +998,26 @@
           "data_as_of": {
             "type": "string",
             "format": "date-time"
+          },
+          "diagnostics": {
+            "type": "object",
+            "properties": {
+              "experience": {
+                "$ref": "#/components/schemas/ProfileFacet"
+              },
+              "goal": {
+                "$ref": "#/components/schemas/ProfileFacet"
+              },
+              "direction": {
+                "$ref": "#/components/schemas/ProfileFacet"
+              }
+            },
+            "required": [
+              "experience",
+              "goal",
+              "direction"
+            ],
+            "description": "Included only when diagnostics=true."
           }
         },
         "required": [
@@ -1281,6 +1311,38 @@
           }
         },
         "required": []
+      },
+      "ProfileFacet": {
+        "type": "object",
+        "properties": {
+          "eligible": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Eligible distinct courses with only this facet filter removed."
+          },
+          "unknown": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Eligible courses with no confirmed value for this facet."
+          },
+          "selected": {
+            "type": "string"
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": "Confirmed distinct-course counts; values can overlap."
+          }
+        },
+        "required": [
+          "eligible",
+          "unknown",
+          "selected",
+          "counts"
+        ]
       }
     }
   },

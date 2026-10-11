@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.20.0] - 2026-10-11
+
+- Add opt-in contextual filter diagnostics and treat a zero lower budget as unrestricted.
+
 ## [0.19.1] - 2026-10-11
 
 - Install pinned project-local frontend design skills from Impeccable, Taste Skill and Emil Kowalski, including references, licenses, provenance and repository usage guidance.
