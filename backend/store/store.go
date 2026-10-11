@@ -55,7 +55,7 @@ func load(ctx context.Context, q Querier) ([]catalog.Course, error) {
 	if e != nil {
 		return nil, e
 	}
-	rows, e = q.Query(ctx, "SELECT id,course_id,name,price,price_kind,free,price_checked_at,valid_until,hours,weeks,review,mentor,schedule,enrollment,url,support_known,billing,duration_months FROM offers ORDER BY id")
+	rows, e = q.Query(ctx, "SELECT id,course_id,name,price,price_kind,free,price_checked_at,valid_until,hours,weeks,review,mentor,schedule,enrollment,url,support_known,billing,duration_months,duration_collected,learning_conditions,learning_ownership FROM offers ORDER BY id")
 	if e != nil {
 		return nil, e
 	}
@@ -63,12 +63,17 @@ func load(ctx context.Context, q Querier) ([]catalog.Course, error) {
 	for rows.Next() {
 		var o catalog.Offer
 		var cid string
-		var billing []byte
-		if e = rows.Scan(&o.ID, &cid, &o.Name, &o.Price, &o.PriceKind, &o.Free, &o.PriceCheckedAt, &o.ValidUntil, &o.Hours, &o.Weeks, &o.Review, &o.Mentor, &o.Schedule, &o.Enrollment, &o.URL, &o.SupportKnown, &billing, &o.DurationMonths); e != nil {
+		var billing, conditions []byte
+		if e = rows.Scan(&o.ID, &cid, &o.Name, &o.Price, &o.PriceKind, &o.Free, &o.PriceCheckedAt, &o.ValidUntil, &o.Hours, &o.Weeks, &o.Review, &o.Mentor, &o.Schedule, &o.Enrollment, &o.URL, &o.SupportKnown, &billing, &o.DurationMonths, &o.DurationCollected, &conditions, &o.LearningOwnership); e != nil {
 			return nil, e
 		}
 		if len(billing) > 0 && string(billing) != "null" {
 			if e = json.Unmarshal(billing, &o.Billing); e != nil {
+				return nil, e
+			}
+		}
+		if len(conditions) > 0 && string(conditions) != "null" {
+			if e = json.Unmarshal(conditions, &o.LearningConditions); e != nil {
 				return nil, e
 			}
 		}
@@ -183,7 +188,8 @@ func importTx(ctx context.Context, tx pgx.Tx, old []catalog.Course, data catalog
 		}
 		for _, o := range c.Offers {
 			billing, _ := json.Marshal(o.Billing)
-			_, e = tx.Exec(ctx, `INSERT INTO offers(id,course_id,name,price,price_kind,free,price_checked_at,valid_until,hours,weeks,review,mentor,schedule,enrollment,url,support_known,billing,duration_months) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,price=EXCLUDED.price,price_kind=EXCLUDED.price_kind,free=EXCLUDED.free,price_checked_at=EXCLUDED.price_checked_at,valid_until=EXCLUDED.valid_until,hours=EXCLUDED.hours,weeks=EXCLUDED.weeks,review=EXCLUDED.review,mentor=EXCLUDED.mentor,schedule=EXCLUDED.schedule,enrollment=EXCLUDED.enrollment,url=EXCLUDED.url,support_known=EXCLUDED.support_known,billing=EXCLUDED.billing,duration_months=EXCLUDED.duration_months WHERE offers.course_id=EXCLUDED.course_id`, o.ID, c.ID, o.Name, o.Price, o.PriceKind, o.Free, o.PriceCheckedAt, o.ValidUntil, o.Hours, o.Weeks, o.Review, o.Mentor, o.Schedule, o.Enrollment, o.URL, o.SupportKnown, billing, o.DurationMonths)
+			conditions, _ := json.Marshal(o.LearningConditions)
+			_, e = tx.Exec(ctx, `INSERT INTO offers(id,course_id,name,price,price_kind,free,price_checked_at,valid_until,hours,weeks,review,mentor,schedule,enrollment,url,support_known,billing,duration_months,duration_collected,learning_conditions,learning_ownership) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17::jsonb,$18,$19,$20::jsonb,$21) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,price=EXCLUDED.price,price_kind=EXCLUDED.price_kind,free=EXCLUDED.free,price_checked_at=EXCLUDED.price_checked_at,valid_until=EXCLUDED.valid_until,hours=EXCLUDED.hours,weeks=EXCLUDED.weeks,review=EXCLUDED.review,mentor=EXCLUDED.mentor,schedule=EXCLUDED.schedule,enrollment=EXCLUDED.enrollment,url=EXCLUDED.url,support_known=EXCLUDED.support_known,billing=EXCLUDED.billing,duration_months=EXCLUDED.duration_months,duration_collected=EXCLUDED.duration_collected,learning_conditions=EXCLUDED.learning_conditions,learning_ownership=EXCLUDED.learning_ownership WHERE offers.course_id=EXCLUDED.course_id`, o.ID, c.ID, o.Name, o.Price, o.PriceKind, o.Free, o.PriceCheckedAt, o.ValidUntil, o.Hours, o.Weeks, o.Review, o.Mentor, o.Schedule, o.Enrollment, o.URL, o.SupportKnown, billing, o.DurationMonths, o.DurationCollected, conditions, o.LearningOwnership)
 			if e != nil {
 				return e
 			}

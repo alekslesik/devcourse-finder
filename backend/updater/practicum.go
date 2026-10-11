@@ -252,6 +252,7 @@ func collectPracticumTariff(page, profession, prices, squads []byte, c Candidate
 	if o.Enrollment == "open" && (o.ValidUntil == nil || lastDeadline.Before(*o.ValidUntil)) {
 		o.ValidUntil = &lastDeadline
 	}
+	o.DurationObserved = true
 	o.DurationMonths = practicumDurationMonths(p)
 	o.Price = &final
 	o.Schedule = "scheduled"

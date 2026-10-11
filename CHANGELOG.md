@@ -3,6 +3,13 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.18.0] - 2026-10-11
+
+- Introduce evidence-bearing duration ranges, explicit weekly workload and independent review, mentor and community facts with per-field collector ownership and conservative search filters.
+- Add the all-provider learning-conditions epic and linked implementation specification.
+- Recover pre-upgrade duration ownership from identity-bound import history, preserve later operator overrides and mark newly added Practicum plus durations as collected.
+- Track ownership of collected duration and clear disappeared source evidence while retaining manually curated course conditions.
+
 ## [0.17.1] - 2026-10-11
 
 - Simplify course cards by hiding unknown facts and weekly workload; preserve verified Practicum duration in months across collection, storage, API and course views.

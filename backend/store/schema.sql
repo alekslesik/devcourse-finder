@@ -105,3 +105,38 @@ ALTER TABLE offers ADD COLUMN IF NOT EXISTS billing jsonb;
 ALTER TABLE catalog_identities ADD COLUMN IF NOT EXISTS practicum_tariffs jsonb;
 
 ALTER TABLE offers ADD COLUMN IF NOT EXISTS duration_months integer CHECK (duration_months BETWEEN 1 AND 120);
+
+-- One-time ownership recovery for pre-ownership collectors. A duration-changing
+-- automatic import proves collection; any later explicit operator import wins.
+-- Unchanged automatic writes cannot turn retained curated values into owned ones.
+DO $$
+BEGIN
+ IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='offers' AND column_name='duration_collected') THEN
+  ALTER TABLE offers ADD COLUMN duration_collected boolean NOT NULL DEFAULT false;
+  WITH bound AS (
+   SELECT course_id,offer_id FROM catalog_identities WHERE adapter='yandex'
+   UNION
+   SELECT i.course_id,t.value->>'offer_id' FROM catalog_identities i
+    CROSS JOIN LATERAL jsonb_each(COALESCE(i.practicum_tariffs,'{}'::jsonb)) t
+    WHERE i.adapter='yandex'
+  ), ownership AS (
+   SELECT o.id,(
+    SELECT h.operator FROM imports h
+     CROSS JOIN LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(h.after_data->'courses')='array' THEN h.after_data->'courses' ELSE '[]'::jsonb END) c
+     CROSS JOIN LATERAL jsonb_array_elements(COALESCE(c->'offers','[]'::jsonb)) a
+    WHERE c->>'id'=o.course_id AND a->>'id'=o.id
+     AND (h.operator NOT IN ('automatic-catalog-discovery','automatic-catalog-publisher','automatic-catalog-updater')
+      OR (SELECT b->'duration_months'
+       FROM jsonb_array_elements(CASE WHEN jsonb_typeof(h.before_data)='array' THEN h.before_data ELSE '[]'::jsonb END) bc
+       CROSS JOIN LATERAL jsonb_array_elements(COALESCE(bc->'offers','[]'::jsonb)) b
+       WHERE bc->>'id'=o.course_id AND b->>'id'=o.id LIMIT 1) IS DISTINCT FROM a->'duration_months')
+    ORDER BY h.id DESC LIMIT 1
+   ) AS last_writer FROM offers o JOIN bound b ON b.offer_id=o.id AND b.course_id=o.course_id
+   WHERE o.duration_months IS NOT NULL
+  )
+  UPDATE offers o SET duration_collected=true FROM ownership x WHERE o.id=x.id AND x.last_writer IN ('automatic-catalog-discovery','automatic-catalog-publisher','automatic-catalog-updater');
+ END IF;
+END $$;
+
+ALTER TABLE offers ADD COLUMN IF NOT EXISTS learning_conditions jsonb;
+ALTER TABLE offers ADD COLUMN IF NOT EXISTS learning_ownership integer NOT NULL DEFAULT 0 CHECK (learning_ownership BETWEEN 0 AND 31);

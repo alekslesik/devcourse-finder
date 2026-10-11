@@ -185,6 +185,8 @@ export interface components {
             billing?: components["schemas"]["Billing"];
             /** @description Verified course duration in months; absent when unknown. Mutually exclusive with weeks. */
             duration_months?: number | null;
+            /** @description Independently evidenced learning facts. Missing facts are unknown, not confirmed absence; source units and ranges are preserved. */
+            learning_conditions?: components["schemas"]["LearningConditions"];
         };
         Result: {
             course: components["schemas"]["Course"];
@@ -252,6 +254,39 @@ export interface components {
             currency: "USD" | "EUR" | "RUB";
             /** @enum {string} */
             interval: "month" | "year";
+        };
+        LearningEvidence: {
+            /** Format: uri */
+            source: string;
+            locator: string;
+            digest: string;
+            /** Format: date-time */
+            checked_at: string;
+        };
+        LearningDuration: {
+            min: number;
+            max: number;
+            /** @enum {string} */
+            unit: "day" | "week" | "month" | "year";
+            evidence: components["schemas"]["LearningEvidence"];
+        };
+        LearningWorkload: {
+            min: number;
+            max: number;
+            /** @enum {string} */
+            unit: "hours_per_week";
+            evidence: components["schemas"]["LearningEvidence"];
+        };
+        LearningSupport: {
+            available: boolean;
+            evidence: components["schemas"]["LearningEvidence"];
+        };
+        LearningConditions: {
+            duration?: components["schemas"]["LearningDuration"];
+            weekly_workload?: components["schemas"]["LearningWorkload"];
+            review?: components["schemas"]["LearningSupport"];
+            mentor?: components["schemas"]["LearningSupport"];
+            community?: components["schemas"]["LearningSupport"];
         };
     };
     responses: never;
