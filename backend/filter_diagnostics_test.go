@@ -41,3 +41,26 @@ func TestSearchDiagnosticsOptionalAndUnpaginated(t *testing.T) {
 		t.Fatal(invalid.Code)
 	}
 }
+
+func TestSearchZeroMinimumIsNeutral(t *testing.T) {
+	repo := httpFixture()
+	repo.courses[0].Offers = repo.courses[0].Offers[:1]
+	repo.courses[0].Offers[0].Price = nil
+	repo.courses[0].Offers[0].PriceKind = "unknown"
+	handler := newHandler(repo)
+	for _, query := range []string{"", "?min=0"} {
+		response := request(handler, http.MethodGet, "/api/v1/courses"+query, "")
+		newResponseContract(t).check(t, response, "/api/v1/courses", "get", 200)
+		var body struct{ Total int }
+		if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil || body.Total != 1 {
+			t.Fatal(response.Body.String(), err)
+		}
+	}
+	for _, query := range []string{"?min=1", "?min=0&max=1000000000"} {
+		response := request(handler, http.MethodGet, "/api/v1/courses"+query, "")
+		var body struct{ Total int }
+		if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil || body.Total != 0 {
+			t.Fatal(response.Body.String(), err)
+		}
+	}
+}
