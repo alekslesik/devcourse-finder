@@ -69,6 +69,11 @@ func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, 
 		if err != nil {
 			return catalog.Course{}, o, err
 		}
+		o.LearningObserved = true
+		o.LearningConditions = stepikLearning(data, remote, c, now)
+		if len(o.LearningConditions.Evidence()) == 0 {
+			o.LearningConditions = nil
+		}
 		record, err := normalizedRecord(c, remote.Title, remote.Summary, "Stepik", o, now)
 		return record, o, err
 	}
