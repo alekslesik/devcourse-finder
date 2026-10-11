@@ -108,7 +108,12 @@ func collectSkillfactory(data, pricing []byte, c Candidate, now time.Time) (cata
 		}
 		o.VerifiedTariffs = append(o.VerifiedTariffs, PurpleTariff{ID: int64(i + 1), Category: t.key, Name: t.name, Price: t.amount * 100})
 	}
-	return verifiedTariffRecord(c, title, summary, o, now)
+	r, o, err := verifiedTariffRecord(c, title, summary, o, now)
+	if err != nil {
+		return r, o, err
+	}
+	r, o = skillfactoryLearning(data, doc, r, o, c, now)
+	return r, o, nil
 }
 func abs64(v int64) int64 {
 	if v < 0 {
