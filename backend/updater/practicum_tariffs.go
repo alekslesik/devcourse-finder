@@ -126,6 +126,9 @@ func fetchPracticumGroup(ctx context.Context, client *http.Client, page []byte, 
 	if len(slugs) == 0 {
 		return record, o, digest, nil
 	}
+	o.LearningByOffer = map[string]*catalog.LearningConditions{record.Offers[0].ID: o.LearningConditions}
+	o.LearningObserved = false
+	o.LearningConditions = nil
 	o.PracticumTariffs = []PracticumTariff{{DurationObserved: o.DurationObserved, DurationMonths: o.DurationMonths, Slug: c.ExternalID, ProductID: o.ProductID, ProfessionID: o.ProfessionID, Price: *o.Price, Enrollment: o.Enrollment, ValidUntil: o.ValidUntil}}
 	now := record.CheckedAt
 	lease := now.Add(26 * time.Hour)
@@ -163,6 +166,7 @@ func fetchPracticumGroup(ctx context.Context, client *http.Client, page []byte, 
 				offer := r.Offers[0]
 				offer.ID = record.ID + "-" + slug
 				record.Offers = append(record.Offers, offer)
+				o.LearningByOffer[offer.ID] = offer.LearningConditions
 			}
 		}
 		if readErr != nil {

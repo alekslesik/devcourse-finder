@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.19.0] - 2026-10-11
+
+- Collect evidence-bound learning conditions across all supported providers.
+
 ## [0.18.2] - 2026-10-11
 
 - Simplify catalog controls on mobile and desktop: remove hero catalog links, sharing controls and benefit copy, hide the visible sorting label and place mobile filter chips above sorting.
