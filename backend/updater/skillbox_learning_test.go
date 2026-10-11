@@ -16,6 +16,8 @@ func TestSkillboxLearningKeepsCourseAndTariffsSeparate(t *testing.T) {
 	c := Candidate{Adapter: "skillbox", URL: "https://skillbox.ru/course/profession-python", ExternalID: "profession-python"}
 	now := time.Now().UTC()
 	r := catalog.Course{ID: "skillbox-profession-python", Offers: []catalog.Offer{{ID: "skillbox-profession-python-t76"}, {ID: "skillbox-profession-python-t1777"}, {ID: "skillbox-profession-python-t1776"}}}
+	point := strings.Index(string(data), "</section>") + len("</section>")
+	data = []byte(string(data[:point]) + `<footer>` + string(data[point:]) + `</footer>`)
 	r, o := skillboxLearning(data, learningDocument(data), r, Observation{}, c, now)
 	for _, offer := range r.Offers {
 		if offer.LearningConditions == nil || offer.LearningConditions.Duration == nil || offer.LearningConditions.Duration.Max != 10 {

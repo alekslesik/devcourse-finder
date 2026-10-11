@@ -89,8 +89,10 @@ func TestPracticumCollectorQueuesAllEvidenceAndPublisherProtectsProducts(t *test
 	missing.Record.Offers = append([]catalog.Offer(nil), event.Record.Offers...)
 	missing.Record.Offers[0].DurationMonths = nil
 	missing.Observation.DurationMonths = nil
+	missing.Observation.LearningConditions = nil
+	missing.Record.Offers[0].LearningConditions = nil
 	missing.ObservedAt = time.Now().UTC()
-	if err = s.enqueue(ctx, missing); err != nil {
+	if err = s.enqueue(ctx, reobserveLearning(t, missing, missing.ObservedAt)); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = publisher.Run(ctx); err != nil {
@@ -107,7 +109,7 @@ func TestPracticumCollectorQueuesAllEvidenceAndPublisherProtectsProducts(t *test
 		t.Fatal(err)
 	}
 	missing.ObservedAt = time.Now().UTC()
-	if err = s.enqueue(ctx, missing); err != nil {
+	if err = s.enqueue(ctx, reobserveLearning(t, missing, missing.ObservedAt)); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = publisher.Run(ctx); err != nil {
@@ -119,7 +121,7 @@ func TestPracticumCollectorQueuesAllEvidenceAndPublisherProtectsProducts(t *test
 	}
 	event.ObservedAt = time.Now().UTC()
 	event.Observation.ProductID = "11111111-1111-4111-8111-111111111111"
-	if err = s.enqueue(ctx, event); err != nil {
+	if err = s.enqueue(ctx, reobserveLearning(t, event, event.ObservedAt)); err != nil {
 		t.Fatal(err)
 	}
 	result, err = publisher.Run(ctx)

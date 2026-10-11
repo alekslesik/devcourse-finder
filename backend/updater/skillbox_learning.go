@@ -11,7 +11,13 @@ func skillboxLearning(data []byte, doc *html.Node, r catalog.Course, o Observati
 	program := learningOne(doc, func(n *html.Node) bool { return n.Data == "section" && nodeAttr(n, "id") == "program" })
 	proof := learningProof(data, c.URL, "#program .program-v6__stat", now)
 	duration := learningUniqueRange(learningNodes(program, func(n *html.Node) bool { return classToken(n, "program-v6__stat") }), false, proof)
-	cards := learningNodes(doc, func(n *html.Node) bool { return n.Data == "li" && nodeAttr(n, "data-tariff-data") != "" })
+	var cards []*html.Node
+	// Verified purchase cards are also rendered in footer-mounted modal portals.
+	visitNodes(doc, func(n *html.Node) {
+		if n.Data == "li" && nodeAttr(n, "data-tariff-data") != "" {
+			cards = append(cards, n)
+		}
+	})
 	by := map[string]*catalog.LearningConditions{}
 	for _, card := range cards {
 		var v struct {

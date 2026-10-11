@@ -207,6 +207,8 @@ func TestPracticumDurationOwnershipUpgradeAndMissingPlus(t *testing.T) {
 	e.Record.Offers = append([]catalog.Offer(nil), r.Offers...)
 	for i := range e.Record.Offers {
 		e.Record.Offers[i].DurationMonths = nil
+		e.Record.Offers[i].LearningConditions = nil
+		e.Observation.LearningByOffer[e.Record.Offers[i].ID] = nil
 	}
 	e.Observation.DurationMonths = nil
 	e.Observation.PracticumTariffs = append([]PracticumTariff(nil), o.PracticumTariffs...)

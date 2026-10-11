@@ -2,6 +2,7 @@ package updater
 
 import (
 	"devcourse-finder/catalog"
+	"os"
 	"testing"
 	"time"
 )
@@ -44,5 +45,56 @@ func TestPracticumLearningUsesOnlyTargetSKU(t *testing.T) {
 	applyLearningConditions(&offer, nil)
 	if offer.LearningConditions != nil || offer.Hours != nil || offer.Review {
 		t.Fatal("vanished facts retained", offer)
+	}
+}
+
+func TestPracticumCourseReviewRequiresExplicitPlusInheritance(t *testing.T) {
+	data, err := os.ReadFile("testdata/learning/practicum.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := Candidate{Adapter: "yandex", ExternalID: "backend-developer", URL: "https://practicum.yandex.ru/backend-developer"}
+	now := time.Now().UTC()
+	for _, slug := range []string{"backend-developer", "python-developer-plus"} {
+		v := practicumLearning(data, []byte(`{}`), c, slug, practicumProfession{}, now)
+		if v.Review == nil || !v.Review.Available || v.Mentor != nil || v.WeeklyWorkload != nil {
+			t.Fatal(slug, v)
+		}
+	}
+	if v := practicumLearning(data, []byte(`{}`), c, "unrelated-plus", practicumProfession{}, now); v.Review != nil {
+		t.Fatal("unbound plus inherited base review")
+	}
+}
+
+func TestLearningSupportNegationAndConflict(t *testing.T) {
+	proof := learningProof([]byte("source"), "https://skillbox.ru/course/profession-python", "tariff", time.Now().UTC())
+	for _, text := range []string{"Ручная проверка домашних заданий не предусмотрена", "Без проверки домашних заданий"} {
+		got := learningSupportText(text, proof)
+		if got.Review == nil || got.Review.Available {
+			t.Fatal(text, got)
+		}
+	}
+	got := learningSupportText("Без проверки домашних заданий. Ручная проверка домашних заданий", proof)
+	if got.Review != nil {
+		t.Fatal("conflicting support became certain", got)
+	}
+	got = learningSupportText("Индивидуальные консультации с экспертом не предусмотрены", proof)
+	if got.Mentor != nil && got.Mentor.Available {
+		t.Fatal("negated consultation became available", got)
+	}
+}
+
+func TestLearningRangesRejectOneSidedBounds(t *testing.T) {
+	proof := learningProof([]byte("source"), "https://otus.ru/lessons/python-basic", "description", time.Now().UTC())
+	for _, text := range []string{"от 6 часов в неделю", "Нагрузка до 6 часов в неделю", "Нужно от 6 часов в неделю", "от 6 месяцев", "Длительность от 6 месяцев", "6 часов в неделю и более"} {
+		if learningTextRange(text, false, proof) != nil || learningTextRange(text, true, proof) != nil {
+			t.Fatal("one-sided bound became exact", text)
+		}
+	}
+	for _, text := range []string{"от 6 до 12 часов в неделю", "Нагрузка от 6 до 12 часов в неделю", "6–12 часов в неделю"} {
+		v := learningTextRange(text, true, proof)
+		if v == nil || v.Min != 6 || v.Max != 12 {
+			t.Fatal("closed range lost", text, v)
+		}
 	}
 }

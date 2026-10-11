@@ -125,6 +125,10 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 				return result, ErrSource
 			}
 			if verified {
+				if observation.LearningObserved {
+					template.Offers = append([]catalog.Offer(nil), template.Offers...)
+					template.Offers[0].LearningConditions = observation.LearningConditions
+				}
 				readEvent = &QueuedObservation{Kind: "curated", Candidate: candidate, SourceID: source.CourseID, Record: template, Observation: observation, ObservedAt: observedAt, Digest: digest}
 				code = "queued"
 			} else {

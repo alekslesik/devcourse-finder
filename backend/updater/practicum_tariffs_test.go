@@ -118,7 +118,7 @@ func TestPracticumSharedTariffPublicationIsolationIdentityAndAtomicAck(t *testin
 	}
 	publish := func(obs Observation, at time.Time) {
 		t.Helper()
-		if err := s.enqueue(ctx, QueuedObservation{Kind: "discovered", Candidate: c, Record: r, Observation: obs, ObservedAt: at, Digest: fingerprint(page)}); err != nil {
+		if err := s.enqueue(ctx, reobserveLearning(t, QueuedObservation{Kind: "discovered", Candidate: c, Record: r, Observation: obs, ObservedAt: at, Digest: fingerprint(page)}, at)); err != nil {
 			t.Fatal(err)
 		}
 		if _, err := s.Publish(ctx); err != nil {
@@ -177,6 +177,7 @@ func TestPracticumSharedTariffPublicationIsolationIdentityAndAtomicAck(t *testin
 	r.Offers[1].Price = &price
 	publish(changed, now.Add(-18*time.Hour))
 	failed := o
+	failed.LearningByOffer = map[string]*catalog.LearningConditions{r.Offers[0].ID: r.Offers[0].LearningConditions}
 	failed.PracticumTariffs = append([]PracticumTariff(nil), o.PracticumTariffs...)
 	failed.PracticumTariffs[1] = PracticumTariff{Slug: "python-developer-plus", FailureCode: "source_unavailable"}
 	saved := r
@@ -210,7 +211,7 @@ func TestPracticumSharedTariffPublicationIsolationIdentityAndAtomicAck(t *testin
 		t.Fatal(err)
 	}
 	r.Offers[1].Price = &o.PracticumTariffs[1].Price
-	if err = s.enqueue(ctx, QueuedObservation{Kind: "discovered", Candidate: c, Record: r, Observation: o, ObservedAt: now.Add(-time.Hour), Digest: fingerprint(page)}); err != nil {
+	if err = s.enqueue(ctx, reobserveLearning(t, QueuedObservation{Kind: "discovered", Candidate: c, Record: r, Observation: o, ObservedAt: now.Add(-time.Hour), Digest: fingerprint(page)}, now.Add(-time.Hour))); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = s.Publish(ctx); err == nil {

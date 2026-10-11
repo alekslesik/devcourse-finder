@@ -1,12 +1,12 @@
 import ExternalMark from './external-mark';
-import {duration, type Item, type Offer} from '../lib/catalog';
+import {duration, supportLabel, type Item} from '../lib/catalog';
 const languages:Record<string,string>={go:'Go',python:'Python',java:'Java',javascript:'JavaScript'};
 const directions:Record<string,string>={basics:'Основы',backend:'Backend',frontend:'Frontend',fullstack:'Fullstack',automation:'Автоматизация'};
 function money(i:Item){if(i.effective_price===null)return i.offer.price_kind==='from'?'Цена от · уточните у школы':'Уточнить цену';return i.effective_price===0?'Бесплатно':new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(i.effective_price/100)}
 function date(v:string){return new Date(v).toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})}
-function support(o:Offer){return o.support_known===false?null:o.mentor?'Персональный наставник':o.review?'Проверка заданий':'Самостоятельно'}
+
 export default function CourseCard({i,selected,onToggle}:{i:Item;selected:boolean;onToggle:(id:string)=>void}){
- const courseDuration=duration(i.offer), courseSupport=support(i.offer);
+ const courseDuration=duration(i.offer), courseSupport=supportLabel(i.offer);
  const courseMeta=[directions[i.course.direction], i.offer.schedule==='flexible'?'В своём темпе':i.offer.schedule==='scheduled'?'По расписанию':null].filter(Boolean).join(' · ');
  return <article className="card" key={i.offer.id}><div className="cardTop"><span className={'languageBadge '+i.course.language}>{languages[i.course.language]}</span><span className="provider">{i.course.provider}</span>{i.course.demo&&<span className="miniBadge">ДЕМО</span>}</div><div className="cardBody"><div className="courseInfo">{courseMeta&&<div className="courseDirection">{courseMeta}</div>}<h3><a className="titleButton" href={"/courses/"+encodeURIComponent(i.course.slug)}>{i.course.title}</a></h3><p>{i.course.summary}</p>{(courseDuration||courseSupport)&&<div className="facts">{courseDuration&&<span>◷ {courseDuration}</span>}{courseSupport&&<span>{courseSupport}</span>}</div>}<div className="reasons">{i.reasons?.map(r=><span key={r}>✓ {r}</span>)}</div></div><div className="offerInfo"><span className="tariff">{i.offer.name}</span>{i.offer.enrollment==='closed'&&<span className="enrollmentBadge">Набор закрыт</span>}{i.offer.enrollment==='unknown'&&<span className="enrollmentBadge">Набор неизвестен</span>}<strong className={i.effective_price===0?'price free':'price'}>{money(i)}</strong><small>{i.effective_price!==null&&i.effective_price>0?'за весь курс':'Условия на сайте источника'}</small><a className="secondary linkButton" href={"/courses/"+encodeURIComponent(i.course.slug)}>Подробнее</a><label className="checkbox compareChoice"><input type="checkbox" checked={selected} onChange={()=>onToggle(i.offer.id)}/>Сравнить тариф</label></div></div><div className="cardFooter"><span>Проверено {date(i.course.checked_at)}{i.stale?' · Данные требуют обновления':''}</span><a href={i.course.source} target="_blank" rel="noopener noreferrer">Источник <ExternalMark/></a></div></article>;
 }

@@ -5,7 +5,11 @@ Merged pull requests receive the matching Git tag and GitHub Release.
 
 ## [0.19.0] - 2026-10-11
 
-- Collect evidence-bound learning conditions across all supported providers.
+- Collect evidence-bound calendar duration, explicit weekly workload and independent human review, personal mentor and community facts for all 13 supported providers; retain unknown values when official evidence is absent or ambiguous.
+- Bind learning conditions to verified course/tariff sections, preserve ranges, ignore billing periods and automated checks, and reject conflicting support claims.
+- Recover legacy PurpleSchool support ownership from import history while preserving later operator changes; clear vanished collected facts without refreshing retained facts on failed source reads.
+- Display duration/workload ranges and independently confirmed support in existing course and comparison views without changing their layout.
+- Report per-provider field coverage and oldest fact dates in catalog status; add opt-in bounded live-source acceptance, PostgreSQL publication regressions and browser coverage.
 
 ## [0.18.2] - 2026-10-11
 

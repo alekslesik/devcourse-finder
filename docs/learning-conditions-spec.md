@@ -36,27 +36,26 @@ data, and must never describe unknown support as confirmed lack of support.
 One implementation commit per issue. Backend changes are the primary scope;
 regenerated API types follow schema changes. No new deployment trigger is added.
 
-- [ ] [#60](https://github.com/alekslesik/devcourse-finder/issues/60) — Learning conditions: evidence model and safe publication lifecycle
-- [ ] [#61](https://github.com/alekslesik/devcourse-finder/issues/61) — Practicum: collect verified duration, weekly workload and support
-- [ ] [#62](https://github.com/alekslesik/devcourse-finder/issues/62) — Netology: collect verified duration, weekly workload and support
-- [ ] [#63](https://github.com/alekslesik/devcourse-finder/issues/63) — Skillbox: collect verified duration, weekly workload and support
-- [ ] [#64](https://github.com/alekslesik/devcourse-finder/issues/64) — Skillfactory: collect verified duration, weekly workload and support
-- [ ] [#65](https://github.com/alekslesik/devcourse-finder/issues/65) — HTML Academy: collect verified duration, weekly workload and support
-- [ ] [#66](https://github.com/alekslesik/devcourse-finder/issues/66) — PurpleSchool: collect verified duration, weekly workload and support
-- [ ] [#67](https://github.com/alekslesik/devcourse-finder/issues/67) — Skypro: collect verified duration, weekly workload and support
-- [ ] [#68](https://github.com/alekslesik/devcourse-finder/issues/68) — OTUS: collect verified duration, weekly workload and support
-- [ ] [#69](https://github.com/alekslesik/devcourse-finder/issues/69) — Hexlet: collect verified duration, weekly workload and support
-- [ ] [#70](https://github.com/alekslesik/devcourse-finder/issues/70) — Stepik: collect verified duration, weekly workload and support
-- [ ] [#71](https://github.com/alekslesik/devcourse-finder/issues/71) — JavaRush: collect verified duration, weekly workload and support
-- [ ] [#72](https://github.com/alekslesik/devcourse-finder/issues/72) — RS School: collect verified duration, weekly workload and support
-- [ ] [#73](https://github.com/alekslesik/devcourse-finder/issues/73) — CodeBasics: collect verified duration, weekly workload and support
-- [ ] [#74](https://github.com/alekslesik/devcourse-finder/issues/74) — Learning conditions: live coverage and regression acceptance
+- [x] [#60](https://github.com/alekslesik/devcourse-finder/issues/60) — Learning conditions: evidence model and safe publication lifecycle
+- [x] [#61](https://github.com/alekslesik/devcourse-finder/issues/61) — Practicum: collect verified duration, weekly workload and support
+- [x] [#62](https://github.com/alekslesik/devcourse-finder/issues/62) — Netology: collect verified duration, weekly workload and support
+- [x] [#63](https://github.com/alekslesik/devcourse-finder/issues/63) — Skillbox: collect verified duration, weekly workload and support
+- [x] [#64](https://github.com/alekslesik/devcourse-finder/issues/64) — Skillfactory: collect verified duration, weekly workload and support
+- [x] [#65](https://github.com/alekslesik/devcourse-finder/issues/65) — HTML Academy: collect verified duration, weekly workload and support
+- [x] [#66](https://github.com/alekslesik/devcourse-finder/issues/66) — PurpleSchool: collect verified duration, weekly workload and support
+- [x] [#67](https://github.com/alekslesik/devcourse-finder/issues/67) — Skypro: collect verified duration, weekly workload and support
+- [x] [#68](https://github.com/alekslesik/devcourse-finder/issues/68) — OTUS: collect verified duration, weekly workload and support
+- [x] [#69](https://github.com/alekslesik/devcourse-finder/issues/69) — Hexlet: collect verified duration, weekly workload and support
+- [x] [#70](https://github.com/alekslesik/devcourse-finder/issues/70) — Stepik: collect verified duration, weekly workload and support
+- [x] [#71](https://github.com/alekslesik/devcourse-finder/issues/71) — JavaRush: collect verified duration, weekly workload and support
+- [x] [#72](https://github.com/alekslesik/devcourse-finder/issues/72) — RS School: collect verified duration, weekly workload and support
+- [x] [#73](https://github.com/alekslesik/devcourse-finder/issues/73) — CodeBasics: collect verified duration, weekly workload and support
+- [x] [#74](https://github.com/alekslesik/devcourse-finder/issues/74) — Learning conditions: live coverage and regression acceptance
 
 ## Completion evidence
 
-- #60: shared provenance/range/support contract and private ownership lifecycle.
-- The provider issues remain open until their actual extraction contracts and
-  recorded source fixtures are implemented. A shared data model alone does not
-  establish provider coverage.
-- #74 requires a bounded disposable live run and per-provider field coverage;
-  production rollout remains a separate manual release deployment.
+#60 shipped in v0.18.0. The provider contracts (#61–73) and acceptance work
+(#74) are implemented in v0.19.0, with one commit per remaining issue.
+See [live samples and collection limits](learning-conditions-coverage.md).
+Issue closure occurs when the combined implementation PR merges. Production
+rollout remains a separate manual release deployment.

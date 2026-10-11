@@ -3,6 +3,7 @@ package updater
 import (
 	"devcourse-finder/catalog"
 	"golang.org/x/net/html"
+	"strings"
 	"time"
 )
 
@@ -26,6 +27,21 @@ func practicumLearning(page, profession []byte, c Candidate, slug string, p prac
 		support := learningSupportText(nodeText(card), proof)
 		conditions.Review, conditions.Mentor, conditions.Community = support.Review, support.Mentor, support.Community
 		conditions.WeeklyWorkload = learningUniqueRange(learningNodes(card, func(n *html.Node) bool { return n.Data == "p" || n.Data == "li" }), true, proof)
+	}
+
+	// Course-level manual project review applies to the base program. A plus SKU
+	// can inherit it only when its verified card explicitly includes the base.
+	inherited := card != nil && (strings.Contains(strings.ToLower(nodeText(card)), "то же самое +") || strings.Contains(strings.ToLower(nodeText(card)), "включает базовый тариф"))
+	if slug == c.ExternalID || inherited {
+		features := learningOne(doc, func(n *html.Node) bool { return classToken(n, "mentors-section") })
+		if features != nil && conditions.Review == nil {
+			locator := ".mentors-section[base=" + c.ExternalID + "]"
+			if slug != c.ExternalID {
+				locator += "+.common-flow-card__wrapper#" + slug + "[includes-base]"
+			}
+			facts := learningSupportText(nodeText(features), learningProof(page, c.URL, locator, now))
+			conditions.Review = facts.Review
+		}
 	}
 	return conditions
 }

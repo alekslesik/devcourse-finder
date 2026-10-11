@@ -97,3 +97,27 @@ for(const months of [null,3]){
   else await expect(card.locator('.facts')).toHaveCount(0);
  });
 }
+
+test('verified ranges and independent human support reach cards and comparison',async({page})=>{
+ const evidence={source:'https://courses.example/course',locator:'verified-course',digest:'a'.repeat(64),checked_at:new Date().toISOString()};
+ const conditions={duration:{min:2,max:4,unit:'month',evidence},weekly_workload:{min:6,max:12,unit:'hours_per_week',evidence},review:{available:true,evidence}};
+ await page.route('**/api/v1/courses*',async route=>{
+  const body=await(await route.fetch()).json();const item=body.items[0];
+  item.offer.learning_conditions=conditions;item.offer.duration_months=null;item.offer.weeks=null;item.offer.hours=null;item.offer.support_known=false;item.offer.review=true;item.offer.mentor=false;
+  await route.fulfill({json:{...body,items:[item],total:1}});
+ });
+ await page.goto('/courses');
+ await expect(page.locator('.card .facts')).toContainText('2–4 мес.');
+ await expect(page.locator('.card .facts')).toContainText('Проверка заданий');
+ await expect(page.locator('.card')).not.toContainText(/Персональный наставник|Нагрузка не/);
+ await page.route('**/api/v1/compare*',async route=>{
+  const body=await(await route.fetch()).json();for(const item of body)if(!item.unavailable){item.offer.learning_conditions=conditions;item.offer.hours=null;item.offer.support_known=false}
+  await route.fulfill({json:body});
+ });
+ await page.goto('/courses?compare=demo-go-1-standard');
+ const dialog=page.getByRole('dialog');
+ await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Длительность',exact:true})})).toContainText('2–4 мес.');
+ await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Нагрузка',exact:true})})).toContainText('6–12 ч/нед.');
+ await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Проверка кода',exact:true})})).toContainText('Есть');
+ await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Уточните у школы');
+});

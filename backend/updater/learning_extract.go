@@ -58,8 +58,16 @@ func learningOne(root *html.Node, match func(*html.Node) bool) *html.Node {
 var learningDurationText = regexp.MustCompile(`^(?:курс проходится |обучение |длительность(?: обучения| курса)?[: ]+)?(?:от )?([0-9]+(?:[.,][0-9]+)?)(?:\s*(?:–|—|-|до)\s*([0-9]+(?:[.,][0-9]+)?))?\s*(месяц(?:а|ев)?|недел(?:я|и|ь)|дн(?:я|ей)|год(?:а|ов)?)(?: обучения| в зависимости от интенсивности)?[.!]?$`)
 var learningWeeklyText = regexp.MustCompile(`(?:^|[^0-9])(?:от )?([0-9]+(?:[.,][0-9]+)?)(?:\s*(?:–|—|-|до)\s*([0-9]+(?:[.,][0-9]+)?))?\s*час(?:а|ов)?\s*в\s*неделю(?:\b|[.! ,]|$)`)
 
+// A one-sided bound cannot be represented by an exact closed numeric range.
+var learningOneSidedText = regexp.MustCompile(`(?:^|[^a-zа-я])(?:от|до|минимум|максимум|не менее|не больше)\s+[0-9]+(?:[.,][0-9]+)?\s*(?:час(?:а|ов)?|месяц(?:а|ев)?|недел(?:я|и|ь)|дн(?:я|ей)|год(?:а|ов)?)(?:[ .,!]|$)`)
+
+var learningClosedText = regexp.MustCompile(`(?:от\s+)?[0-9]+(?:[.,][0-9]+)?\s*(?:до|–|—|-)\s*[0-9]+(?:[.,][0-9]+)?\s*(?:час(?:а|ов)?|месяц(?:а|ев)?|недел(?:я|и|ь)|дн(?:я|ей)|год(?:а|ов)?)(?:[ .,!]|$)`)
+
 func learningTextRange(text string, weekly bool, evidence catalog.LearningEvidence) *catalog.LearningRange {
 	text = strings.ToLower(strings.Join(strings.Fields(text), " "))
+	if learningOneSidedText.MatchString(learningClosedText.ReplaceAllString(text, " ")) || strings.Contains(text, "и более") || strings.Contains(text, "и меньше") {
+		return nil
+	}
 	// Negated claims, access/subscription/billing and video runtime are never facts.
 	for _, s := range []string{"рассроч", "доступ", "подписк", "кредит", "видеоурок", "не потребуется", "не нужно", "не более", "до ", "от " + "0", "~", "≈", "примерно"} {
 		// 'от X до Y' is a genuine range, 'до X' alone is not an exact duration.
@@ -130,17 +138,28 @@ func learningSupportText(text string, evidence catalog.LearningEvidence) *catalo
 	text = strings.ToLower(strings.Join(strings.Fields(text), " "))
 	c := &catalog.LearningConditions{}
 	// Only explicit descriptions; AI checks and general mentor titles are omitted.
-	field := func(positive, negative []string) *catalog.LearningSupport {
+	field := func(positive, negative []string, extra *regexp.Regexp) *catalog.LearningSupport {
+		remaining := text
+		for _, phrase := range positive {
+			negative = append(negative, phrase+" не предусмотрена", phrase+" не предусмотрены", "нет "+phrase)
+		}
 		yes, no := false, false
+		for _, s := range negative {
+			if strings.Contains(remaining, s) {
+				no = true
+				remaining = strings.ReplaceAll(remaining, s, "")
+			}
+		}
 		for _, s := range positive {
-			if strings.Contains(text, s) {
+			if strings.Contains(remaining, s) {
 				yes = true
 			}
 		}
-		for _, s := range negative {
-			if strings.Contains(text, s) {
-				no = true
-			}
+		if extra != nil && extra.MatchString(remaining) {
+			yes = true
+		}
+		if no && yes {
+			return nil
 		}
 		if no {
 			return &catalog.LearningSupport{Available: false, Evidence: evidence}
@@ -150,12 +169,12 @@ func learningSupportText(text string, evidence catalog.LearningEvidence) *catalo
 		}
 		return nil
 	}
-	c.Review = field([]string{"ручная проверка домашних заданий", "проверка домашних заданий экспертом", "ревью от опытных наставников", "проекты проверим вручную", "наставник будет проверять качество выполнения заданий", "наставник проверяет задания", "проверка заданий наставником", "код-ревью от наставника", "персональное код-ревью"}, []string{"без проверки заданий", "без проверки домашних заданий", "без код-ревью"})
-	c.Mentor = field([]string{"индивидуальные консультации с наставником", "персональных консультаций с наставником", "индивидуальные консультации ментора", "индивидуальные консультации с ментором", "личные встречи с наставником"}, []string{"без индивидуальных консультаций", "без личных встреч с наставником"})
-	if c.Mentor == nil && regexp.MustCompile(`индивидуальн(?:ые|ых) (?:встреч(?:и)?|консультаци(?:и|й)) с (?:опытным [a-zа-я-]+-разработчиком|экспертом)(?:[ .,:]|$)`).MatchString(text) {
+	c.Review = field([]string{"ручная проверка домашних заданий", "проверка домашних заданий экспертом", "ревью от опытных наставников", "проекты проверим вручную", "наставник будет проверять качество выполнения заданий", "наставник проверяет задания", "проверка заданий наставником", "код-ревью от наставника", "персональное код-ревью"}, []string{"без проверки заданий", "без проверки домашних заданий", "без код-ревью"}, nil)
+	c.Mentor = field([]string{"индивидуальные консультации с наставником", "персональных консультаций с наставником", "индивидуальные консультации ментора", "индивидуальные консультации с ментором", "личные встречи с наставником"}, []string{"без индивидуальных консультаций", "без личных встреч с наставником"}, nil)
+	if c.Mentor == nil && !strings.Contains(text, "без индивидуальных") && !strings.Contains(text, "не предусмотрен") && !strings.Contains(text, "нет индивидуальных") && regexp.MustCompile(`индивидуальн(?:ые|ых) (?:встреч(?:и)?|консультаци(?:и|й)) с (?:опытным [a-zа-я-]+-разработчиком|экспертом)(?:[ .,:]|$)`).MatchString(text) {
 		c.Mentor = &catalog.LearningSupport{Available: true, Evidence: evidence}
 	}
-	c.Community = field([]string{"учебном чате", "учебный чат", "чат с менторами", "чат с наставником", "чат с наставниками", "сообщество студентов", "course discord server"}, []string{"без учебного чата"})
+	c.Community = field([]string{"учебном чате", "учебный чат", "чат с менторами", "чат с наставником", "чат с наставниками", "сообщество студентов", "course discord server"}, []string{"без учебного чата"}, nil)
 	return c
 }
 func learningAttach(r catalog.Course, o Observation, byOffer map[string]*catalog.LearningConditions) (catalog.Course, Observation) {
