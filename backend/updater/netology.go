@@ -262,7 +262,7 @@ func netologyStart(raw string) (time.Time, error) {
 	}
 	return date, nil
 }
-func collectNetology(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectNetologyRecord(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	var empty catalog.Course
 	var o Observation
 	identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID)
@@ -384,4 +384,13 @@ func collectNetology(data []byte, c Candidate, now time.Time) (catalog.Course, O
 		record.Offers[0].Name = name
 	}
 	return record, o, err
+}
+
+func collectNetology(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, e := collectNetologyRecord(data, c, now)
+	if e != nil {
+		return r, o, e
+	}
+	r, o = attachHTMLProfile(data, c, r, o, now)
+	return r, o, nil
 }

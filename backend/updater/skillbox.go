@@ -28,7 +28,7 @@ func staticJSObject(data []byte, name string, target any) bool {
 	b = jsKey.ReplaceAllString(b, `${1}"${2}":`)
 	return decodeJSON([]byte(b), target) == nil
 }
-func collectSkillbox(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectSkillboxRecord(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	reject := func() (catalog.Course, Observation, error) {
 		return catalog.Course{}, Observation{}, rejection("invalid_skillbox_contract")
 	}
@@ -161,5 +161,15 @@ func collectSkillbox(data []byte, c Candidate, now time.Time) (catalog.Course, O
 		return r, o, err
 	}
 	r, o = skillboxLearning(data, doc, r, o, c, now)
+	return r, o, nil
+}
+
+func collectSkillbox(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectSkillboxRecord(data, c, now)
+	if err != nil {
+		return r, o, err
+	}
+
+	r, o = attachHTMLProfile(data, c, r, o, now)
 	return r, o, nil
 }

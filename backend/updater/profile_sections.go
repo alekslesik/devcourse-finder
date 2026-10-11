@@ -23,10 +23,11 @@ func profileBlockedNode(n *html.Node) bool {
 }
 func profileSection(doc *html.Node, headings []string) (*html.Node, string) {
 	var found *html.Node
+	var foundRoot *html.Node
 	label := ""
 	ambiguous := false
 	visitNodes(doc, func(n *html.Node) {
-		if n.Type != html.ElementNode || profileBlockedNode(n) {
+		if n.Type != html.ElementNode || profileBlockedNode(n) || !(n.Data == "h2" || n.Data == "h3" || n.Data == "h4" || n.Data == "p" || n.Data == "strong" || n.Data == "button" || (n.Data == "div" && n.FirstChild != nil && n.FirstChild.Type == html.TextNode && n.FirstChild.NextSibling == nil)) {
 			return
 		}
 		text := normalizeTitle(nodeText(n))
@@ -51,23 +52,28 @@ func profileSection(doc *html.Node, headings []string) (*html.Node, string) {
 			if len(content) > 12000 {
 				return
 			}
-			// A block with another top-level question is not this question's answer.
-			other := false
+			// End this semantic section at the next heading; adjacent promotional
+			// sections do not establish this course audience or requirements.
+			start := strings.Index(content, nodeText(n))
+			if start >= 0 {
+				content = content[start:]
+			}
 			visitNodes(parent, func(x *html.Node) {
-				if x == n || x.Type != html.ElementNode {
-					return
-				}
-				if (x.Data == "h2" || x.Data == "h3") && nodeText(x) != nodeText(n) {
-					other = true
+				if x != n && (x.Data == "h2" || x.Data == "h3") && nodeText(x) != nodeText(n) {
+					if at := strings.Index(content, nodeText(x)); at > 0 {
+						content = content[:at]
+					}
 				}
 			})
-			if other {
+			if len(content) <= len(nodeText(n))+20 {
 				return
 			}
-			if found != nil && found != parent {
+			if foundRoot != nil && foundRoot != parent {
 				ambiguous = true
 			}
-			found = parent
+			foundRoot = parent
+			found = &html.Node{Type: html.ElementNode, Data: "section"}
+			found.AppendChild(&html.Node{Type: html.TextNode, Data: content})
 			label = text
 			return
 		}

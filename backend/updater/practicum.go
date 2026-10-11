@@ -163,7 +163,7 @@ func emptyJSON(raw json.RawMessage, expected string) bool {
 func collectPracticum(page, profession, prices, squads []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	return collectPracticumTariff(page, profession, prices, squads, c, c.ExternalID, now)
 }
-func collectPracticumTariff(page, profession, prices, squads []byte, c Candidate, slug string, now time.Time) (catalog.Course, Observation, error) {
+func collectPracticumTariffRecord(page, profession, prices, squads []byte, c Candidate, slug string, now time.Time) (catalog.Course, Observation, error) {
 	var empty catalog.Course
 	var o Observation
 	if len(profession) > maxBody || len(prices) > maxBody || len(squads) > maxBody {
@@ -308,4 +308,16 @@ func practicumDurationMonths(p practicumProfession) *int {
 		return nil
 	}
 	return &months
+}
+
+func collectPracticumTariff(page, profession, prices, squads []byte, c Candidate, slug string, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectPracticumTariffRecord(page, profession, prices, squads, c, slug, now)
+	if err != nil {
+		return r, o, err
+	}
+	if slug != c.ExternalID {
+		return r, o, err
+	}
+	r, o = attachHTMLProfile(page, c, r, o, now)
+	return r, o, nil
 }
