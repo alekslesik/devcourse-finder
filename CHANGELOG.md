@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.18.2] - 2026-10-11
+
+- Simplify catalog controls on mobile and desktop: remove hero catalog links, sharing controls and benefit copy, hide the visible sorting label and place mobile filter chips above sorting.
+
 ## [0.18.1] - 2026-10-11
 
 - Keep mobile route filters open, scroll language shortcuts to the route form, hide the mobile hero catalog link and align the language tiles and diagonal scene captions.
