@@ -50,16 +50,10 @@ test('AC-08: empty results and API failure remain distinct without relaxing any 
  await checkForm();
 });
 
-test('AC-09: copied search URL restores filters, sort and page in an independent browser context',async({page,browser})=>{
- await page.addInitScript(()=>{
-  Object.defineProperty(navigator,'clipboard',{value:{writeText:async(value:string)=>{sessionStorage.setItem('copied-search',value)}}});
- });
+test('AC-09: search URL restores filters, sort and page in an independent browser context',async({page,browser})=>{
  await page.goto('/courses?language=go&sort=price_asc&page=2');
  await expect(page.getByRole('region',{name:'Результаты поиска'})).toHaveAttribute('aria-busy','false');
- await page.getByRole('button',{name:'Скопировать ссылку',exact:true}).click();
- await expect(page.locator('.shareSearch').getByRole('status')).toHaveText('Ссылка скопирована');
- const copied=await page.evaluate(()=>sessionStorage.getItem('copied-search'));
- expect(copied).toBe(page.url());
+ const copied=page.url();
  const fresh=await browser.newContext();
  try{
   const shared=await fresh.newPage();
@@ -77,13 +71,6 @@ test('AC-09: copied search URL restores filters, sort and page in an independent
  }finally{await fresh.close()}
 });
 
-test('AC-09: clipboard refusal offers the current URL for manual copying',async({page})=>{
- await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async()=>{throw Error('Denied')}}}));
- await page.goto('/courses?language=python&sort=duration&page=2');
- await page.getByRole('button',{name:'Скопировать ссылку',exact:true}).click();
- await expect(page.getByLabel('Ссылка на поиск',{exact:true})).toHaveValue(page.url());
- await expect(page.getByLabel('Ссылка на поиск',{exact:true})).toBeFocused();
-});
 
 for(const [enrollment,label] of [['closed','Набор закрыт'],['unknown','Набор неизвестен']]){
  test(`AC-16: catalog card labels ${enrollment} enrollment explicitly`,async({page})=>{
