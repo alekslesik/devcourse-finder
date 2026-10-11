@@ -131,7 +131,10 @@ The identity-bound profession response supplies `duration` in months (legacy
 field). Explicit `catalog_duration_unit` of `month` or `months` uses
 `catalog_duration_amount` instead. Only positive integers up to 120 are accepted;
 other units, ambiguous metadata, fractions and ranges remain unknown. Missing
-metadata does not reject an otherwise verified course or erase curated duration.
+metadata does not reject an otherwise verified course. A successful read marks
+duration as observed even when unknown: publication clears an older scraper-owned
+value (`offers.duration_collected`) while preserving genuinely curated duration.
+A failed source read does not clear or reconfirm existing facts.
 The anonymous React profession response checked on 2026-10-11 returned
 `duration: 3` with both explicit catalog-duration fields null.
 

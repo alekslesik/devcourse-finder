@@ -83,6 +83,40 @@ func TestPracticumCollectorQueuesAllEvidenceAndPublisherProtectsProducts(t *test
 	if len(old) != 1 || old[0].Offers[0].Price == nil || *old[0].Offers[0].Price != 13700000 || old[0].Offers[0].DurationMonths == nil || *old[0].Offers[0].DurationMonths != 10 {
 		t.Fatal(old)
 	}
+
+	// A successful read with missing duration clears only scraper-owned metadata.
+	missing := event
+	missing.Record.Offers = append([]catalog.Offer(nil), event.Record.Offers...)
+	missing.Record.Offers[0].DurationMonths = nil
+	missing.Observation.DurationMonths = nil
+	missing.ObservedAt = time.Now().UTC()
+	if err = s.enqueue(ctx, missing); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = publisher.Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+	cleared, _ := db.Load(ctx)
+	if len(cleared) != 1 || cleared[0].Offers[0].DurationMonths != nil || cleared[0].Offers[0].DurationCollected {
+		t.Fatal("stale collected duration retained", cleared)
+	}
+	// Explicit operator imports have no collector ownership; an unknown read preserves them.
+	months := 6
+	cleared[0].Offers[0].DurationMonths = &months
+	if err = db.Import(ctx, catalog.Dataset{Domains: []string{"practicum.yandex.ru"}, Courses: cleared}, "operator", false); err != nil {
+		t.Fatal(err)
+	}
+	missing.ObservedAt = time.Now().UTC()
+	if err = s.enqueue(ctx, missing); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = publisher.Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+	preserved, _ := db.Load(ctx)
+	if len(preserved) != 1 || preserved[0].Offers[0].DurationMonths == nil || *preserved[0].Offers[0].DurationMonths != 6 || preserved[0].Offers[0].DurationCollected {
+		t.Fatal("curated duration erased", preserved)
+	}
 	event.ObservedAt = time.Now().UTC()
 	event.Observation.ProductID = "11111111-1111-4111-8111-111111111111"
 	if err = s.enqueue(ctx, event); err != nil {

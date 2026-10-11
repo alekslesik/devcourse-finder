@@ -298,9 +298,10 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 	if o.Schedule != "" {
 		current.Schedule = o.Schedule
 	}
-	if o.DurationMonths != nil {
+	if o.DurationObserved && (o.DurationMonths != nil || current.DurationCollected) {
 		current.DurationMonths = o.DurationMonths
 		current.Weeks = nil
+		current.DurationCollected = o.DurationMonths != nil
 	}
 	c.CheckedAt = now
 	c.Offers[offerIndex] = current

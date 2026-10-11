@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.18.0] - 2026-10-11
+
+- Track ownership of collected duration and clear disappeared source evidence while retaining manually curated course conditions.
+
 ## [0.17.1] - 2026-10-11
 
 - Simplify course cards by hiding unknown facts and weekly workload; preserve verified Practicum duration in months across collection, storage, API and course views.

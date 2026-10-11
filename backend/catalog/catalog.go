@@ -38,23 +38,24 @@ func (b *Billing) Valid() bool {
 }
 
 type Offer struct {
-	DurationMonths *int       `json:"duration_months,omitempty"`
-	Billing        *Billing   `json:"billing,omitempty"`
-	SupportKnown   *bool      `json:"support_known,omitempty"`
-	ID             string     `json:"id"`
-	Name           string     `json:"name"`
-	Price          *int64     `json:"price"`
-	PriceKind      string     `json:"price_kind"`
-	Free           bool       `json:"free"`
-	PriceCheckedAt time.Time  `json:"price_checked_at"`
-	ValidUntil     *time.Time `json:"valid_until,omitempty"`
-	Hours          *int       `json:"hours"`
-	Weeks          *int       `json:"weeks"`
-	Review         bool       `json:"review"`
-	Mentor         bool       `json:"mentor"`
-	Schedule       string     `json:"schedule"`
-	Enrollment     string     `json:"enrollment"`
-	URL            string     `json:"url"`
+	DurationCollected bool       `json:"-"`
+	DurationMonths    *int       `json:"duration_months,omitempty"`
+	Billing           *Billing   `json:"billing,omitempty"`
+	SupportKnown      *bool      `json:"support_known,omitempty"`
+	ID                string     `json:"id"`
+	Name              string     `json:"name"`
+	Price             *int64     `json:"price"`
+	PriceKind         string     `json:"price_kind"`
+	Free              bool       `json:"free"`
+	PriceCheckedAt    time.Time  `json:"price_checked_at"`
+	ValidUntil        *time.Time `json:"valid_until,omitempty"`
+	Hours             *int       `json:"hours"`
+	Weeks             *int       `json:"weeks"`
+	Review            bool       `json:"review"`
+	Mentor            bool       `json:"mentor"`
+	Schedule          string     `json:"schedule"`
+	Enrollment        string     `json:"enrollment"`
+	URL               string     `json:"url"`
 }
 type Filter struct {
 	Language, Direction, Experience, Goal, Budget, Support, Schedule, Sort string
