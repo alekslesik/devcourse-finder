@@ -207,6 +207,11 @@ func collectRSSchool(data, catalogData []byte, c Candidate, now time.Time) (cata
 		}
 	}
 	o.ValidUntil = &lease
+	o.LearningObserved = true
+	o.LearningConditions = rsLearning(data, doc, c, now)
+	if len(o.LearningConditions.Evidence()) == 0 {
+		o.LearningConditions = nil
+	}
 	record, err := normalizedRecord(c, nodeText(names[0]), strings.Join(summary, " "), "RS School", o, now)
 	if err != nil {
 		return empty, o, err
