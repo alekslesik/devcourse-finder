@@ -68,6 +68,7 @@ type basicsPage struct {
 			State       string `json:"state"`
 			Header      string `json:"header"`
 			Description string `json:"description"`
+			Duration    string `json:"duration"`
 		} `json:"courseLandingPage"`
 		First   basicsLesson `json:"firstLesson"`
 		Modules []struct {
@@ -153,7 +154,7 @@ func collectCodeBasics(data, policy []byte, c Candidate, now time.Time) (catalog
 		return catalog.Course{}, Observation{}, ErrSource
 	}
 	zero := int64(0)
-	o := Observation{Price: &zero, Enrollment: "continuous", Schedule: "flexible"}
+	o := Observation{LearningObserved: true, LearningConditions: basicsLearning(data, page, c, now), Price: &zero, Enrollment: "continuous", Schedule: "flexible"}
 	record, err := normalizedRecord(c, p.Landing.Header, p.Landing.Description, "CodeBasics", o, now)
 	return record, o, err
 }
