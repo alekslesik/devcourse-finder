@@ -21,7 +21,7 @@ test('legacy comparison traps focus, blocks the background and restores focus on
  await expect(close).toBeFocused();
  await page.keyboard.press('Escape');
  await expect(dialog).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Фильтры',exact:true})).toBeFocused();
+ await expect(page.getByRole('button',{name:'Найти обучение'})).toBeFocused();
  expect(new URL(page.url()).searchParams.has('compare')).toBe(false);
  expect(await page.evaluate(()=>document.body.style.overflow)).not.toBe('hidden');
 });
@@ -58,5 +58,5 @@ test('dialog keeps keyboard focus during loading and error, and passes axe at 36
  const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
  expect(result.violations.filter(v=>v.impact==='serious'||v.impact==='critical').map(v=>v.id)).toEqual([]);
  await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Фильтры',exact:true})).toBeFocused();
+ await expect(page.getByRole('button',{name:'Найти обучение'})).toBeFocused();
 });

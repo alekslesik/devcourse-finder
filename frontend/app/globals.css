@@ -232,13 +232,7 @@ dialog.overlay::backdrop { background: transparent; }
 .shareSearch p {font-size: 13px;}
 .trustLine {gap: 16px; padding-bottom: 18px; margin-bottom: 18px;}
 @media(max-width: 700px) {.resultActions {flex-direction: column;} .resultsHeading {align-items: stretch;}}
-.mobileFilters {display: none;}
 .priceInputs input {min-width: 0; font-variant-numeric: tabular-nums; padding-left: 10px; padding-right: 10px;}
-@media(max-width: 700px) {
-  .mobileFilters {display: flex; width: 100%; justify-content: space-between; margin: 0 0 16px;}
-  .workspace aside.filtersClosed {display: none;}
-  .workspace aside.filtersOpen {display: block; margin-bottom: 24px;}
-}
 .card h3 {font-size: clamp(19px, 1.6vw, 23px); line-height: 1.35;}
 .cardTop .miniBadge {letter-spacing: .4px; font-size: 12px;}
 .tariff {font-size: 13px; font-weight: 600;}
