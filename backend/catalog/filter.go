@@ -47,12 +47,13 @@ func Parse(q url.Values) (Filter, error) {
 			f.PageSize = int(n)
 		}
 	}
-	for _, k := range []string{"include_free", "include_closed", "diagnostics"} {
+	for _, k := range []string{"include_free", "include_closed", "diagnostics", "include_unknown_profiles"} {
 		v := q.Get(k)
 		if v != "" && v != "true" && v != "false" {
 			return f, fmt.Errorf("invalid %s", k)
 		}
 	}
+	f.IncludeUnknownProfiles = q.Get("include_unknown_profiles") == "true"
 	f.IncludeFree = q.Get("include_free") == "true"
 	f.IncludeClosed = q.Get("include_closed") == "true"
 	f.Diagnostics = q.Get("diagnostics") == "true"

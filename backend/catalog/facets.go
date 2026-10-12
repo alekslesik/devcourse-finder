@@ -53,15 +53,7 @@ func ProfileFacets(courses []Course, f Filter, now time.Time) map[string]Facet {
 		for _, result := range eligible {
 			known := false
 			for _, v := range values {
-				matches := false
-				switch key {
-				case "experience":
-					matches = matchesExperience(result.Course.Audience, v)
-				case "goal":
-					matches = slices.Contains(result.Course.Goals, v)
-				case "direction":
-					matches = result.Course.Direction == v
-				}
+				matches := MatchProfile(result.Course, key, v) == "confirmed"
 				if matches {
 					facet.Counts[v]++
 					known = true

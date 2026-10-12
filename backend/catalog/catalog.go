@@ -1,27 +1,28 @@
 package catalog
 
 import (
-	"slices"
 	"sort"
 	"time"
 )
 
 type Course struct {
-	ID        string    `json:"id"`
-	Slug      string    `json:"slug"`
-	Title     string    `json:"title"`
-	Provider  string    `json:"provider"`
-	Language  string    `json:"language"`
-	Direction string    `json:"direction"`
-	Summary   string    `json:"summary"`
-	Audience  []string  `json:"audience"`
-	Goals     []string  `json:"goals"`
-	Topics    []string  `json:"topics"`
-	Source    string    `json:"source"`
-	CheckedAt time.Time `json:"checked_at"`
-	Status    string    `json:"status"`
-	Offers    []Offer   `json:"offers"`
-	Demo      bool      `json:"demo"`
+	Profile          *CourseProfile `json:"profile,omitempty"`
+	ProfileOwnership int            `json:"-"`
+	ID               string         `json:"id"`
+	Slug             string         `json:"slug"`
+	Title            string         `json:"title"`
+	Provider         string         `json:"provider"`
+	Language         string         `json:"language"`
+	Direction        string         `json:"direction"`
+	Summary          string         `json:"summary"`
+	Audience         []string       `json:"audience"`
+	Goals            []string       `json:"goals"`
+	Topics           []string       `json:"topics"`
+	Source           string         `json:"source"`
+	CheckedAt        time.Time      `json:"checked_at"`
+	Status           string         `json:"status"`
+	Offers           []Offer        `json:"offers"`
+	Demo             bool           `json:"demo"`
 }
 
 // Billing preserves a recurring fee in its original currency. It is never a
@@ -63,15 +64,17 @@ type Filter struct {
 	Language, Direction, Experience, Goal, Budget, Support, Schedule, Sort string
 	Min, Max                                                               *int64
 	Hours                                                                  *int
-	IncludeFree, IncludeClosed, Diagnostics                                bool
+	IncludeFree, IncludeClosed, Diagnostics, IncludeUnknownProfiles        bool
 	Page, PageSize                                                         int
 }
 type Result struct {
-	Course  Course   `json:"course"`
-	Offer   Offer    `json:"offer"`
-	Price   *int64   `json:"effective_price"`
-	Reasons []string `json:"reasons"`
-	Stale   bool     `json:"stale"`
+	ProfileMatch         string   `json:"profile_match,omitempty"`
+	UnknownProfileFields []string `json:"unknown_profile_fields,omitempty"`
+	Course               Course   `json:"course"`
+	Offer                Offer    `json:"offer"`
+	Price                *int64   `json:"effective_price"`
+	Reasons              []string `json:"reasons"`
+	Stale                bool     `json:"stale"`
 }
 
 func EffectivePrice(o Offer, now time.Time) *int64 {
@@ -84,14 +87,25 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 	out := []Result{}
 	hasPriceBounds := f.Min != nil && *f.Min > 0 || f.Max != nil
 	for _, c := range courses {
-		if c.Status != "published" || (f.Language != "" && c.Language != f.Language) || (f.Direction != "" && c.Direction != f.Direction) {
+		if c.Status != "published" || (f.Language != "" && c.Language != f.Language) {
 			continue
 		}
-		if f.Experience != "" && !matchesExperience(c.Audience, f.Experience) {
+		unknown := []string{}
+		incompatible := false
+		for _, pair := range [][2]string{{"experience", f.Experience}, {"goal", f.Goal}, {"direction", f.Direction}} {
+			switch MatchProfile(c, pair[0], pair[1]) {
+			case "incompatible":
+				incompatible = true
+			case "unknown":
+				unknown = append(unknown, pair[0])
+			}
+		}
+		if incompatible || len(unknown) > 0 && !f.IncludeUnknownProfiles {
 			continue
 		}
-		if f.Goal != "" && !slices.Contains(c.Goals, f.Goal) {
-			continue
+		match := "confirmed"
+		if len(unknown) > 0 {
+			match = "unverified"
 		}
 		candidates := []Result{}
 		for _, o := range c.Offers {
@@ -122,10 +136,10 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 				continue
 			}
 			reasons := []string{}
-			if f.Goal != "" {
+			if f.Goal != "" && MatchProfile(c, "goal", f.Goal) == "confirmed" {
 				reasons = append(reasons, "Соответствует вашей цели")
 			}
-			if f.Experience != "" {
+			if f.Experience != "" && MatchProfile(c, "experience", f.Experience) == "confirmed" {
 				reasons = append(reasons, "Подходит вашему опыту")
 			}
 			if hasPriceBounds {
@@ -140,7 +154,7 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			if len(reasons) > 3 {
 				reasons = reasons[:3]
 			}
-			candidates = append(candidates, Result{Course: c, Offer: o, Price: price, Reasons: reasons, Stale: now.Sub(c.CheckedAt) > 90*24*time.Hour})
+			candidates = append(candidates, Result{ProfileMatch: match, UnknownProfileFields: unknown, Course: c, Offer: o, Price: price, Reasons: reasons, Stale: now.Sub(c.CheckedAt) > 90*24*time.Hour})
 		}
 		sort.SliceStable(candidates, func(i, j int) bool {
 			a, b := candidates[i], candidates[j]
@@ -161,6 +175,9 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 	}
 	sort.SliceStable(out, func(i, j int) bool {
 		a, b := out[i], out[j]
+		if a.ProfileMatch != b.ProfileMatch {
+			return a.ProfileMatch == "confirmed"
+		}
 		if f.Sort == "price_asc" || f.Sort == "price_desc" {
 			if a.Price == nil && b.Price != nil {
 				return false

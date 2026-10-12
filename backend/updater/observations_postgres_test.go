@@ -110,6 +110,7 @@ func TestPublisherRejectsPoisonAndOldEventsWithoutBlockingQueue(t *testing.T) {
 		t.Fatal(err)
 	}
 	e.ObservedAt = e.ObservedAt.Add(time.Second)
+	e = reobserveLearning(t, e, e.ObservedAt)
 	if err = s.enqueue(ctx, e); err != nil {
 		t.Fatal(err)
 	}
@@ -119,6 +120,7 @@ func TestPublisherRejectsPoisonAndOldEventsWithoutBlockingQueue(t *testing.T) {
 	}
 	older := e
 	older.ObservedAt = e.ObservedAt.Add(-49 * time.Hour)
+	older = reobserveLearning(t, older, older.ObservedAt)
 	if err = s.enqueue(ctx, older); err != nil {
 		t.Fatal(err)
 	}

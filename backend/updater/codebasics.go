@@ -79,7 +79,7 @@ type basicsPage struct {
 	} `json:"props"`
 }
 
-func collectCodeBasics(data, policy []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectCodeBasicsRecord(data, policy []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	if !codeBasicsFreePolicy(policy) || len(data) > maxBody || c.Adapter != "codebasics" {
 		return catalog.Course{}, Observation{}, ErrSource
 	}
@@ -157,4 +157,13 @@ func collectCodeBasics(data, policy []byte, c Candidate, now time.Time) (catalog
 	o := Observation{LearningObserved: true, LearningConditions: basicsLearning(data, page, c, now), Price: &zero, Enrollment: "continuous", Schedule: "flexible"}
 	record, err := normalizedRecord(c, p.Landing.Header, p.Landing.Description, "CodeBasics", o, now)
 	return record, o, err
+}
+
+func collectCodeBasics(data, policy []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectCodeBasicsRecord(data, policy, c, now)
+	if err != nil {
+		return r, o, err
+	}
+	r, o = attachHTMLProfile(data, c, r, o, now)
+	return r, o, nil
 }

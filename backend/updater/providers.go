@@ -19,7 +19,7 @@ func candidateEndpoint(c Candidate) string {
 	}
 	return c.URL
 }
-func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectCandidateRecord(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
 		return catalog.Course{}, Observation{}, rejection("identity_mismatch")
 	}
@@ -245,4 +245,14 @@ func collectStructured(data []byte, c Candidate, now time.Time) (catalog.Course,
 	}
 	record, err := normalizedRecord(c, schemaString(v.node, "name"), schemaString(v.node, "description"), providerNames[c.Adapter], v.o, now)
 	return record, v.o, err
+}
+
+func collectCandidate(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectCandidateRecord(data, c, now)
+	if err != nil {
+		return r, o, err
+	}
+
+	r, o = attachHTMLProfile(data, c, r, o, now)
+	return r, o, nil
 }

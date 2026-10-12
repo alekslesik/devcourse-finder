@@ -42,5 +42,25 @@ func reobserveLearning(t *testing.T, e QueuedObservation, at time.Time) QueuedOb
 	for i := range out.Record.Offers {
 		update(out.Record.Offers[i].LearningConditions)
 	}
+	profile := func(p *catalog.CourseProfile) {
+		if p == nil {
+			return
+		}
+		if p.Prerequisites != nil {
+			p.Prerequisites.Evidence.CheckedAt = at
+		}
+		for _, v := range []*catalog.ProfileTags{p.Audience, p.Goals, p.ExcludedAudience} {
+			if v != nil {
+				v.Evidence.CheckedAt = at
+			}
+		}
+		for _, v := range []*catalog.ProfileValue{p.Direction, p.TargetLevel} {
+			if v != nil {
+				v.Evidence.CheckedAt = at
+			}
+		}
+	}
+	profile(out.Observation.Profile)
+	profile(out.Record.Profile)
 	return out
 }

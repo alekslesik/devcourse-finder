@@ -52,6 +52,14 @@ func newHandler(db catalogRepository) http.Handler {
 		now := time.Now()
 		items := catalog.Search(cs, f, now)
 		total := len(items)
+		confirmed, unverified := 0, 0
+		for _, item := range items {
+			if item.ProfileMatch == "unverified" {
+				unverified++
+			} else {
+				confirmed++
+			}
+		}
 		start := (f.Page - 1) * f.PageSize
 		if start > total {
 			start = total
@@ -60,9 +68,18 @@ func newHandler(db catalogRepository) http.Handler {
 		if end > total {
 			end = total
 		}
-		response := map[string]any{"items": items[start:end], "total": total, "page": f.Page, "page_size": f.PageSize, "data_as_of": now, "applied_filters": r.URL.Query()}
+		response := map[string]any{"confirmed_total": confirmed, "unverified_total": unverified, "items": items[start:end], "total": total, "page": f.Page, "page_size": f.PageSize, "data_as_of": now, "applied_filters": r.URL.Query()}
 		if f.Diagnostics {
 			response["diagnostics"] = catalog.ProfileFacets(cs, f, now)
+			prospective := f
+			prospective.IncludeUnknownProfiles = true
+			available := 0
+			for _, item := range catalog.Search(cs, prospective, now) {
+				if item.ProfileMatch == "unverified" {
+					available++
+				}
+			}
+			response["unknown_available"] = available
 		}
 		write(w, 200, response)
 	})

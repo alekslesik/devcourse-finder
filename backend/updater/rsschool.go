@@ -69,7 +69,7 @@ func rsLanguage(root *html.Node) string {
 	}
 	return nodeText(n[0])
 }
-func collectRSSchool(data, catalogData []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectRSSchoolRecord(data, catalogData []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	var empty catalog.Course
 	var o Observation
 	reject := func(code string) (catalog.Course, Observation, error) { return empty, Observation{}, rejection(code) }
@@ -223,4 +223,13 @@ func collectRSSchool(data, catalogData []byte, c Candidate, now time.Time) (cata
 	// entrant or convert peer cross-checking into human mentor support.
 	record.Offers[0].Name = "Полная программа — бесплатное обучение"
 	return record, o, nil
+}
+
+func collectRSSchool(data, catalogData []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectRSSchoolRecord(data, catalogData, c, now)
+	if err != nil {
+		return r, o, err
+	}
+	r, o = attachHTMLProfile(data, c, r, o, now)
+	return r, o, nil
 }

@@ -149,7 +149,7 @@ func purpleFlight(doc *html.Node, slug string) ([]byte, error) {
 	}
 	return found[0], nil
 }
-func collectPurpleSchool(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectPurpleSchoolRecord(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	var empty catalog.Course
 	var o Observation
 	reject := func() (catalog.Course, Observation, error) {
@@ -405,4 +405,13 @@ func collectPurpleSchool(data []byte, c Candidate, now time.Time) (catalog.Cours
 	}
 	record, o = purpleLearning(data, doc, p, record, o, c, now)
 	return record, o, nil
+}
+
+func collectPurpleSchool(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectPurpleSchoolRecord(data, c, now)
+	if err != nil {
+		return r, o, err
+	}
+	r, o = attachHTMLProfile(data, c, r, o, now)
+	return r, o, nil
 }

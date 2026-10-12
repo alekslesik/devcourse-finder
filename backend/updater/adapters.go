@@ -17,6 +17,8 @@ import (
 // Curated classification/description, other tariffs and unpublished states are
 // never overwritten from scraped marketing text.
 type Observation struct {
+	ProfileObserved    bool                                   `json:"profile_observed,omitempty"`
+	Profile            *catalog.CourseProfile                 `json:"profile,omitempty"`
 	LearningByOffer    map[string]*catalog.LearningConditions `json:"learning_by_offer,omitempty"`
 	LearningObserved   bool                                   `json:"learning_observed,omitempty"`
 	LearningConditions *catalog.LearningConditions            `json:"learning_conditions,omitempty"`
@@ -53,6 +55,8 @@ func decodeJSON(data []byte, v any) error {
 }
 
 type stepikCourse struct {
+	Requirements    string          `json:"requirements"`
+	TargetAudience  string          `json:"target_audience"`
 	Workload        string          `json:"workload"`
 	Description     string          `json:"description"`
 	Summary         string          `json:"summary"`
@@ -144,6 +148,11 @@ func parseStepik(data []byte, s Source, now time.Time) (Observation, error) {
 	o.LearningObserved = true
 	candidate := Candidate{Adapter: "stepik", ExternalID: strconv.Itoa(c.ID), URL: "https://stepik.org/course/" + strconv.Itoa(c.ID) + "/promo"}
 	o.LearningConditions = stepikLearning(data, c, candidate, now)
+	o.ProfileObserved = true
+	o.Profile = stepikProfile(data, c, candidate, now)
+	if len(o.Profile.Evidence()) == 0 {
+		o.Profile = nil
+	}
 	if len(o.LearningConditions.Evidence()) == 0 {
 		o.LearningConditions = nil
 	}
@@ -247,7 +256,21 @@ func parse(data []byte, s Source, canonical string, now time.Time) (Observation,
 	case "stepik":
 		return parseStepik(data, s, now)
 	case "schema-course":
-		return parseSchemaCourse(data, canonical)
+		o, err := parseSchemaCourse(data, canonical)
+		if err != nil {
+			return o, err
+		}
+		for adapter := range profileContracts {
+			if c, ok := candidateURL(adapter, canonical, ""); ok {
+				p := profileFromSections(data, c, "", now, profileContracts[adapter])
+				if len(p.Evidence()) > 0 {
+					o.Profile = p
+				}
+				o.ProfileObserved = true
+				break
+			}
+		}
+		return o, nil
 	}
 	return Observation{}, errors.New("unsupported adapter")
 }

@@ -103,5 +103,8 @@ func observationStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 			return err
 		}
 	}
+	if err := profileStatus(ctx, db, w); err != nil {
+		return err
+	}
 	return learningStatus(ctx, db, w)
 }

@@ -70,6 +70,14 @@ func Decode(r io.Reader) (Dataset, error) {
 		if len(c.Audience) == 0 || len(c.Goals) == 0 || len(c.Offers) == 0 {
 			return d, fail("audience, goals and offers required")
 		}
+		if !c.Profile.Valid() {
+			return d, fail("invalid course profile")
+		}
+		for _, e := range c.Profile.Evidence() {
+			if !SafeURL(e.Source, d.Domains) {
+				return d, fail("unapproved profile source")
+			}
+		}
 		for _, v := range c.Audience {
 			if !slices.Contains([]string{"none", "basics", "projects", "working", "switch", "unknown"}, v) {
 				return d, fail("invalid audience")

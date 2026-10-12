@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func collectSkypro(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+func collectSkyproRecord(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	reject := func() (catalog.Course, Observation, error) {
 		return catalog.Course{}, Observation{}, rejection("invalid_skypro_contract")
 	}
@@ -98,5 +98,15 @@ func collectSkypro(data []byte, c Candidate, now time.Time) (catalog.Course, Obs
 		return catalog.Course{}, Observation{}, e
 	}
 	r.Offers[0].Name = "Полная программа — стоимость уточняется"
+	return r, o, nil
+}
+
+func collectSkypro(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
+	r, o, err := collectSkyproRecord(data, c, now)
+	if err != nil {
+		return r, o, err
+	}
+
+	r, o = attachHTMLProfile(data, c, r, o, now)
 	return r, o, nil
 }

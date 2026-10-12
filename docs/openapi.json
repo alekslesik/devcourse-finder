@@ -263,6 +263,15 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "include_unknown_profiles",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include unknown selected profile fields as unverified candidates. Confirmed incompatibilities are always excluded; all offer and price constraints still apply."
           }
         ],
         "responses": {
@@ -764,6 +773,9 @@
             "items": {
               "$ref": "#/components/schemas/Offer"
             }
+          },
+          "profile": {
+            "$ref": "#/components/schemas/CourseProfile"
           }
         },
         "required": [
@@ -904,6 +916,24 @@
           },
           "stale": {
             "type": "boolean"
+          },
+          "profile_match": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "unverified"
+            ]
+          },
+          "unknown_profile_fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "experience",
+                "goal",
+                "direction"
+              ]
+            }
           }
         },
         "required": [
@@ -1018,6 +1048,21 @@
               "direction"
             ],
             "description": "Included only when diagnostics=true."
+          },
+          "confirmed_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Confirmed matches before pagination."
+          },
+          "unverified_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Included unverified candidates before pagination."
+          },
+          "unknown_available": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Unverified candidates satisfying all other constraints; included when diagnostics=true."
           }
         },
         "required": [
@@ -1343,6 +1388,202 @@
           "selected",
           "counts"
         ]
+      },
+      "ProfileValue": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "enum": [
+              "basics",
+              "backend",
+              "frontend",
+              "fullstack",
+              "automation",
+              "none",
+              "projects",
+              "working"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "value",
+          "evidence"
+        ]
+      },
+      "ProfileTags": {
+        "type": "object",
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "none",
+                "basics",
+                "projects",
+                "working",
+                "switch",
+                "try",
+                "job",
+                "deepen"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "values",
+          "evidence"
+        ]
+      },
+      "ProfileRequirement": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "basics",
+              "projects",
+              "working"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "programming",
+              "course_language"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "level",
+          "scope",
+          "evidence"
+        ]
+      },
+      "CourseProfile": {
+        "type": "object",
+        "properties": {
+          "prerequisites": {
+            "$ref": "#/components/schemas/ProfileRequirement"
+          },
+          "audience": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileTags"
+              },
+              {
+                "properties": {
+                  "values": {
+                    "items": {
+                      "enum": [
+                        "none",
+                        "basics",
+                        "projects",
+                        "working",
+                        "switch"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "goals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileTags"
+              },
+              {
+                "properties": {
+                  "values": {
+                    "items": {
+                      "enum": [
+                        "try",
+                        "job",
+                        "switch",
+                        "deepen"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "direction": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileValue"
+              },
+              {
+                "properties": {
+                  "value": {
+                    "enum": [
+                      "basics",
+                      "backend",
+                      "frontend",
+                      "fullstack",
+                      "automation"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "target_level": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileValue"
+              },
+              {
+                "properties": {
+                  "value": {
+                    "enum": [
+                      "none",
+                      "basics",
+                      "projects",
+                      "working"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "excluded_audience": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileTags"
+              },
+              {
+                "properties": {
+                  "values": {
+                    "items": {
+                      "enum": [
+                        "none",
+                        "basics",
+                        "projects",
+                        "working",
+                        "switch"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
       }
     }
   },
