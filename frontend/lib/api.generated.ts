@@ -195,6 +195,9 @@ export interface components {
             effective_price: number | null;
             reasons: string[] | null;
             stale: boolean;
+            /** @enum {string} */
+            profile_match?: "confirmed" | "unverified";
+            unknown_profile_fields?: ("experience" | "goal" | "direction")[];
         };
         Unavailable: {
             id: string;
@@ -227,6 +230,12 @@ export interface components {
                 goal: components["schemas"]["ProfileFacet"];
                 direction: components["schemas"]["ProfileFacet"];
             };
+            /** @description Confirmed matches before pagination. */
+            confirmed_total?: number;
+            /** @description Included unverified candidates before pagination. */
+            unverified_total?: number;
+            /** @description Unverified candidates satisfying all other constraints; included when diagnostics=true. */
+            unknown_available?: number;
         };
         Error: {
             error: string;
@@ -419,6 +428,8 @@ export interface operations {
                 include_closed?: boolean;
                 /** @description Include contextual experience, goal and direction counts. Each facet removes only its own filter; other constraints and offer eligibility remain. Counts refer to distinct courses before pagination. Unknown profiles are not matches. */
                 diagnostics?: boolean;
+                /** @description Include unknown selected profile fields as unverified candidates. Confirmed incompatibilities are always excluded; all offer and price constraints still apply. */
+                include_unknown_profiles?: boolean;
             };
             header?: never;
             path?: never;

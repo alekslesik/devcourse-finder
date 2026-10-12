@@ -1,0 +1,30 @@
+import {test,expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import {readFileSync} from 'node:fs';
+const base=JSON.parse(readFileSync('../data/demo-catalog.json','utf8')).courses[0];
+test('profile counts and explicit unknown results preserve filters and history on mobile',async({page})=>{
+ await page.setViewportSize({width:360,height:800});
+ await page.route('**/api/v1/courses*',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  expect(p.get('diagnostics')).toBe('true');
+  const include=p.get('include_unknown_profiles')==='true';
+  const item={course:base,offer:base.offers[0],effective_price:base.offers[0].price,reasons:[],stale:false,profile_match:'confirmed'};
+  const unknown={...item,course:{...base,id:'unknown',title:'Курс с неполными данными'},offer:{...base.offers[0],id:'unknown-offer'},profile_match:'unverified',unknown_profile_fields:['experience']};
+  return route.fulfill({json:{items:include?[item,unknown]:[item],total:include?2:1,confirmed_total:1,unverified_total:include?1:0,unknown_available:1,page:1,page_size:12,diagnostics:{experience:{eligible:2,unknown:1,selected:'basics',counts:{none:0,basics:1,projects:0,working:0,switch:0}},goal:{eligible:2,unknown:0,selected:'job',counts:{try:0,job:2,switch:0,deepen:0}},direction:{eligible:2,unknown:0,selected:'backend',counts:{basics:0,backend:2,frontend:0,fullstack:0,automation:0}}}}});
+ });
+ await page.goto('/courses?language=go&experience=basics&goal=job&direction=backend&max=50000000');
+ await expect(page.getByRole('heading',{level:2,name:'1 программа с подтверждёнными условиями'})).toBeVisible();
+ await expect(page.locator('select[name=experience] option[value=basics]')).toHaveText('Знаю основы · 1');
+ await expect(page.locator('.profileNotice')).toContainText('Ещё 1 программа');
+ await page.getByRole('button',{name:'Показать курсы с неполными данными',exact:true}).focus();await page.keyboard.press('Enter');
+ await expect(page).toHaveURL(/include_unknown_profiles=true/);
+ for(const [key,value] of [['language','go'],['experience','basics'],['goal','job'],['direction','backend'],['max','50000000']])expect(new URL(page.url()).searchParams.get(key)).toBe(value);
+ await expect(page.getByRole('heading',{name:'Условия нужно уточнить'})).toBeVisible();
+ await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
+ await expect(page.getByRole('checkbox',{name:'Показать курсы с неполными данными'})).toBeChecked();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(axe.violations.filter(v=>v.impact==='serious'||v.impact==='critical')).toEqual([]);
+ await page.goBack();await expect(page.getByRole('checkbox',{name:'Показать курсы с неполными данными'})).not.toBeChecked();await expect(page.locator('.unverifiedResults')).toHaveCount(0);
+ await page.goForward();await expect(page.locator('.unverifiedResults')).toBeVisible();
+ await page.getByRole('button',{name:'Убрать фильтр: Неполные данные включены'}).click();await expect(page).not.toHaveURL(/include_unknown_profiles/);
+});

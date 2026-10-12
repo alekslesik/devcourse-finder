@@ -285,3 +285,14 @@ footer::before {content: ""; position: absolute; z-index: -1; pointer-events: no
   .intro::before {width: 220px; height: 220px; top: -160px; right: -90px; opacity: .45;}
   footer::before {left: auto; right: -100px; bottom: -145px;}
 }
+
+/* Profile diagnostics use the existing glass surface and native controls. */
+.profileOptions {grid-column:1/-1;grid-row:4}
+.profileOptions .checkbox {margin:0}
+.profileCountHelp {display:block;margin-block:0 1rem}
+@media(max-width:1000px) {.profileOptions {grid-row:auto}}
+.profileNotice {margin-block:1rem;padding:1.25rem;border:1px solid var(--line);border-radius:var(--radius,1rem);background:var(--glass,var(--surface))}
+.profileNotice p {margin:0 0 1rem;max-width:65ch}
+.unverifiedResults {margin-block-start:2rem}
+.unverifiedResults h3 {margin:0 0 .5rem;font-size:1.25rem}
+.unverifiedResults>p {margin:0 0 1.25rem;max-width:65ch;color:var(--muted)}

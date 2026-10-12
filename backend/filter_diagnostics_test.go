@@ -64,3 +64,49 @@ func TestSearchZeroMinimumIsNeutral(t *testing.T) {
 		}
 	}
 }
+
+func TestUnknownProfileResponseCountsPrecedePagination(t *testing.T) {
+	repo := httpFixture()
+	known := repo.courses[0]
+	known.Audience = []string{"basics"}
+	known.Goals = []string{"job"}
+	known.Direction = "backend"
+	unknown := known
+	unknown.ID = "unknown"
+	unknown.Slug = "unknown"
+	unknown.Audience = []string{"unknown"}
+	incompatible := known
+	incompatible.ID = "incompatible"
+	incompatible.Slug = "incompatible"
+	incompatible.Goals = []string{"deepen"}
+	repo.courses = []catalog.Course{unknown, incompatible, known}
+	h := newHandler(repo)
+	for _, include := range []bool{false, true} {
+		query := "/api/v1/courses?experience=basics&goal=job&diagnostics=true&page=2&page_size=1"
+		if include {
+			query += "&include_unknown_profiles=true"
+		}
+		response := request(h, http.MethodGet, query, "")
+		newResponseContract(t).check(t, response, "/api/v1/courses", "get", 200)
+		var body struct {
+			Total      int
+			Confirmed  int `json:"confirmed_total"`
+			Unverified int `json:"unverified_total"`
+			Available  int `json:"unknown_available"`
+			Items      []catalog.Result
+		}
+		if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+			t.Fatal(err)
+		}
+		if body.Confirmed != 1 || body.Available != 1 {
+			t.Fatal(response.Body.String())
+		}
+		if include {
+			if body.Total != 2 || body.Unverified != 1 || len(body.Items) != 1 || body.Items[0].ProfileMatch != "unverified" {
+				t.Fatal(response.Body.String())
+			}
+		} else if body.Total != 1 || body.Unverified != 0 || len(body.Items) != 0 {
+			t.Fatal(response.Body.String())
+		}
+	}
+}

@@ -263,6 +263,15 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "include_unknown_profiles",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include unknown selected profile fields as unverified candidates. Confirmed incompatibilities are always excluded; all offer and price constraints still apply."
           }
         ],
         "responses": {
@@ -907,6 +916,24 @@
           },
           "stale": {
             "type": "boolean"
+          },
+          "profile_match": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "unverified"
+            ]
+          },
+          "unknown_profile_fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "experience",
+                "goal",
+                "direction"
+              ]
+            }
           }
         },
         "required": [
@@ -1021,6 +1048,21 @@
               "direction"
             ],
             "description": "Included only when diagnostics=true."
+          },
+          "confirmed_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Confirmed matches before pagination."
+          },
+          "unverified_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Included unverified candidates before pagination."
+          },
+          "unknown_available": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Unverified candidates satisfying all other constraints; included when diagnostics=true."
           }
         },
         "required": [
