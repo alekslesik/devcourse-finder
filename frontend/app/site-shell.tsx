@@ -1,9 +1,10 @@
 import Brand from './brand';
 import ThemeControl from './theme-control';
+import SiteNavigation from './site-navigation';
 export function SiteHeader() {
   return <><a className="skipLink" href="#content">Перейти к содержанию</a><header>
     <Brand/>
-    <nav className="siteNav" aria-label="Основная навигация"><a href="/courses">Каталог</a><a href="/about">О сервисе</a></nav>
+    <SiteNavigation/>
     <ThemeControl/>
   </header></>;
 }
