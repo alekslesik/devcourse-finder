@@ -49,3 +49,21 @@ func TestProfileEnvelopeAttestation(t *testing.T) {
 		}
 	}
 }
+
+func TestProfileNegationAndDeclaredOutcome(t *testing.T) {
+	proof := profileFixture(Candidate{URL: "https://otus.ru/lessons/python"}, time.Now()).Audience.Evidence
+	v := profileExcludedAudience("Курс не для новичков. Для знающих основы.", proof)
+	if v == nil || v.Values[0] != "none" {
+		t.Fatal(v)
+	}
+	if profileRequirement("Не требуется коммерческий опыт", "python", proof) != nil {
+		t.Fatal("negative requirement inverted")
+	}
+	vlevel := profileOutcomeLevel("Результаты обучения. Целевой уровень: самостоятельные проекты.", proof)
+	if vlevel == nil || vlevel.Value != "projects" {
+		t.Fatal(vlevel)
+	}
+	if profileOutcomeLevel("Например, целевой уровень: коммерческая разработка.", proof) != nil {
+		t.Fatal("example became target")
+	}
+}

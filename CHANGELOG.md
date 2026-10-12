@@ -3,9 +3,13 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
-## [0.21.0] - 2026-10-11
+## [0.21.0] - 2026-10-12
 
-- Collect evidence-bound course profiles and explain confirmed and unknown filter results.
+- Model independently verified prerequisites, audience, exclusions, outcomes, direction and target level; preserve literal legacy classifications and reject contradictory source claims.
+- Add course-bound profile extraction contracts for all 13 supported providers, with provenance and conservative handling of missing, optional, negated or unrelated statements.
+- Backfill existing published identities through normal bounded refreshes; protect operator edits, clear only disappeared collector-owned facts and report per-provider profile coverage.
+- Display contextual confirmed filter counts and offer an explicit opt-in group for courses with incomplete profile data, preserving price, support, workload, URL history and mobile accessibility constraints.
+- Add PostgreSQL rollback/backfill regressions, filter combination acceptance and a bounded live-source report under the production worker memory limits.
 
 ## [0.20.0] - 2026-10-11
 

@@ -46,3 +46,15 @@ func TestLargeSchoolProfileContractMutations(t *testing.T) {
 		}
 	}
 }
+
+func TestAllHTMLProviderProfileFieldsRequireSemanticSections(t *testing.T) {
+	for adapter, h := range profileContracts {
+		// Synthetic positive contract mutations: no claim about current live coverage.
+		raw := []byte("<section><h2>" + h.Audience[0] + "</h2><p>Для начинающих без опыта.</p></section><section><h2>" + h.Outcomes[0] + "</h2><p>Вы сможете подготовиться к трудоустройству и разрабатывать серверные приложения. Целевой уровень: самостоятельные проекты.</p></section>")
+		c := Candidate{Adapter: adapter, URL: "https://" + providerHosts[adapter] + "/course"}
+		p := profileFromSections(raw, c, "python", time.Now().UTC(), h)
+		if p.Audience == nil || p.Goals == nil || p.Direction == nil || p.TargetLevel == nil || !p.Valid() {
+			t.Fatal(adapter, p)
+		}
+	}
+}

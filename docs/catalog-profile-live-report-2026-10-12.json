@@ -1,0 +1,325 @@
+{
+  "post_backfill_filter_matrix": {
+    "go": {
+      "direction": {
+        "eligible": 0,
+        "unknown": 0,
+        "selected": "",
+        "counts": {
+          "automation": 0,
+          "backend": 0,
+          "basics": 0,
+          "frontend": 0,
+          "fullstack": 0
+        }
+      },
+      "experience": {
+        "eligible": 0,
+        "unknown": 0,
+        "selected": "",
+        "counts": {
+          "basics": 0,
+          "experienced": 0,
+          "none": 0,
+          "projects": 0,
+          "switch": 0,
+          "working": 0
+        }
+      },
+      "goal": {
+        "eligible": 0,
+        "unknown": 0,
+        "selected": "",
+        "counts": {
+          "deepen": 0,
+          "job": 0,
+          "switch": 0,
+          "try": 0
+        }
+      }
+    },
+    "java": {
+      "direction": {
+        "eligible": 1,
+        "unknown": 1,
+        "selected": "",
+        "counts": {
+          "automation": 0,
+          "backend": 0,
+          "basics": 0,
+          "frontend": 0,
+          "fullstack": 0
+        }
+      },
+      "experience": {
+        "eligible": 1,
+        "unknown": 1,
+        "selected": "",
+        "counts": {
+          "basics": 0,
+          "experienced": 0,
+          "none": 0,
+          "projects": 0,
+          "switch": 0,
+          "working": 0
+        }
+      },
+      "goal": {
+        "eligible": 1,
+        "unknown": 1,
+        "selected": "",
+        "counts": {
+          "deepen": 0,
+          "job": 0,
+          "switch": 0,
+          "try": 0
+        }
+      }
+    },
+    "javascript": {
+      "direction": {
+        "eligible": 2,
+        "unknown": 2,
+        "selected": "",
+        "counts": {
+          "automation": 0,
+          "backend": 0,
+          "basics": 0,
+          "frontend": 0,
+          "fullstack": 0
+        }
+      },
+      "experience": {
+        "eligible": 2,
+        "unknown": 1,
+        "selected": "",
+        "counts": {
+          "basics": 0,
+          "experienced": 0,
+          "none": 1,
+          "projects": 0,
+          "switch": 0,
+          "working": 0
+        }
+      },
+      "goal": {
+        "eligible": 2,
+        "unknown": 2,
+        "selected": "",
+        "counts": {
+          "deepen": 0,
+          "job": 0,
+          "switch": 0,
+          "try": 0
+        }
+      }
+    },
+    "python": {
+      "direction": {
+        "eligible": 5,
+        "unknown": 5,
+        "selected": "",
+        "counts": {
+          "automation": 0,
+          "backend": 0,
+          "basics": 0,
+          "frontend": 0,
+          "fullstack": 0
+        }
+      },
+      "experience": {
+        "eligible": 5,
+        "unknown": 2,
+        "selected": "",
+        "counts": {
+          "basics": 0,
+          "experienced": 1,
+          "none": 3,
+          "projects": 0,
+          "switch": 1,
+          "working": 0
+        }
+      },
+      "goal": {
+        "eligible": 5,
+        "unknown": 5,
+        "selected": "",
+        "counts": {
+          "deepen": 0,
+          "job": 0,
+          "switch": 0,
+          "try": 0
+        }
+      }
+    }
+  },
+  "scope": "One official sample per provider; disposable database, not production backfill counts.",
+  "sources": [
+    {
+      "provider": "yandex",
+      "url": "https://practicum.yandex.ru/backend-developer",
+      "code": "verified",
+      "language": "python",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    },
+    {
+      "provider": "netology",
+      "url": "https://netology.ru/programs/go",
+      "code": "source_unavailable",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 0
+    },
+    {
+      "provider": "skillbox",
+      "url": "https://skillbox.ru/course/profession-python",
+      "code": "verified",
+      "language": "python",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    },
+    {
+      "provider": "skillfactory",
+      "url": "https://skillfactory.ru/python-developer",
+      "code": "verified",
+      "language": "python",
+      "prerequisites": 0,
+      "audience": 1,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    },
+    {
+      "provider": "htmlacademy",
+      "url": "https://htmlacademy.ru/intensive/react",
+      "code": "verified",
+      "language": "javascript",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    },
+    {
+      "provider": "purpleschool",
+      "url": "https://purpleschool.ru/course/javascript-basics",
+      "code": "verified",
+      "language": "javascript",
+      "prerequisites": 0,
+      "audience": 1,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    },
+    {
+      "provider": "skypro",
+      "url": "https://sky.pro/course/programming/python-web-course",
+      "code": "verified_unavailable",
+      "language": "python",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 0
+    },
+    {
+      "provider": "otus",
+      "url": "https://otus.ru/lessons/python-basic",
+      "code": "verified",
+      "language": "python",
+      "prerequisites": 0,
+      "audience": 1,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    },
+    {
+      "provider": "hexlet",
+      "url": "https://ru.hexlet.io/programs/python",
+      "code": "invalid_structured_payload",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 0
+    },
+    {
+      "provider": "stepik",
+      "url": "https://stepik.org/course/58852/promo",
+      "code": "source_unavailable",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 0
+    },
+    {
+      "provider": "javarush",
+      "url": "https://javarush.com/prices",
+      "code": "verified",
+      "language": "java",
+      "prerequisites": 0,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    },
+    {
+      "provider": "rsschool",
+      "url": "https://rs.school/courses/javascript",
+      "code": "verified_unavailable",
+      "language": "javascript",
+      "prerequisites": 1,
+      "audience": 0,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 0
+    },
+    {
+      "provider": "codebasics",
+      "url": "https://code-basics.com/ru/languages/python",
+      "code": "verified",
+      "language": "python",
+      "prerequisites": 0,
+      "audience": 1,
+      "goals": 0,
+      "direction": 0,
+      "excluded_audience": 0,
+      "target_level": 0,
+      "published": 1
+    }
+  ]
+}

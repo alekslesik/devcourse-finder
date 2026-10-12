@@ -1480,16 +1480,108 @@
             "$ref": "#/components/schemas/ProfileRequirement"
           },
           "audience": {
-            "$ref": "#/components/schemas/ProfileTags"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileTags"
+              },
+              {
+                "properties": {
+                  "values": {
+                    "items": {
+                      "enum": [
+                        "none",
+                        "basics",
+                        "projects",
+                        "working",
+                        "switch"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
           },
           "goals": {
-            "$ref": "#/components/schemas/ProfileTags"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileTags"
+              },
+              {
+                "properties": {
+                  "values": {
+                    "items": {
+                      "enum": [
+                        "try",
+                        "job",
+                        "switch",
+                        "deepen"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
           },
           "direction": {
-            "$ref": "#/components/schemas/ProfileValue"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileValue"
+              },
+              {
+                "properties": {
+                  "value": {
+                    "enum": [
+                      "basics",
+                      "backend",
+                      "frontend",
+                      "fullstack",
+                      "automation"
+                    ]
+                  }
+                }
+              }
+            ]
           },
           "target_level": {
-            "$ref": "#/components/schemas/ProfileValue"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileValue"
+              },
+              {
+                "properties": {
+                  "value": {
+                    "enum": [
+                      "none",
+                      "basics",
+                      "projects",
+                      "working"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "excluded_audience": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProfileTags"
+              },
+              {
+                "properties": {
+                  "values": {
+                    "items": {
+                      "enum": [
+                        "none",
+                        "basics",
+                        "projects",
+                        "working",
+                        "switch"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       }

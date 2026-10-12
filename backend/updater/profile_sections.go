@@ -95,10 +95,12 @@ func profileFromSections(data []byte, c Candidate, language string, now time.Tim
 	}
 	text, proof := extract(h.Audience)
 	p.Audience = profileTags(text, proof, "audience")
+	p.ExcludedAudience = profileExcludedAudience(text, proof)
 	text, proof = extract(h.Requirements)
 	p.Prerequisites = profileRequirement(text, language, proof)
 	text, proof = extract(h.Outcomes)
 	p.Goals = profileTags(text, proof, "goals")
+	p.TargetLevel = profileOutcomeLevel(text, proof)
 	p.Direction = profileDirection(text, proof)
 	return p
 }
@@ -114,6 +116,9 @@ func stepikDescriptionProfile(data []byte, course stepikCourse, c Candidate, now
 		text := nodeText(n)
 		switch kind {
 		case "audience":
+			if p.ExcludedAudience == nil {
+				p.ExcludedAudience = profileExcludedAudience(text, proof)
+			}
 			if p.Audience == nil {
 				p.Audience = profileTags(text, proof, kind)
 			}
@@ -123,6 +128,7 @@ func stepikDescriptionProfile(data []byte, course stepikCourse, c Candidate, now
 			}
 		case "outcomes":
 			p.Goals = profileTags(text, proof, "goals")
+			p.TargetLevel = profileOutcomeLevel(text, proof)
 			if p.Direction == nil {
 				p.Direction = profileDirection(text, proof)
 			}

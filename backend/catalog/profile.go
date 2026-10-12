@@ -18,11 +18,12 @@ type ProfileRequirement struct {
 	Evidence LearningEvidence `json:"evidence"`
 }
 type CourseProfile struct {
-	Prerequisites *ProfileRequirement `json:"prerequisites,omitempty"`
-	Audience      *ProfileTags        `json:"audience,omitempty"`
-	Goals         *ProfileTags        `json:"goals,omitempty"`
-	Direction     *ProfileValue       `json:"direction,omitempty"`
-	TargetLevel   *ProfileValue       `json:"target_level,omitempty"`
+	Prerequisites    *ProfileRequirement `json:"prerequisites,omitempty"`
+	ExcludedAudience *ProfileTags        `json:"excluded_audience,omitempty"`
+	Audience         *ProfileTags        `json:"audience,omitempty"`
+	Goals            *ProfileTags        `json:"goals,omitempty"`
+	Direction        *ProfileValue       `json:"direction,omitempty"`
+	TargetLevel      *ProfileValue       `json:"target_level,omitempty"`
 }
 
 var experienceValues = []string{"none", "basics", "projects", "working", "switch"}
@@ -38,7 +39,7 @@ func (p *CourseProfile) Evidence() []LearningEvidence {
 	if p.Prerequisites != nil {
 		out = append(out, p.Prerequisites.Evidence)
 	}
-	for _, v := range []*ProfileTags{p.Audience, p.Goals} {
+	for _, v := range []*ProfileTags{p.Audience, p.Goals, p.ExcludedAudience} {
 		if v != nil {
 			out = append(out, v.Evidence)
 		}
@@ -70,7 +71,7 @@ func (p *CourseProfile) Valid() bool {
 		}
 		return true
 	}
-	if !tags(p.Audience, experienceValues) || !tags(p.Goals, goalValues) {
+	if !tags(p.Audience, experienceValues) || !tags(p.Goals, goalValues) || !tags(p.ExcludedAudience, experienceValues) {
 		return false
 	}
 	if v := p.Prerequisites; v != nil && (levelRank(v.Level) < 0 || !slices.Contains([]string{"programming", "course_language"}, v.Scope)) {
@@ -84,6 +85,20 @@ func (p *CourseProfile) Valid() bool {
 	}
 	if p.Prerequisites != nil && p.TargetLevel != nil && levelRank(p.TargetLevel.Value) < levelRank(p.Prerequisites.Level) {
 		return false
+	}
+	if p.Audience != nil && p.ExcludedAudience != nil {
+		for _, v := range p.Audience.Values {
+			if slices.Contains(p.ExcludedAudience.Values, v) {
+				return false
+			}
+		}
+	}
+	if p.Audience != nil && p.Prerequisites != nil {
+		for _, v := range p.Audience.Values {
+			if rank := levelRank(v); rank >= 0 && rank < levelRank(p.Prerequisites.Level) {
+				return false
+			}
+		}
 	}
 	for _, e := range p.Evidence() {
 		if !e.Valid() {
@@ -103,6 +118,24 @@ func MatchProfile(c Course, key, value string) string {
 	var tags []string
 	switch key {
 	case "experience":
+		if value == "experienced" {
+			unknown := false
+			for _, v := range experienceValues[1:] {
+				switch MatchProfile(c, key, v) {
+				case "confirmed":
+					return "confirmed"
+				case "unknown":
+					unknown = true
+				}
+			}
+			if unknown {
+				return "unknown"
+			}
+			return "incompatible"
+		}
+		if p != nil && p.ExcludedAudience != nil && slices.Contains(p.ExcludedAudience.Values, value) {
+			return "incompatible"
+		}
 		if p != nil && p.Prerequisites != nil {
 			r := p.Prerequisites
 			rank := levelRank(value)

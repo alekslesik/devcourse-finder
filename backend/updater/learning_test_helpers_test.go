@@ -49,7 +49,7 @@ func reobserveLearning(t *testing.T, e QueuedObservation, at time.Time) QueuedOb
 		if p.Prerequisites != nil {
 			p.Prerequisites.Evidence.CheckedAt = at
 		}
-		for _, v := range []*catalog.ProfileTags{p.Audience, p.Goals} {
+		for _, v := range []*catalog.ProfileTags{p.Audience, p.Goals, p.ExcludedAudience} {
 			if v != nil {
 				v.Evidence.CheckedAt = at
 			}

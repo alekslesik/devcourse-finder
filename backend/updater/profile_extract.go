@@ -48,7 +48,7 @@ func profileTags(text string, proof catalog.LearningEvidence, kind string) *cata
 }
 func profileRequirement(raw, language string, proof catalog.LearningEvidence) *catalog.ProfileRequirement {
 	text := profileText(raw)
-	if profileHas(text, "желательно", "рекомендуется", "необязательно", "не обязательны", "возможно", "например") {
+	if profileHas(text, "желательно", "рекомендуется", "необязательно", "не обязательны", "возможно", "например", "не требуется коммерческий", "не нужен коммерческий", "не требуется опыт коммерческой", "не требуется опыт работы", "без коммерческого опыта") {
 		return nil
 	}
 	levels := []string{}
@@ -112,8 +112,50 @@ func stepikProfile(data []byte, course stepikCourse, c Candidate, now time.Time)
 	language := courseLanguage(course.Title, course.Summary)
 	p.Prerequisites = profileRequirement(course.Requirements, language, proof("requirements"))
 	p.Audience = profileTags(course.TargetAudience, proof("target_audience"), "audience")
+	p.ExcludedAudience = profileExcludedAudience(course.TargetAudience, proof("target_audience"))
 	// Summary is the current course's declared subject, not a title classifier.
 	p.Direction = profileDirection(course.Summary, proof("summary"))
 	stepikDescriptionProfile(data, course, c, now, p)
 	return p
+}
+
+// Preserve explicit negative suitability separately; unknown opt-in must never
+// reinterpret 'not for beginners' as an unverified beginner recommendation.
+func profileExcludedAudience(raw string, proof catalog.LearningEvidence) *catalog.ProfileTags {
+	text := profileText(raw)
+	values := []string{}
+	for _, rule := range []struct {
+		value   string
+		phrases []string
+	}{
+		{"none", []string{"не для новичков", "не подходит новичкам", "не подходит начинающим", "не для начинающих", "not for beginners"}},
+		{"basics", []string{"не для знающих основы", "не подходит людям с базовыми знаниями"}},
+		{"working", []string{"не для опытных разработчиков", "не подходит работающим разработчикам"}},
+	} {
+		if profileHas(text, rule.phrases...) {
+			values = append(values, rule.value)
+		}
+	}
+	if len(values) == 0 {
+		return nil
+	}
+	return &catalog.ProfileTags{Values: values, Evidence: proof}
+}
+func profileOutcomeLevel(raw string, proof catalog.LearningEvidence) *catalog.ProfileValue {
+	text := profileText(raw)
+	if profileHas(text, "например", "не гарантируется", "возможно") {
+		return nil
+	}
+	levels := []string{}
+	for _, rule := range []struct{ value, phrase string }{
+		{"basics", "целевой уровень: базовые знания"}, {"projects", "целевой уровень: самостоятельные проекты"}, {"working", "целевой уровень: коммерческая разработка"},
+	} {
+		if strings.Contains(text, rule.phrase) {
+			levels = append(levels, rule.value)
+		}
+	}
+	if len(levels) != 1 {
+		return nil
+	}
+	return &catalog.ProfileValue{Value: levels[0], Evidence: proof}
 }

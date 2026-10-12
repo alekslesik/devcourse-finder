@@ -36,3 +36,25 @@ func TestProfileMatchingSeparatesRequirementsAndAudience(t *testing.T) {
 		t.Fatal("duplicate evidence tag accepted")
 	}
 }
+
+func TestProfileNegativeAndContradictoryEvidence(t *testing.T) {
+	p := &CourseProfile{ExcludedAudience: &ProfileTags{Values: []string{"none"}, Evidence: profileProof()}}
+	c := fixture(time.Now())
+	c.Audience = []string{"unknown"}
+	c.Profile = p
+	if MatchProfile(c, "experience", "none") != "incompatible" || !p.Valid() {
+		t.Fatal(p)
+	}
+	if len(Search([]Course{c}, Filter{Experience: "none", IncludeUnknownProfiles: true}, time.Now())) != 0 {
+		t.Fatal("explicit exclusion bypassed")
+	}
+	p.Audience = &ProfileTags{Values: []string{"none"}, Evidence: profileProof()}
+	if p.Valid() {
+		t.Fatal("contradiction accepted")
+	}
+	p.ExcludedAudience = nil
+	p.Prerequisites = &ProfileRequirement{Level: "basics", Scope: "programming", Evidence: profileProof()}
+	if p.Valid() {
+		t.Fatal("beginner suitability conflicts with hard prerequisites")
+	}
+}

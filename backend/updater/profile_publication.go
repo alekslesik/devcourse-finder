@@ -12,6 +12,7 @@ const (
 	profileGoals
 	profileDirectionBit
 	profileTarget
+	profileExclusions
 )
 
 func knownProfileTags(v []string) bool {
@@ -78,6 +79,10 @@ func applyCourseProfile(c *catalog.Course, incoming *catalog.CourseProfile) {
 		if old.Direction != nil {
 			c.Direction = old.Direction.Value
 		}
+	}
+	if owned(profileExclusions, old.ExcludedAudience != nil, false) {
+		old.ExcludedAudience = next.ExcludedAudience
+		setBit(profileExclusions, old.ExcludedAudience != nil)
 	}
 	c.Profile = nil
 	if len(old.Evidence()) > 0 {

@@ -333,10 +333,23 @@ export interface components {
         };
         CourseProfile: {
             prerequisites?: components["schemas"]["ProfileRequirement"];
-            audience?: components["schemas"]["ProfileTags"];
-            goals?: components["schemas"]["ProfileTags"];
-            direction?: components["schemas"]["ProfileValue"];
-            target_level?: components["schemas"]["ProfileValue"];
+            audience?: components["schemas"]["ProfileTags"] & {
+                values?: unknown;
+            };
+            goals?: components["schemas"]["ProfileTags"] & {
+                values?: unknown;
+            };
+            direction?: components["schemas"]["ProfileValue"] & {
+                /** @enum {unknown} */
+                value?: "basics" | "backend" | "frontend" | "fullstack" | "automation";
+            };
+            target_level?: components["schemas"]["ProfileValue"] & {
+                /** @enum {unknown} */
+                value?: "none" | "basics" | "projects" | "working";
+            };
+            excluded_audience?: components["schemas"]["ProfileTags"] & {
+                values?: unknown;
+            };
         };
     };
     responses: never;
