@@ -61,7 +61,8 @@ services:
     environment:
       SITE_URL: ${SITE_URL:-http://localhost:3000}
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         SITE_URL: ${SITE_URL:-http://localhost:3000}
     depends_on:

@@ -2,7 +2,7 @@
 
 FROM node:22-alpine AS dependencies
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca; fi; \
     npm ci --https-proxy="${HTTPS_PROXY:-}"
@@ -12,7 +12,8 @@ WORKDIR /app
 ARG SITE_URL=http://localhost:3000
 ENV NEXT_TELEMETRY_DISABLED=1 SITE_URL=$SITE_URL
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY . .
+COPY frontend/ .
+COPY VERSION /VERSION
 RUN npm run build
 
 FROM node:22-alpine AS runtime

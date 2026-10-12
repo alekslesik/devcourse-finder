@@ -26,14 +26,14 @@ build-images:
       - COMPONENT: api
         BUILD_CONTEXT: backend
       - COMPONENT: frontend
-        BUILD_CONTEXT: frontend
+        BUILD_CONTEXT: .
   before_script:
     - docker info
   script:
     - |
       IMAGE="$CI_REGISTRY_IMAGE/$COMPONENT"
       if [ "$COMPONENT" = frontend ]; then
-        docker build --pull --build-arg "SITE_URL=${SITE_URL:-http://localhost:3000}" --tag "$IMAGE:$CI_COMMIT_SHA" "$BUILD_CONTEXT"
+        docker build --pull --file frontend/Dockerfile --build-arg "SITE_URL=${SITE_URL:-http://localhost:3000}" --tag "$IMAGE:$CI_COMMIT_SHA" "$BUILD_CONTEXT"
       else
         docker build --pull --tag "$IMAGE:$CI_COMMIT_SHA" "$BUILD_CONTEXT"
       fi

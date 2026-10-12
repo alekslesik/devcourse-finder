@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 const {courses}=JSON.parse(readFileSync(new URL('../../data/demo-catalog.json',import.meta.url)));
 const course=courses[0];
+const version=readFileSync(new URL('../../VERSION',import.meta.url),'utf8').trim();
 const result={course,offer:course.offers[0],effective_price:course.offers[0].price,reasons:[],stale:false};
 test('production routes: server HTML, unpublished 404, comparison URL, sitemap and outage',async()=>{
  let outage=false;
@@ -39,7 +40,7 @@ test('production routes: server HTML, unpublished 404, comparison URL, sitemap a
  for(const agent of ['TelegramBot (like TwitterBot)','WhatsApp/2.24.0','facebookexternalhit/1.1']){
   for(const [path,title] of expected){
    const response=await fetch(origin+path,{headers:{'User-Agent':agent}});assert.equal(response.status,200);
-   const body=await response.text(),head=body.slice(0,body.indexOf('</head>'));
+   const body=await response.text();assert.ok(body.includes('aria-label="Версия сайта v'+version+'"'),`Missing release version on ${path}`);const head=body.slice(0,body.indexOf('</head>'));
    assert.equal(meta(head,'og:title'),title);assert.equal(meta(head,'twitter:title'),title);
    assert.ok(meta(head,'og:description'));assert.equal(meta(head,'og:description'),meta(head,'twitter:description'));
    assert.equal(new URL(meta(head,'og:url')).href,new URL(path.split('?')[0],'https://courses.example').href);

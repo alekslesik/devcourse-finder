@@ -238,6 +238,8 @@ npm run build
 npm run test:routes
 ```
 
+The footer displays the root `VERSION` embedded at build time, so release and rollback images show their own version. Frontend Docker builds use the repository root as context (`docker build -f frontend/Dockerfile .`); its allowlist excludes local dependencies, environment files and unrelated source. The manual Deploy release run and job names include the selected release tag.
+
 The frontend proxies `/api/*` and `/out/*` to the API. Outside Docker, set `API_URL` when building the frontend if the API is not available at `http://api:8080`.
 
 The CI workflow repeats the backend tests, frontend typecheck and production build, validates the Compose model, and builds both container images on every pull request.

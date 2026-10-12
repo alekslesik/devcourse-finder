@@ -1,0 +1,12 @@
+**
+!VERSION
+!frontend/
+!frontend/**
+frontend/node_modules
+frontend/.next
+frontend/.git
+frontend/.env*
+frontend/test-results
+frontend/playwright-report
+frontend/*.tsbuildinfo
+frontend/npm-debug.log*
