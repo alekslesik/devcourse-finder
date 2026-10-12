@@ -5,6 +5,7 @@ import Modal from './modal';
 import ComparisonTable from './comparison-table';
 import CourseCard from './course-card';
 import ResultState from './result-state';
+import {rememberCatalog,takeCatalogRestore} from '../lib/catalog-navigation';
 import {recordEvent as event} from '../lib/analytics';
 const unavailableMessage='Каталог временно недоступен. Попробуйте ещё раз.';
 class SearchError extends Error {}
@@ -53,12 +54,15 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  function updateSelection(ids:string[]){setSelected(ids);try{localStorage.setItem('devcourse-offers',JSON.stringify(ids))}catch{}}
  function toggle(id:string){setNotice('');if(selected.includes(id)){updateSelection(selected.filter(x=>x!==id));return;}if(selected.length===3){setNotice('В сравнении уже 3 тарифа. Уберите один, чтобы добавить новый.');return;}updateSelection([...selected,id])}
  function removeComparison(id:string){const ids=selected.filter(x=>x!==id);updateSelection(ids);if(!ids.length){close();return;}const p=new URLSearchParams(location.search);p.set('compare',ids.join(','));history.replaceState(null,'',location.pathname+'?'+p);}
- function showCompare(){try{localStorage.setItem('devcourse-offers',JSON.stringify(selected))}catch{};location.assign('/compare?offers='+selected.map(encodeURIComponent).join(','))}
+ function showCompare(){rememberCatalog();try{localStorage.setItem('devcourse-offers',JSON.stringify(selected))}catch{};location.assign('/compare?offers='+selected.map(encodeURIComponent).join(','))}
  function close(){setCompareOpen(false);setModalError('');const p=new URLSearchParams(location.search);p.delete('compare');history.replaceState(null,'',location.pathname+(p.toString()?'?'+p:''));setParams(p)}
  useEffect(()=>{if(new URLSearchParams(location.search).has('compare'))return;try{const saved=JSON.parse(localStorage.getItem('devcourse-offers')||'[]');if(Array.isArray(saved))setSelected([...new Set(saved.filter((v:unknown):v is string=>typeof v==='string'))].slice(0,3))}catch{}},[]);
  const searchButton=useRef<HTMLButtonElement>(null);
  const resultHeading=useRef<HTMLHeadingElement>(null), focusResults=useRef(false);
  useEffect(()=>{if(!loading&&focusResults.current){focusResults.current=false;resultHeading.current?.focus({preventScroll:true});resultHeading.current?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}},[loading,data,error]);
+ const restoredPosition=useRef(false);
+ useEffect(()=>{const remember=(e:MouseEvent)=>{const anchor=(e.target as Element)?.closest('a');if(anchor){const url=new URL(anchor.href,location.origin);if(url.origin===location.origin&&(url.pathname.startsWith('/courses/')||url.pathname==='/compare'))rememberCatalog();}};document.addEventListener('click',remember,true);window.addEventListener('pagehide',rememberCatalog);return()=>{document.removeEventListener('click',remember,true);window.removeEventListener('pagehide',rememberCatalog);};},[]);
+ useEffect(()=>{if(loading||restoredPosition.current)return;restoredPosition.current=true;const context=takeCatalogRestore();if(context){let active=true;document.fonts.ready.then(()=>requestAnimationFrame(()=>{if(active)window.scrollTo({top:context.scrollY,behavior:'instant'});}));return()=>{active=false;};}},[loading]);
  const items=data?.items||[],page=data?.page||1;
  const confirmedItems=items.filter(i=>i.profile_match!=="unverified"),unverifiedItems=items.filter(i=>i.profile_match==="unverified");
  const confirmedTotal=data?.confirmed_total??data?.total??0;
