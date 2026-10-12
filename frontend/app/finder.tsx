@@ -27,12 +27,13 @@ function filterValue(key:string,value:string){
 export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  const [formRevision,setFormRevision]=useState(0);
  const [params,setParams]=useState<URLSearchParams|null>(null),[data,setData]=useState<Response|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
+ const [announcement,setAnnouncement]=useState('');
  const [selected,setSelected]=useState<string[]>([]),[compare,setCompare]=useState<ComparisonItem[]|null>(null),[compareOpen,setCompareOpen]=useState(false),[modalError,setModalError]=useState(''),[notice,setNotice]=useState('');
  useEffect(()=>{const read=()=>{const raw=new URLSearchParams(location.search),p=canonicalParams(raw),query=p.toString();if(raw.toString()!==query)history.replaceState(null,'',location.pathname+(query?'?'+query:''));setParams(p);setFormRevision(v=>v+1);if(p.has('compare'))setSelected([...new Set((p.get('compare')||'').split(',').filter(Boolean))].slice(0,3));setCompareOpen(p.has('compare'))};read();window.addEventListener('popstate',read);return()=>window.removeEventListener('popstate',read)},[]);
  useEffect(()=>{
   if(!params)return;
   const ctrl=new AbortController(),requestParams=searchParams(params);requestParams.set('diagnostics','true');const query=requestParams.toString();
-  setLoading(true);setError('');
+  setLoading(true);setError('');setAnnouncement('');
   fetch('/api/v1/courses'+(query?'?'+query:''),{signal:ctrl.signal}).then(async r=>{
    if(!r.ok)throw new SearchError(r.status===400?'Проверьте параметры поиска или сбросьте фильтры.':'Каталог временно недоступен. Попробуйте ещё раз.');
    const data=await r.json();
@@ -42,7 +43,7 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
    // Transport may already have completed when cleanup aborts this search.
    // Ignore queued results and analytics as well as late failures.
    if(ctrl.signal.aborted)return;
-   setData(d);event(d.total?'search':'empty',{language:params.get('language')||'',goal:params.get('goal')||'',total:d.total});
+   setData(d);setAnnouncement(focusResults.current?'':d.total?countLabel(d.total)+' найдено.':'Подходящих программ нет.');event(d.total?'search':'empty',{language:params.get('language')||'',goal:params.get('goal')||'',total:d.total});
   }).catch(e=>{if(!ctrl.signal.aborted)setError(e instanceof SearchError?e.message:unavailableMessage)}).finally(()=>{if(!ctrl.signal.aborted)setLoading(false)});
   return()=>ctrl.abort();
  },[params,retry]);
@@ -79,6 +80,7 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  <div className="profileOptions">{counts&&<small className="profileCountHelp">Числа — программы с подтверждённым параметром при остальных выбранных фильтрах.</small>}
  <label className="checkbox"><input type="checkbox" name="include_unknown_profiles" value="true" defaultChecked={params.get('include_unknown_profiles')==='true'}/>Показать курсы с неполными данными</label></div>
  <input type="hidden" name="sort" value={params.get('sort')||'recent'}/><button ref={searchButton} className="primary searchButton" type="submit">Найти обучение <span>→</span></button></form>}</aside>
+ <div className="srOnly" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
  <section id="catalog" className="results" aria-label="Результаты поиска" aria-busy={loading}><div className="resultsHeading"><div className="resultTitle"><div className="eyebrow">КАТАЛОГ ОБУЧЕНИЯ</div><h2 ref={resultHeading} tabIndex={-1} className="resultHeading">{loading?'Ищем подходящие программы…':error?'Поиск недоступен':confirmedTotal?countLabel(confirmedTotal)+(hasProfileFilters?' с подтверждёнными условиями':hasFilters?' по вашим условиям':' в каталоге'):hasProfileFilters?'Подтверждённых совпадений нет':hasFilters?'Пока без совпадений':'Каталог пока пуст'}</h2></div>
  <div className="filterChips" role="group" aria-label="Применённые фильтры">{Array.from(params?.entries()||[]).filter(([key])=>key in filterLabels).map(([key,value])=><button className="filterChip" key={key} aria-label={"Убрать фильтр: "+filterLabels[key]} onClick={()=>{const p=new URLSearchParams(params||'');p.delete(key);p.delete('page');navigate(p)}}>{filterLabels[key]}: {filterValue(key,value)} <span aria-hidden="true">×</span></button>)}</div>
  <div className="sort"><select aria-label="Сортировка" value={params?.get('sort')||'recent'} onChange={e=>{const p=new URLSearchParams(params||'');p.set('sort',e.target.value);p.delete('page');navigate(p,true)}}><option value="recent">Сначала свежие данные</option><option value="price_asc">Сначала дешевле</option><option value="price_desc">Сначала дороже</option><option value="duration">Сначала короче</option></select></div></div>
