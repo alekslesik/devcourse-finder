@@ -394,7 +394,9 @@ func mergePracticumGroup(ctx context.Context, tx pgx.Tx, old []catalog.Course, c
 	if _, err = tx.Exec(ctx, "UPDATE catalog_identities SET practicum_tariffs=$2::jsonb WHERE adapter='yandex' AND external_id=$1", c.ExternalID, raw); err != nil {
 		return nil, err
 	}
-	return []catalog.Course{current}, nil
+	result := []catalog.Course{current}
+	applyPublishedProfile(result, old, o)
+	return result, nil
 }
 
 func sameOptionalInt(a, b *int) bool { return a == nil && b == nil || a != nil && b != nil && *a == *b }

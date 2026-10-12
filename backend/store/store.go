@@ -129,6 +129,10 @@ func (d *DB) Import(ctx context.Context, data catalog.Dataset, operator string, 
 	if dry {
 		return nil
 	}
+	data.Courses = append([]catalog.Course(nil), data.Courses...)
+	for i := range data.Courses {
+		data.Courses[i].ProfileOwnership = 0
+	}
 	if e = importTx(ctx, tx, old, data, operator); e != nil {
 		return e
 	}

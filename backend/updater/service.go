@@ -125,6 +125,9 @@ func (s *Service) Run(ctx context.Context) (result Result, err error) {
 				return result, ErrSource
 			}
 			if verified {
+				if observation.ProfileObserved {
+					template.Profile = observation.Profile
+				}
 				if observation.LearningObserved {
 					template.Offers = append([]catalog.Offer(nil), template.Offers...)
 					template.Offers[0].LearningConditions = observation.LearningConditions
@@ -317,6 +320,13 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 		}
 		applyLearningConditions(&current, o.LearningConditions)
 	}
+	if o.ProfileObserved {
+		if !found {
+			c.Profile = nil
+			c.ProfileOwnership = 0
+		}
+		applyCourseProfile(&c, o.Profile)
+	}
 	c.CheckedAt = now
 	c.Offers[offerIndex] = current
 	return []catalog.Course{c}, nil
@@ -342,6 +352,8 @@ func needsConfirmation(old catalog.Offer, o Observation) bool {
 func confirm(ctx context.Context, tx pgx.Tx, id string, o Observation, now time.Time) (bool, error) {
 	// Fresh learning evidence timestamps/digests cannot prevent repeated price or
 	// enrollment evidence from confirming an anomaly in the next scheduled window.
+	o.ProfileObserved = false
+	o.Profile = nil
 	o.LearningObserved = false
 	o.LearningConditions = nil
 	o.LearningByOffer = nil

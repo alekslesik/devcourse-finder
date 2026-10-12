@@ -256,7 +256,21 @@ func parse(data []byte, s Source, canonical string, now time.Time) (Observation,
 	case "stepik":
 		return parseStepik(data, s, now)
 	case "schema-course":
-		return parseSchemaCourse(data, canonical)
+		o, err := parseSchemaCourse(data, canonical)
+		if err != nil {
+			return o, err
+		}
+		for adapter := range profileContracts {
+			if c, ok := candidateURL(adapter, canonical, ""); ok {
+				p := profileFromSections(data, c, "", now, profileContracts[adapter])
+				if len(p.Evidence()) > 0 {
+					o.Profile = p
+				}
+				o.ProfileObserved = true
+				break
+			}
+		}
+		return o, nil
 	}
 	return Observation{}, errors.New("unsupported adapter")
 }

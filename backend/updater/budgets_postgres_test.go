@@ -68,6 +68,7 @@ func TestPublisherSeparatesRefreshesFromNewCoursesAndBoundsRetention(t *testing.
 	}
 	event.ObservedAt = event.ObservedAt.Add(time.Minute)
 	event.Record.CheckedAt = event.ObservedAt
+	event = reobserveLearning(t, event, event.ObservedAt)
 	if err = s.enqueue(ctx, event); err != nil {
 		t.Fatal(err)
 	}

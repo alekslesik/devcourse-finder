@@ -164,5 +164,6 @@ func mergePurpleSchool(ctx context.Context, tx pgx.Tx, old []catalog.Course, can
 	if len(result) > 0 {
 		_, err = tx.Exec(ctx, `INSERT INTO catalog_identities(adapter,external_id,canonical_url,course_id,offer_id,purple_binding) VALUES($1,$2,$3,$4,$5,$6::jsonb) ON CONFLICT(adapter,external_id) DO NOTHING`, candidate.Adapter, candidate.ExternalID, candidate.URL, record.ID, record.Offers[0].ID, raw)
 	}
+	applyPublishedProfile(result, old, o)
 	return result, err
 }
