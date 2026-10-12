@@ -50,3 +50,6 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
  aside form {gap:12px;}
  .resultsHeading {margin-bottom:16px;}
 }
+
+.draftNotice {grid-column:1/5; margin:0; color:var(--muted); font-size:13px; align-self:center;}
+@media(max-width:1000px) {.draftNotice {grid-column:1/-1;}}
