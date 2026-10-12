@@ -16,11 +16,15 @@ test('profile counts and explicit unknown results preserve filters and history o
  await expect(page.getByRole('heading',{level:2,name:'1 программа с подтверждёнными условиями'})).toBeVisible();
  await expect(page.locator('select[name=experience] option[value=basics]')).toHaveText('Знаю основы · 1');
  await expect(page.locator('.profileNotice')).toContainText('Ещё 1 программа');
+ await page.getByLabel('До, ₽',{exact:true}).fill('350000');
  await page.getByRole('button',{name:'Показать курсы с неполными данными',exact:true}).focus();await page.keyboard.press('Enter');
  await expect(page).toHaveURL(/include_unknown_profiles=true/);
  for(const [key,value] of [['language','go'],['experience','basics'],['goal','job'],['direction','backend'],['max','50000000']])expect(new URL(page.url()).searchParams.get(key)).toBe(value);
  await expect(page.getByRole('heading',{name:'Условия нужно уточнить'})).toBeVisible();
  await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
+ await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('350000');
+ await expect(page.locator('.draftNotice')).toContainText('Есть изменения');
+ await expect(page.locator('.srOnly[role=status]')).toContainText('1 программа с подтверждёнными условиями. 1 программа с неполными данными.');
  await expect(page.getByRole('checkbox',{name:'Показать курсы с неполными данными'})).toBeChecked();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(axe.violations.filter(v=>v.impact==='serious'||v.impact==='critical')).toEqual([]);

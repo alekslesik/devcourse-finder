@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.21.1] - 2026-10-12
+
+- Shorten the catalog path, retain search drafts and return context, and keep mobile comparison headings visible.
+- Announce completed searches without duplicate focus feedback, improve touch controls and course summaries, and extend browser UX acceptance coverage.
+
 ## [0.21.0] - 2026-10-12
 
 - Model independently verified prerequisites, audience, exclusions, outcomes, direction and target level; preserve literal legacy classifications and reject contradictory source claims.

@@ -9,7 +9,7 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 .glassHero{display:grid;grid-template-columns:1.05fr 1fr;align-items:center;gap:80px;padding:64px 30px 66px;overflow:visible}.intro::before{display:none}.glassHero h1{font-size:82px;font-weight:600;letter-spacing:-.04em;line-height:1.1;margin:0 0 22px}.glassHero p{font-size:19px;line-height:1.5}
 .languageScene{height:330px;position:relative;display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:55px 30px 45px;border-radius:38px;transform:rotate(-3deg);background:var(--glass);box-shadow:var(--shadow);backdrop-filter:blur(18px)}.languageScene::before{content:'';position:absolute;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#ebf7ff,#8aa8ee);box-shadow:inset -10px -15px 30px #2f5b9f20,0 20px 35px #577bbb20;right:-17px;top:-23px;z-index:-1}.sceneCaption{position:absolute;top:20px;left:30px;font-size:13px;font-weight:600}.languageScene>button{display:flex;align-items:center;gap:15px;min-width:0;border:0;border-radius:18px;background:var(--surface);box-shadow:inset 0 1px 2px #ffffff80;padding:18px;font-size:16px;font-weight:600;text-align:left}.languageScene>button[aria-pressed=true]{background:var(--accent-soft);outline:2px solid var(--accent)}.languageCode{font-size:22px;letter-spacing:-.06em;color:var(--accent)}.sceneFoot{position:absolute;bottom:15px;right:28px;color:var(--muted);font-size:10px}
 .workspace{display:block}.workspace aside{position:static;max-height:none;overflow:visible;border:0;border-radius:24px;background:var(--glass);backdrop-filter:blur(20px);box-shadow:var(--shadow);padding:24px 28px;margin-bottom:44px}.filterTitle{margin-bottom:20px}.filterTitle h2{font-size:22px;font-weight:600}aside form{display:grid;grid-template-columns:1.45fr repeat(3,minmax(0,1fr)) 1.1fr;column-gap:18px;row-gap:18px;align-items:start}aside fieldset,aside form>label{margin:0}.languageGrid{display:flex;flex-wrap:wrap;gap:6px}.languageChoice span{padding:8px 10px;border:0;background:var(--glass);box-shadow:inset 0 1px 1px #ffffff70;border-radius:9px;font-size:12px}.languageChoice input:checked+span{background:var(--accent);color:var(--accent-text)}.priceInputs{gap:8px}.priceInputs input{padding-inline:8px}.priceInputs+small{grid-column:1/3;margin:0}aside form>.checkbox{grid-column:3/5;align-self:center}aside form>details{grid-column:1/5;margin:0;padding-top:12px}aside form>.searchButton{grid-column:5;grid-row:2/4;align-self:end;margin:0}input,select{border:1px solid transparent;background:var(--surface);box-shadow:inset 0 1px 1px #ffffff70;border-radius:12px}select{font-size:13px}
-@supports(appearance:base-select){select,select::picker(select){appearance:base-select}select::picker(select){background:var(--surface-raised);backdrop-filter:blur(24px);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--shadow);max-height:320px}select option{border-radius:8px;padding:10px;white-space:normal}@media (hover:hover) and (pointer:fine) {select option:hover,select option:checked{background:var(--accent-soft);color:var(--ink)}}select::picker-icon{color:var(--muted)}}
+@supports(appearance:base-select){select,select::picker(select){appearance:base-select}select::picker(select){background:var(--surface-raised);backdrop-filter:blur(24px);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--shadow);max-height:320px}select option{border-radius:8px;padding:10px;white-space:normal}select option:checked{background:var(--accent-soft);color:var(--ink)}@media (hover:hover) and (pointer:fine) {select option:hover{background:var(--accent-soft);color:var(--ink)}}select::picker-icon{color:var(--muted)}}
 .resultsHeading h2{font-size:32px;font-weight:600}.resultsHeading .eyebrow{display:none}.cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;align-items:stretch}.card{display:flex;flex-direction:column;border:1px solid #ffffff30;border-radius:24px;background:var(--glass);backdrop-filter:blur(22px);box-shadow:var(--shadow)}@media (hover:hover) and (pointer:fine) {.card:hover{border-color:var(--line)}}.cardTop{padding:24px 24px 0;gap:8px}.languageBadge{border-radius:8px;background:#e1e8ff;color:#315297}.languageBadge.python{background:#e7dcf5;color:#624390}.languageBadge.go{background:#d9eded;color:#2f6970}.languageBadge.javascript{background:#f3e7cc;color:#82632e}.cardBody{display:flex;flex-direction:column;flex:1;padding:18px 24px 22px;gap:22px}.card h3{font-size:23px;font-weight:600;line-height:1.15}.courseInfo p{font-size:13px;line-height:1.6}.facts{gap:8px 12px;font-size:12px}.offerInfo{display:flex;border:0;border-top:1px solid var(--line);padding:18px 0 0;margin-top:auto}.price{font-size:28px;font-weight:600}.offerInfo .secondary{background:var(--surface);color:var(--ink);box-shadow:inset 0 1px 1px #ffffff80}.cardFooter{padding:14px 24px;font-size:11px}.how{padding:44px 30px 52px;margin-top:64px;gap:60px}.how .eyebrow{display:none}.how h2{font-size:50px;font-weight:600;line-height:1.1}.how h2 span{color:var(--muted)}footer{padding-inline:30px}.compareBar,.modal,.empty,.detailOffers>section,.detailOffers>div{backdrop-filter:blur(24px);box-shadow:var(--shadow)}
 @media(max-width:1350px){header{margin-inline:30px}.glassHero{gap:40px}aside form{grid-template-columns:repeat(4,minmax(0,1fr))}aside fieldset{grid-column:1/-1}aside form>details{grid-column:1/4}aside form>.searchButton{grid-column:4;grid-row:3/5}aside form>.checkbox{grid-column:3/5}}
 @media(max-width:1000px){.glassHero{padding-inline:0;gap:30px}.glassHero h1{font-size:64px}.languageScene{height:290px;padding:55px 16px 38px;gap:12px}.languageScene>button{padding:12px;font-size:13px;gap:8px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}aside form{grid-template-columns:repeat(2,minmax(0,1fr))}aside form>details{grid-column:1/-1}aside form>.searchButton{grid-column:2;grid-row:auto}aside form>.checkbox{grid-column:1/-1}.how{gap:30px;padding-inline:0}.how h2{font-size:40px}}
@@ -31,25 +31,37 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 }
 
 /* #92: keep route controls visible while bringing the catalog closer. */
-.glassHero {padding-block:32px 36px; gap:40px;}
+.glassHero {padding-block:16px 20px; gap:40px;}
 .glassHero h1 {font-size:64px;}
-.languageScene {height:260px; padding-block:45px 36px;}
+.languageScene {height:220px; padding-block:40px 28px;}
 .workspace aside {margin-bottom:28px;}
 .resultHeading {scroll-margin-top:24px;}
 @media(max-width:700px) {
- .glassHero {gap:16px; padding:24px 4px;}
- .glassHero h1 {font-size:40px; line-height:1.1; margin-bottom:10px;}
+ .glassHero {gap:8px; padding:10px 4px;}
+ .glassHero h1 {font-size:36px; line-height:1.1; margin-bottom:10px;}
  .glassHero h1 br,.glassHero p br {display:none;}
  .glassHero p {font-size:15px; line-height:1.5;}
- .languageScene {height:140px; grid-template-columns:repeat(4,minmax(0,1fr)); padding:32px 10px 24px; gap:6px; margin-inline:0; transform:none; border-radius:20px;}
+ .languageScene {height:104px; grid-template-columns:repeat(4,minmax(0,1fr)); padding:28px 10px 20px; gap:6px; margin-inline:0; transform:none; border-radius:20px;}
  .languageScene>button {flex-direction:column; justify-content:center; gap:3px; padding:8px 2px; font-size:11px;}
  .languageCode {font-size:18px;}
  .languageScene::before {width:54px; height:54px; right:-4px; top:-10px;}
- .workspace aside {padding:16px; margin-bottom:24px;}
+ .workspace aside {padding:12px; margin-bottom:12px;}
  .filterTitle {margin-bottom:12px;}
- aside form {gap:12px;}
+ aside form {gap:10px;}
  .resultsHeading {margin-bottom:16px;}
 }
 
 .draftNotice {grid-column:1/5; margin:0; color:var(--muted); font-size:13px; align-self:center;}
 @media(max-width:1000px) {.draftNotice {grid-column:1/-1;}}
+
+.draftNotice:empty {display:none;}
+
+/* Keep both opt-ins together, alongside the existing price explanation. */
+.profileOptions {grid-column:3/5; grid-row:2; display:grid; gap:4px;}
+@media(max-width:1350px) and (min-width:1001px) {
+ .profileOptions {grid-column:1/4; grid-row:3;}
+ aside form>.searchButton {grid-row:4/6;}
+ aside form>details {grid-row:5;}
+}
+@media(max-width:1000px) {.profileOptions {grid-column:1/-1; grid-row:auto;}}
+@media(max-width:700px) {.sceneCaption {top:8px;}}
