@@ -11,12 +11,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"devcourse-finder/catalog"
 )
 
-const aiPolicyVersion = "course-facts-v1"
-const aiMaxText = 48000
+const aiPolicyVersion = "course-facts-v2"
+const aiMaxText = 96000
 const aiMaxClaims = 40
 const aiOwnershipShift = 8
 
@@ -36,6 +37,7 @@ type AIClaim struct {
 	Field      string   `json:"field"`
 	OfferID    string   `json:"offer_id"`
 	DocumentID string   `json:"document_id"`
+	QuoteID    string   `json:"quote_id,omitempty"`
 	Quote      string   `json:"quote"`
 	Value      string   `json:"value"`
 	Values     []string `json:"values"`
@@ -138,8 +140,19 @@ func aiCompile(c Candidate, docs []AIDocument, extraction AIExtraction, verifica
 		d, ok := documents[claim.DocumentID]
 		key := claim.OfferID + ":" + claim.Field
 		q := aiNormalize(claim.Quote)
-		if !ok || seen[key] || len(q) < 12 || len(q) > 1200 || !strings.Contains(aiNormalize(d.Text), q) {
+		if !ok || seen[key] || utf8.RuneCountInString(q) < 12 || utf8.RuneCountInString(q) > 1200 || !strings.Contains(aiNormalize(d.Text), q) {
 			return out, ErrAI
+		}
+		if claim.QuoteID != "" {
+			matched := false
+			for _, segment := range aiQuoteSegments(d.Text) {
+				if segment.ID == claim.QuoteID && segment.Text == q {
+					matched = true
+				}
+			}
+			if !matched {
+				return out, ErrAI
+			}
 		}
 		seen[key] = true
 		course := slices.Contains([]string{"prerequisites", "audience", "excluded_audience", "goals", "direction", "target_level"}, claim.Field)

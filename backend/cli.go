@@ -34,7 +34,7 @@ func commandName(args []string) string {
 		}
 	}
 	switch args[0] {
-	case "migrate", "report", "cleanup", "catalog-update":
+	case "migrate", "report", "cleanup", "catalog-update", "catalog-ai":
 		return args[0]
 	}
 	return "unknown"

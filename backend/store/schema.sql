@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS catalog_ai_sources (
 );
 CREATE TABLE IF NOT EXISTS catalog_ai_observations (
  id bigserial PRIMARY KEY,course_id text NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
- observed_at timestamptz NOT NULL,payload jsonb NOT NULL CHECK(octet_length(payload::text)<=131072),
+ observed_at timestamptz NOT NULL,payload jsonb NOT NULL CHECK(octet_length(payload::text)<=262144),
  processed_at timestamptz,code text NOT NULL DEFAULT 'pending',
  UNIQUE(course_id,observed_at)
 );

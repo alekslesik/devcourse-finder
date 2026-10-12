@@ -56,3 +56,20 @@ func TestOpenAIRejectsFailureRefusalAndTruncation(t *testing.T) {
 		}
 	}
 }
+
+func TestOpenAISeparateReviewerAndSafeQuotaClassification(t *testing.T) {
+	c, docs, x, _ := aiFixture()
+	client := &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+		var req map[string]any
+		json.NewDecoder(r.Body).Decode(&req)
+		if req["model"] != "gpt-4.1" {
+			t.Fatal("reviewer reused extractor")
+		}
+		return &http.Response{StatusCode: 429, Body: io.NopCloser(strings.NewReader(`{"error":{"code":"insufficient_quota","message":"a response can contain a secret; never log this"}}`))}, nil
+	})}
+	model := &OpenAIModel{Key: "test-secret", Model: "gpt-4.1-mini", VerifyModel: "gpt-4.1", Client: client}
+	_, _, err := model.Verify(context.Background(), c, docs, x)
+	if err == nil || err.Error() != "openai_insufficient_quota" {
+		t.Fatal("unsafe provider error", err)
+	}
+}

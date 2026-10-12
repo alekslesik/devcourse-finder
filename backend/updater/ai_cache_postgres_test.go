@@ -3,6 +3,7 @@ package updater
 import (
 	"context"
 	"devcourse-finder/catalog"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -18,11 +19,11 @@ func (m *fakeAIModel) Extract(ctx context.Context, c Candidate, d []AIDocument) 
 	if m.failure {
 		return x, AIUsage{}, ErrAI
 	}
-	return x, AIUsage{Total: 100}, nil
+	return x, AIUsage{Prompt: 100, Total: 100}, nil
 }
 func (m *fakeAIModel) Verify(ctx context.Context, c Candidate, d []AIDocument, x AIExtraction) (AIVerification, AIUsage, error) {
 	m.calls++
-	return AIVerification{Complete: true, Verified: []int{0, 1}}, AIUsage{Total: 50}, nil
+	return AIVerification{Complete: true, Verified: []int{0, 1}}, AIUsage{Prompt: 50, Total: 50}, nil
 }
 func aiImportedCourse(t *testing.T) (catalog.Course, *AIEngine, []AIDocument) {
 	t.Helper()
@@ -64,7 +65,7 @@ func TestAICacheUnchangedContentAndPersistentBudget(t *testing.T) {
 func TestAIFailedRequestsConsumeBudgetAndDoNotCache(t *testing.T) {
 	record, engine, docs := aiImportedCourse(t)
 	engine.Model = &fakeAIModel{failure: true}
-	engine.DailyLimit = 1
+	engine.DailyLimit = 2
 	c, _, _, _ := aiFixture()
 	if _, err := engine.Resolve(context.Background(), record.ID, c, docs, time.Now()); err != ErrAI {
 		t.Fatal(err)
@@ -76,5 +77,33 @@ func TestAIFailedRequestsConsumeBudgetAndDoNotCache(t *testing.T) {
 	engine.DB.Pool.QueryRow(context.Background(), "SELECT count(*) FROM catalog_ai_cache").Scan(&count)
 	if count != 0 {
 		t.Fatal("failure cached")
+	}
+}
+
+func TestAICompletePairRequiredBeforePaidExtraction(t *testing.T) {
+	for _, limit := range []int{1, 3} {
+		t.Run(fmt.Sprint(limit), func(t *testing.T) {
+			record, engine, docs := aiImportedCourse(t)
+			engine.DailyLimit = limit
+			c, _, _, _ := aiFixture()
+			if limit == 3 {
+				if _, err := engine.Resolve(context.Background(), record.ID, c, docs, time.Now()); err != nil {
+					t.Fatal(err)
+				}
+				docs[0].Text += " Новый раздел программы."
+			}
+			before := engine.Model.(*fakeAIModel).calls
+			if _, err := engine.Resolve(context.Background(), record.ID, c, docs, time.Now()); err != ErrAIBudget {
+				t.Fatal(err)
+			}
+			if engine.Model.(*fakeAIModel).calls != before {
+				t.Fatal("paid extraction started without a complete request pair")
+			}
+			var requests int
+			engine.DB.Pool.QueryRow(context.Background(), "SELECT coalesce(sum(requests),0) FROM catalog_ai_daily_budget").Scan(&requests)
+			if requests != before {
+				t.Fatalf("reservation changed: got %d want %d", requests, before)
+			}
+		})
 	}
 }

@@ -157,16 +157,17 @@ func MatchProfile(c Course, key, value string) string {
 		if matchesExperience(tags, value) {
 			return "confirmed"
 		}
-		if slices.ContainsFunc(tags, func(v string) bool { return slices.Contains(experienceValues, v) }) {
-			return "incompatible"
-		}
+		known := slices.ContainsFunc(tags, func(v string) bool { return slices.Contains(experienceValues, v) })
 		// Only a verified target together with verified prerequisites can establish
 		// an interval. A 'from zero' requirement does not match every skilled user.
-		if p != nil && p.Prerequisites != nil && p.TargetLevel != nil && value != "switch" && value != "experienced" {
+		if p != nil && p.Prerequisites != nil && p.TargetLevel != nil && value != "switch" && value != "experienced" && (!known || p.Audience != nil) {
 			rank := levelRank(value)
 			if rank >= levelRank(p.Prerequisites.Level) && rank <= levelRank(p.TargetLevel.Value) {
 				return "confirmed"
 			}
+			return "incompatible"
+		}
+		if known {
 			return "incompatible"
 		}
 	case "goal":

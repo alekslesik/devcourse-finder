@@ -58,3 +58,23 @@ func TestProfileNegativeAndContradictoryEvidence(t *testing.T) {
 		t.Fatal("beginner suitability conflicts with hard prerequisites")
 	}
 }
+
+func TestVerifiedIntervalIsNotBlockedByPrimaryTypedAudience(t *testing.T) {
+	c := fixture(time.Now())
+	c.Audience = []string{"unknown"}
+	c.Profile = &CourseProfile{Prerequisites: &ProfileRequirement{Level: "none", Scope: "programming", Evidence: profileProof()}, TargetLevel: &ProfileValue{Value: "projects", Evidence: profileProof()}, Audience: &ProfileTags{Values: []string{"none"}, Evidence: profileProof()}}
+	if MatchProfile(c, "experience", "basics") != "confirmed" || MatchProfile(c, "experience", "projects") != "confirmed" || MatchProfile(c, "experience", "working") != "incompatible" {
+		t.Fatal("verified interval lost")
+	}
+	c.Profile.TargetLevel = nil
+	if MatchProfile(c, "experience", "working") == "confirmed" || MatchProfile(c, "experience", "basics") == "confirmed" {
+		t.Fatal("beginner audience blindly expanded")
+	}
+	// Existing curated legacy classifications remain literal.
+	c.Profile.Audience = nil
+	c.Profile.TargetLevel = &ProfileValue{Value: "projects", Evidence: profileProof()}
+	c.Audience = []string{"none"}
+	if MatchProfile(c, "experience", "basics") != "incompatible" {
+		t.Fatal("curated legacy tags changed")
+	}
+}

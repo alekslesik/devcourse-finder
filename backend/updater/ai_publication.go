@@ -45,7 +45,7 @@ func aiIdentityDigest(c catalog.Course) string {
 }
 func (e AIEvent) valid() bool {
 	c, ok := candidateURL(e.Candidate.Adapter, e.Candidate.URL, "")
-	if !ok || c.URL != e.Candidate.URL || c.ExternalID != e.Candidate.ExternalID || e.Version != 1 || e.CourseID == "" || !evidenceDigest.MatchString(e.IdentityDigest) || e.Policy != aiEffectivePolicy() || len(e.Model) == 0 || len(e.Model) > 100 || e.ObservedAt.IsZero() {
+	if !ok || c.URL != e.Candidate.URL || c.ExternalID != e.Candidate.ExternalID || e.Version != 1 || e.CourseID == "" || !evidenceDigest.MatchString(e.IdentityDigest) || e.Policy != aiEffectivePolicy() || len(e.Model) == 0 || len(e.Model) > 200 || e.ObservedAt.IsZero() {
 		return false
 	}
 	_, err := aiCompile(c, e.Documents, e.Extraction, e.Verification, e.ObservedAt)
@@ -56,7 +56,7 @@ func (s *Service) enqueueAI(ctx context.Context, e AIEvent) error {
 		return ErrAI
 	}
 	raw, _ := json.Marshal(e)
-	if len(raw) > 131072 {
+	if len(raw) > 262144 {
 		return ErrAI
 	}
 	tx, err := s.DB.Pool.Begin(ctx)
