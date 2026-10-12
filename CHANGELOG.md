@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.23.0] - 2026-10-12
+
+- Add an optional OpenAI course metadata collector with source quotes, independent verification and bounded background refreshes.
+
 ## [0.22.0] - 2026-10-12
 
 - Display the root release version in the site footer and include the selected tag in manual deployment run and job names.
