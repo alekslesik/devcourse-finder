@@ -29,3 +29,24 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
  .resultsHeading .sort {grid-column:1;grid-row:3;}
  .resultsHeading:not(:has(.filterChip)) .sort {grid-row:2;}
 }
+
+/* #92: keep route controls visible while bringing the catalog closer. */
+.glassHero {padding-block:32px 36px; gap:40px;}
+.glassHero h1 {font-size:64px;}
+.languageScene {height:260px; padding-block:45px 36px;}
+.workspace aside {margin-bottom:28px;}
+.resultHeading {scroll-margin-top:24px;}
+@media(max-width:700px) {
+ .glassHero {gap:16px; padding:24px 4px;}
+ .glassHero h1 {font-size:40px; line-height:1.1; margin-bottom:10px;}
+ .glassHero h1 br,.glassHero p br {display:none;}
+ .glassHero p {font-size:15px; line-height:1.5;}
+ .languageScene {height:140px; grid-template-columns:repeat(4,minmax(0,1fr)); padding:32px 10px 24px; gap:6px; margin-inline:0; transform:none; border-radius:20px;}
+ .languageScene>button {flex-direction:column; justify-content:center; gap:3px; padding:8px 2px; font-size:11px;}
+ .languageCode {font-size:18px;}
+ .languageScene::before {width:54px; height:54px; right:-4px; top:-10px;}
+ .workspace aside {padding:16px; margin-bottom:24px;}
+ .filterTitle {margin-bottom:12px;}
+ aside form {gap:12px;}
+ .resultsHeading {margin-bottom:16px;}
+}
