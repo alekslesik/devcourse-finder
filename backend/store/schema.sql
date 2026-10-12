@@ -143,3 +143,17 @@ ALTER TABLE offers ADD COLUMN IF NOT EXISTS learning_ownership integer NOT NULL 
 
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS profile jsonb;
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS profile_ownership integer NOT NULL DEFAULT 0;
+
+-- Optional AI metadata enrichment is independent of financial observations.
+CREATE TABLE IF NOT EXISTS catalog_ai_cache (
+ course_id text NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+ bundle_digest text NOT NULL, model text NOT NULL, policy text NOT NULL,
+ extraction jsonb NOT NULL CHECK(octet_length(extraction::text)<=32768),
+ verification jsonb NOT NULL CHECK(octet_length(verification::text)<=8192),
+ used_at timestamptz NOT NULL DEFAULT now(),
+ PRIMARY KEY(course_id,bundle_digest,model,policy)
+);
+CREATE TABLE IF NOT EXISTS catalog_ai_daily_budget (
+ day date PRIMARY KEY, requests integer NOT NULL CHECK(requests>=0),
+ total_tokens bigint NOT NULL DEFAULT 0 CHECK(total_tokens>=0)
+);
