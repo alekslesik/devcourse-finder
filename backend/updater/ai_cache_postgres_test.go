@@ -28,7 +28,7 @@ func aiImportedCourse(t *testing.T) (catalog.Course, *AIEngine, []AIDocument) {
 	t.Helper()
 	db := postgresFixture(t)
 	c, docs, _, _ := aiFixture()
-	now := time.Now().UTC()
+	now := time.Now().UTC().Truncate(time.Microsecond)
 	price := int64(100000)
 	record, err := normalizedRecord(c, "Python курс", "Изучение Python для начинающих", "Stepik", Observation{Price: &price, Enrollment: "continuous", Schedule: "flexible"}, now)
 	if err != nil {

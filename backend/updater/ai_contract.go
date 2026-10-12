@@ -76,17 +76,23 @@ func aiNumberInQuote(n float64, q string) bool {
 	if math.IsNaN(n) || math.IsInf(n, 0) {
 		return false
 	}
-	token := strconv.FormatFloat(n, 'f', -1, 64)
-	// A source digit must exist; the model cannot estimate or convert a duration.
-	rx := regexp.MustCompile(`(^|[^0-9])` + regexp.QuoteMeta(token) + `([^0-9]|$)`)
-	return rx.MatchString(strings.ReplaceAll(q, ",", "."))
+	// Compare whole numeric tokens, never accept 1 as a rounded version of 1.5.
+	for _, token := range regexp.MustCompile(`[0-9]+(?:[.,][0-9]+)?`).FindAllString(q, -1) {
+		value, err := strconv.ParseFloat(strings.ReplaceAll(token, ",", "."), 64)
+		if err == nil && value == n {
+			return true
+		}
+	}
+	return false
 }
+
 func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
 	if c.Adapter != "stepik" && c.Adapter != "yandex" || len(docs) == 0 || len(docs) > 9 {
 		return false
 	}
 	seen := map[string]bool{}
 	total := 0
+	courseCount := 0
 	for _, d := range docs {
 		if d.ID == "" || seen[d.ID] || d.Text == "" || !evidenceDigest.MatchString(d.Digest) {
 			return false
@@ -97,6 +103,7 @@ func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
 			return false
 		}
 		if d.Scope == "course" {
+			courseCount++
 			if d.OfferID != "" || d.Source != c.URL && d.Source != candidateEndpoint(c) {
 				return false
 			}
@@ -108,7 +115,7 @@ func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
 			return false
 		}
 	}
-	return true
+	return courseCount == 1
 }
 func aiCompile(c Candidate, docs []AIDocument, extraction AIExtraction, verification AIVerification, at time.Time) (AIFacts, error) {
 	out := AIFacts{Profile: &catalog.CourseProfile{}, Learning: map[string]*catalog.LearningConditions{}}

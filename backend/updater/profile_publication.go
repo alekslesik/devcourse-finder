@@ -35,7 +35,9 @@ func applyCourseProfile(c *catalog.Course, incoming *catalog.CourseProfile) {
 		next = *incoming
 	}
 	prev := c.ProfileOwnership
-	owned := func(bit int, present, curated bool) bool { return prev&bit != 0 || !present && !curated }
+	owned := func(bit int, present, curated bool) bool {
+		return prev&(bit<<aiOwnershipShift) == 0 && (prev&bit != 0 || !present && !curated)
+	}
 	setBit := func(bit int, present bool) {
 		c.ProfileOwnership &^= bit
 		if present {

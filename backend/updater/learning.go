@@ -28,6 +28,9 @@ func applyLearningConditions(o *catalog.Offer, incoming *catalog.LearningConditi
 	}
 	previous := o.LearningOwnership
 	rangeField := func(current **catalog.LearningRange, value *catalog.LearningRange, bit int, curatedLegacy bool) {
+		if previous&(bit<<aiOwnershipShift) != 0 {
+			return
+		}
 		if previous&bit == 0 && (*current != nil || curatedLegacy) {
 			return
 		}
@@ -38,6 +41,9 @@ func applyLearningConditions(o *catalog.Offer, incoming *catalog.LearningConditi
 		}
 	}
 	supportField := func(current **catalog.LearningSupport, value *catalog.LearningSupport, bit int, curatedLegacy bool) {
+		if previous&(bit<<aiOwnershipShift) != 0 {
+			return
+		}
 		if previous&bit == 0 && (*current != nil || curatedLegacy) {
 			return
 		}
