@@ -9,5 +9,5 @@ export function SiteHeader() {
   </header></>;
 }
 export function SiteFooter() {
-  return <footer><Brand/><span>Учиться — ваш выбор. Найти — наша задача.</span><a href="/about">Как устроен каталог</a></footer>;
+  return <footer><Brand/><span>Учиться — ваш выбор. Найти — наша задача.</span><a href="/about">Как устроен каталог</a><span className="siteVersion" aria-label={'Версия сайта v'+process.env.NEXT_PUBLIC_APP_VERSION}>v{process.env.NEXT_PUBLIC_APP_VERSION}</span></footer>;
 }

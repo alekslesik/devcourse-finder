@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.22.0] - 2026-10-12
+
+- Display the root release version in the site footer and include the selected tag in manual deployment run and job names.
+
 ## [0.21.1] - 2026-10-12
 
 - Shorten the catalog path, retain search drafts and return context, and keep mobile comparison headings visible.

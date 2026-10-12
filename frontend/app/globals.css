@@ -330,3 +330,5 @@ summary,.checkbox {min-height:44px;}
 }
 
 @media(max-width:700px) {.siteNav {gap:12px; font-size:13px;} .siteNav a {white-space:nowrap;}}
+
+.siteVersion {font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums;}
