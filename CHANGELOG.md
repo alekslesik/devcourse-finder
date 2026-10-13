@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.0] - 2026-10-13
+
+- Ship the approved glass catalog design with a book-path logo, muted language colors, responsive header and grouped filters; include free courses and incomplete profiles by default.
+- Verify the deployed frontend footer version before recording a successful deployment.
+
+
 ## [0.23.3] - 2026-10-13
 
 - Authorize agents to deploy published releases after merging and verify production health and version.

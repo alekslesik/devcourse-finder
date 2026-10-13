@@ -2,11 +2,13 @@ import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {readFileSync} from 'node:fs';
 const base=JSON.parse(readFileSync('../data/demo-catalog.json','utf8')).courses[0];
-test('profile counts and explicit unknown results preserve filters and history on mobile',async({page})=>{
+test('profile counts and default unknown results preserve filters and history on mobile',async({page})=>{
  await page.setViewportSize({width:360,height:800});
  await page.route('**/api/v1/courses*',route=>{
   const p=new URL(route.request().url()).searchParams;
   expect(p.get('diagnostics')).toBe('true');
+  expect(p.get('include_unknown_profiles')).toBe('true');
+  expect(p.has('include_free')).toBe(false);
   const include=p.get('include_unknown_profiles')==='true';
   const item={course:base,offer:base.offers[0],effective_price:base.offers[0].price,reasons:[],stale:false,profile_match:'confirmed'};
   const unknown={...item,course:{...base,id:'unknown',title:'Курс с неполными данными'},offer:{...base.offers[0],id:'unknown-offer'},profile_match:'unverified',unknown_profile_fields:['experience']};
@@ -15,20 +17,44 @@ test('profile counts and explicit unknown results preserve filters and history o
  await page.goto('/courses?language=go&experience=basics&goal=job&direction=backend&max=50000000');
  await expect(page.getByRole('heading',{level:2,name:'1 программа с подтверждёнными условиями'})).toBeVisible();
  await expect(page.locator('select[name=experience] option[value=basics]')).toHaveText('Знаю основы · 1');
- await expect(page.locator('.profileNotice')).toContainText('Ещё 1 программа');
+ await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
+ await expect(page.locator('.routeForm input[type=checkbox]')).toHaveCount(0);
+ await expect(page.locator('.profileNotice,.draftNotice')).toHaveCount(0);
  await page.getByLabel('До, ₽',{exact:true}).fill('350000');
- await page.getByRole('button',{name:'Показать курсы с неполными данными',exact:true}).focus();await page.keyboard.press('Enter');
- await expect(page).toHaveURL(/include_unknown_profiles=true/);
+ await page.getByLabel('Сортировка',{exact:true}).selectOption('price_asc');
  for(const [key,value] of [['language','go'],['experience','basics'],['goal','job'],['direction','backend'],['max','50000000']])expect(new URL(page.url()).searchParams.get(key)).toBe(value);
  await expect(page.getByRole('heading',{name:'Условия нужно уточнить'})).toBeVisible();
- await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
  await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('350000');
- await expect(page.locator('.draftNotice')).toContainText('Есть изменения');
  await expect(page.locator('.srOnly[role=status]')).toContainText('1 программа с подтверждёнными условиями. 1 программа с неполными данными.');
- await expect(page.getByRole('checkbox',{name:'Показать курсы с неполными данными'})).toBeChecked();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(axe.violations.filter(v=>v.impact==='serious'||v.impact==='critical')).toEqual([]);
- await page.goBack();await expect(page.getByRole('checkbox',{name:'Показать курсы с неполными данными'})).not.toBeChecked();await expect(page.locator('.unverifiedResults')).toHaveCount(0);
- await page.goForward();await expect(page.locator('.unverifiedResults')).toBeVisible();
- await page.getByRole('button',{name:'Убрать фильтр: Неполные данные включены'}).click();await expect(page).not.toHaveURL(/include_unknown_profiles/);
+ await page.goBack();await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
+ await page.goForward();await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
+ await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('500000');
+ await page.getByLabel('До, ₽',{exact:true}).fill('350000');
+ await page.getByRole('button',{name:'Найти обучение'}).click();
+ await expect(page).toHaveURL(/max=35000000/);
+ await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
+});
+
+test('legacy opt-ins cannot hide free courses or incomplete profiles',async({page})=>{
+ await page.route('**/api/v1/courses*',route=>{
+  const p=new URL(route.request().url()).searchParams;
+  expect(p.has('budget')).toBe(false);
+  expect(p.has('include_free')).toBe(false);
+  expect(p.get('include_unknown_profiles')).toBe('true');
+  expect(p.has('include_closed')).toBe(false);
+  const free={course:base,offer:{...base.offers[0],id:'free',price:0,price_kind:'exact'},effective_price:0,reasons:[],stale:false,profile_match:'confirmed'};
+  const paid={...free,course:{...base,id:'unknown',title:'Курс с неполными данными'},offer:{...base.offers[0],id:'paid',price:100000},effective_price:100000,profile_match:'unverified'};
+  return route.fulfill({json:{items:[free,paid],total:2,confirmed_total:1,unverified_total:1,page:1,page_size:12}});
+ });
+ await page.goto('/courses?budget=paid&include_free=false&include_unknown_profiles=false&include_closed=true');
+ await expect(page.locator('.card')).toHaveCount(2);
+ await expect(page.locator('.price.free')).toHaveText('Бесплатно');
+ await expect(page.locator('.unverifiedResults')).toContainText('Курс с неполными данными');
+ await expect(page).toHaveURL(/\/courses$/);
+ await expect(page.locator('.routeForm input[type=checkbox]')).toHaveCount(0);
+ await page.getByRole('button',{name:'Сбросить',exact:true}).click();
+ await expect(page.locator('.card')).toHaveCount(2);
+ await page.reload();await expect(page.locator('.card')).toHaveCount(2);
 });

@@ -32,7 +32,7 @@ test('AC-08: empty results and API failure remain distinct without relaxing any 
   await expect(page.getByLabel('Обратная связь')).toHaveValue('review');
   await expect(page.locator('form').getByLabel('Расписание')).toHaveValue('flexible');
   await expect(page.getByLabel('Часов в неделю, не больше')).toHaveValue('10');
-  await expect(page.getByLabel('Показать закрытый и неизвестный набор')).toBeChecked();
+  await expect(page.locator('.routeForm input[type=checkbox]')).toHaveCount(0);
   await expect(page.getByLabel('Сортировка',{exact:true})).toHaveValue('price_asc');
   expect(await filters()).toEqual(before);
  };
@@ -82,6 +82,6 @@ for(const [enrollment,label] of [['closed','Набор закрыт'],['unknown'
   await page.goto('/courses?include_closed=true');
   await expect(page.locator('.card')).toHaveCount(1);
   await expect(page.locator('.card').getByText(label,{exact:true})).toBeVisible();
-  await expect(page.getByLabel('Показать закрытый и неизвестный набор')).toBeChecked();
+  await expect(page.locator('.routeForm input[type=checkbox]')).toHaveCount(0);
  });
 }

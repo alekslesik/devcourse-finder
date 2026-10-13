@@ -2,13 +2,13 @@ import type {Metadata} from 'next';
 
 // Compose passes SITE_URL at build time and runtime for static and dynamic pages.
 export const siteOrigin = new URL(process.env.SITE_URL || 'http://localhost:3000');
-export const siteTitle = 'DevCourseFinder — найдите свой путь в разработку';
+export const siteTitle = 'DevCourseFinder — найди свой курс';
 export const siteDescription = 'Подбор и сравнение обучения Go, Python, Java и JavaScript по опыту, цели и бюджету.';
 const preview = {
-  url: new URL('/social-preview-v2.png', siteOrigin).href,
+  url: new URL('/social-preview-v3.png', siteOrigin).href,
   width: 1200,
   height: 630,
-  alt: 'DevCourseFinder — учиться тому, что нужно вам. Go, Python, Java и JavaScript.',
+  alt: 'DevCourseFinder — найди свой курс. Go, Python, Java и JavaScript.',
   type: 'image/png',
 };
 

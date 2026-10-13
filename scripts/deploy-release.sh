@@ -83,6 +83,12 @@ for attempt in {1..30}; do
 done
 $ready || { echo 'Frontend/API verification failed.' >&2; exit 1; }
 [[ $(curl --silent --noproxy '*' --output /dev/null --write-out '%{http_code}' --max-time 15 http://127.0.0.1:3000/) == 200 ]]
+footer_html=$(curl --fail --silent --noproxy '*' --max-time 15 http://127.0.0.1:3000/about)
+[[ $footer_html == *"aria-label=\"Версия сайта $tag\""* ]] || {
+  echo 'Deployed frontend version does not match the selected release.' >&2; exit 1;
+}
+unset footer_html
+echo "Verified frontend footer version: $tag"
 printf 'version=%s\ncommit=%s\ndeployed_at=%s\n' "$tag" "$sha" "$(date -u +%FT%TZ)" > "$record"
 ln -s "$release" "$link"
 mv -Tf "$link" "$base/current"
