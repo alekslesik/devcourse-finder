@@ -71,7 +71,7 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 .glassHero p {font-size:18px; max-width:65ch;}
 .languageScene {height:auto; transform:rotate(-3deg); grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:28px; border-radius:28px; margin:0;}
 .sceneCaption {position:static; grid-column:1/-1; font-size:15px; line-height:1.5;}
-.languageScene>button {position:relative; justify-content:center; min-height:88px; padding:20px 12px; gap:12px; font-size:16px;}
+.languageScene>button {position:relative; justify-content:center; min-height:88px; padding:16px 12px; gap:12px; font-size:16px;}
 .workspace aside {padding:32px; margin-bottom:56px;}
 .filterTitle {margin-bottom:24px;}
 .workspace .routeForm {grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px;}
@@ -128,12 +128,11 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 [data-language=go],.languageBadge.go {--language-mark:var(--go-mark); --language-selected-mark:var(--go-selected-mark); --language-soft:var(--go-soft); --language-ink:var(--go-ink); --language-selected:var(--go-selected); --language-selected-ink:var(--go-selected-ink);}
 .languageScene>button[data-language],.languageBadge:is(.python,.javascript,.java,.go) {background:var(--language-soft); color:var(--language-ink);}
 .languageScene>button[data-language] {border:1px solid color-mix(in srgb,var(--language-mark) 28%,transparent); box-shadow:inset 0 1px 0 var(--control-highlight);}
-.languageIcon {width:36px; height:36px; flex-shrink:0; fill:currentColor; color:var(--language-mark);}
-.languageScene>button[data-language][aria-pressed=true] .languageIcon {color:var(--language-selected-mark);}
+.languageIcon {width:52px; height:52px; flex-shrink:0;}
 @media(max-width:700px) {
  .glassHero h1 {font-size:clamp(28px,8.4vw,34px);}
- .languageIcon {width:28px; height:28px;}
- .languageScene>button {gap:10px;}
+ .languageIcon {width:36px; height:36px;}
+ .languageScene>button {gap:8px; padding-inline:6px;}
 }
 .languageScene>button[data-language] {transition:transform 160ms cubic-bezier(.23,1,.32,1);}
 .languageScene>button[data-language][aria-pressed=true],.languageChoice[data-language] input:checked+span {background:var(--language-selected); color:var(--language-selected-ink);}
@@ -141,7 +140,6 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 .languageSelected {display:none; position:absolute; top:8px; right:8px; width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;}
 .languageScene>button[aria-pressed=true] .languageSelected {display:block;}
 @media(hover:hover) and (pointer:fine) {
- .languageScene>button[data-language]:hover .languageIcon {color:var(--language-selected-mark);}
  .languageScene>button[data-language]:hover {background:var(--language-selected); color:var(--language-selected-ink); transform:translateY(-3px);}
 }
 @media(min-width:1001px) and (hover:hover) and (pointer:fine) {

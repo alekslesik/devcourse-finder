@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.5] - 2026-10-13
+
+- Use the supplied glass-style Go, Java, JS and Python artwork in language shortcuts, with a transparent optimized atlas and readable adjacent names.
+
 ## [0.24.4] - 2026-10-13
 
 - Refine the interface with clearer iOS-inspired glass rims and thinner fills, and align browser chrome and safe areas with the selected iPhone theme.

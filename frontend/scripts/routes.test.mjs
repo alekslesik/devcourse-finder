@@ -65,6 +65,10 @@ test('production routes: server HTML, unpublished 404, comparison URL, sitemap a
   const bytes=Buffer.from(await icon.arrayBuffer());assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
   assert.equal(bytes.readUInt32BE(16),size);assert.equal(bytes.readUInt32BE(20),size);
  }
+ const glass=await fetch(origin+'/languages/glass-icons-v1.webp');
+ assert.equal(glass.status,200);assert.match(glass.headers.get('content-type'),/^image\/webp/);
+ const atlas=Buffer.from(await glass.arrayBuffer());assert.equal(atlas.subarray(0,4).toString(),'RIFF');assert.equal(atlas.subarray(8,12).toString(),'WEBP');
+ assert.ok(atlas.length>1000&&atlas.length<250000);
  const vector=await fetch(origin+'/favicon.svg');assert.equal(vector.status,200);assert.match(vector.headers.get('content-type'),/^image\/svg\+xml/);
  const sitemap=await (await fetch(origin+'/sitemap.xml')).text();assert.ok(sitemap.includes('https://courses.example/courses/'+course.slug));assert.ok(!sitemap.includes('/archived'));
  outage=true;const failed=await fetch(origin+'/courses/'+course.slug);assert.equal(failed.status,500);
