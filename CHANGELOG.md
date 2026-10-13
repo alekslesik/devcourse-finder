@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.23.2] - 2026-10-13
+
+- Make the catalog introduction and filters more spacious across screen sizes, remove the decorative sphere and clarify the programming-course headline.
+
 ## [0.23.1] - 2026-10-13
 
 - Document automatic PR merging after review and CI, followed by verified release publication.

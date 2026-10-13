@@ -6,7 +6,10 @@ the existing API and price rules, and always-visible primary route filters.
 
 ## Behaviour
 
-- The catalog hero is more compact. A submitted search moves focus to the results
+- The original epic made the hero more compact; PR #109 subsequently adopts a
+  more spacious, full-width introduction at the maintainer's request. The heading
+  now specifies programming courses, the decorative sphere is removed, and
+  mobile language shortcuts reflow into two rows. A submitted search moves focus to the results
   heading after the response settles, including empty/error outcomes. Sorting or
   editing the form during a pending request cancels the pending focus transfer.
 - The latest main profile diagnostics and explicit unknown-profile opt-in are
@@ -69,7 +72,12 @@ python3 scripts/release.py check --base-ref origin/main
   saved URLs and unavailable session storage.
 - Both axes of mobile comparison staying fixed while the table scrolls.
 - Explicit layout budgets on the same demo fixtures and 900px viewport height:
-  the first card begins before 1350px at 390px width and before 950px at 1440px.
+  the first card begins before 1800px at 390px width and before 1250px at 1440px.
+  PR #109 increases these limits from 1350px/950px to accommodate the requested
+  spacing; the mobile limit still bounds the path to results to two viewport heights.
+  The test also checks that language shortcuts and filters share the same width
+  and left edge, have at least 24px separation, and that navigation stays clear
+  of the theme control.
   This test explicitly supplies the historical response shape without optional
   diagnostics, even in real-stack CI. These are reproducible fixture regression
   limits, not conversion metrics or a cap on extra diagnostic explanations.
@@ -95,13 +103,22 @@ production build, production route checks, release metadata and API compatibilit
 checks passed.
 
 Baseline audit on `58dc10d` used the same demo catalog: first card y=1647.5px on
-390×900, y=1080.98px on 1440×900. The new layout measurements are attached as
+390×900, y=1080.98px on 1440×900. The original epic layout measurements were attached as
 `catalog-layout.json` by the regression tests: **1301.63px** on 390×900
 and **946.19px** on 1440×900. The historical baseline predates the new main
 profile opt-in, which is retained in the integrated result. Real-stack CI also
 recorded **1360px / 1004.56px** with the additional diagnostic explanation visible;
 that content is not hidden to meet the historical fixture budget. Measurement coordinates include
 the demo banner; they are not claims about production course count or coverage.
+
+For the spacious layout in PR #109 (version 0.23.2), the same fixed-response
+fixture measures **1745.91px** on 390×900 and **1197.25px** on 1440×900.
+These measurements replace the original epic values for current regression
+limits. The local confirmation run passed all **17** catalog UX and visual
+tests, with 72 captures across both themes and four widths, no page overflow
+and no axe violations. Typecheck, production build and release metadata passed;
+the layout detector returned `[]`. The full PR CI also passed before this
+documentation correction. Physical-device acceptance below remains outstanding.
 
 API generation/compatibility checks pass without contract changes. Redocly keeps
 its existing advisory about the outbound redirect endpoint having a 302 response

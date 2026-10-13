@@ -100,6 +100,7 @@ test('mobile comparison keeps both axes of context while scrolling',async({page}
 
 for(const width of [390,1440])test(`fixed demo baseline stays within the layout budget at ${width}px`,async({page})=>{
  // This budget compares the exact legacy-response fixture used by the audit.
+ // Spacious layout allows up to two mobile viewports before the first card.
  // Full-service diagnostics add explanatory content and are covered separately.
  const courses=JSON.parse(readFileSync('../data/demo-catalog.json','utf8')).courses;
  await page.route('**/api/v1/courses*',route=>route.fulfill({json:{items:courses.slice(0,12).map((course:any)=>({course,offer:course.offers[0],effective_price:course.offers[0].price,reasons:[],stale:false})),total:courses.length,page:1,page_size:12}}));
@@ -109,7 +110,15 @@ for(const width of [390,1440])test(`fixed demo baseline stays within the layout 
  const first=await page.locator('.card').first().evaluate(node=>node.getBoundingClientRect().top+scrollY);
  await test.info().attach('catalog-layout.json',{body:JSON.stringify({width,height:900,firstCardY:first}),contentType:'application/json'});
  console.log('Catalog layout:',JSON.stringify({width,firstCardY:first}));
- expect(first).toBeLessThan(width===390?1350:950);
+ expect(first).toBeLessThan(width===390?1800:1250);
+ const scene=(await page.locator('.languageScene').boundingBox())!;
+ const filters=(await page.locator('#catalog-filters').boundingBox())!;
+ expect(Math.abs(scene.x-filters.x)).toBeLessThan(1);
+ expect(Math.abs(scene.width-filters.width)).toBeLessThan(1);
+ expect(filters.y-scene.y-scene.height).toBeGreaterThanOrEqual(24);
+ const nav=(await page.locator('header .siteNav').boundingBox())!;
+ const themeControl=(await page.locator('header .themeControl').boundingBox())!;
+ expect(nav.x+nav.width+8).toBeLessThanOrEqual(themeControl.x);
  if(width===390){
   expect(await page.getByLabel('До, ₽',{exact:true}).evaluate(node=>parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
   const theme=page.locator('.themeChoice').first();expect((await theme.boundingBox())!.width).toBeGreaterThanOrEqual(44);
