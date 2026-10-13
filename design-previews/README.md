@@ -20,3 +20,12 @@ Preview-only concepts with a tilted desktop tray and more space between sections
 
 - [Dark theme, desktop and mobile](F-language-colors-dark.png)
 - [Light theme, desktop and mobile](G-language-colors-light.png)
+
+## Muted palette, expanded route form
+
+Preview-only revision: headline «Выберите, чему учиться», muted language tints and all additional route parameters shown.
+
+- [Desktop dark](muted-desktop-dark.png)
+- [Desktop light](muted-desktop-light.png)
+- [Mobile dark](muted-mobile-dark.png)
+- [Mobile light](muted-mobile-light.png)
