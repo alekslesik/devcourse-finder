@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.23.1] - 2026-10-13
+
+- Document automatic PR merging after review and CI, followed by verified release publication.
+
 ## [0.23.0] - 2026-10-12
 
 - Add an optional OpenAI collector for verified Stepik and Practicum courses, using source-selected quotations and independent semantic verification.
