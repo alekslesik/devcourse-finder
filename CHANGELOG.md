@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.8] - 2026-10-13
+
+- Enlarge Go artwork, clarify comparison checkboxes, use text weight for active navigation, and blend the ambient background into the browser chrome color at the top edge.
+
 ## [0.24.7] - 2026-10-13
 
 - Balance language artwork with optical sizes and intrinsic widths, preserving each mark’s proportions on desktop and mobile.
