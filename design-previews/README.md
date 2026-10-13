@@ -29,3 +29,12 @@ Preview-only revision: headline «Выберите, чему учиться», m
 - [Desktop light](muted-desktop-light.png)
 - [Mobile dark](muted-mobile-dark.png)
 - [Mobile light](muted-mobile-light.png)
+
+## Refined route form
+
+Preview-only revision with aligned form fields and grouped advanced parameters. Removes the free-course and incomplete-data opt-ins and the redundant submit instruction. Intended product behavior: free courses and incomplete profiles are included by default, with completeness labels retained in results.
+
+- [Desktop dark](route-desktop-dark.png)
+- [Desktop light](route-desktop-light.png)
+- [Mobile dark](route-mobile-dark.png)
+- [Mobile light](route-mobile-light.png)
