@@ -1,3 +1,19 @@
+# Repository and pull request workflow
+
+- Before each task, fetch the latest repository changes and start new work from
+  the latest main. Preserve unrelated local changes.
+- After creating a PR, wait at least one minute and wait for review and all
+  required CI checks to finish. Read both conversation comments and inline review
+  threads, address actionable feedback, and resolve addressed review threads.
+- Once review is complete, feedback is addressed and required checks pass, merge
+  the PR yourself without asking for another confirmation. Do not bypass failed
+  checks or unresolved actionable review feedback.
+- After merging, ensure the Release workflow succeeds and verify that the matching
+  version tag and published GitHub Release exist. Complete release publication
+  yourself without asking for another confirmation; never move an existing tag.
+- Release publication and production deployment are separate actions. Keep the
+  manual deployment policy below unless the user explicitly requests deployment.
+
 # Release workflow
 
 - Every PR must increase the root `VERSION` and add its English release notes to
@@ -35,6 +51,3 @@
 - Load only skills relevant to the current task. Do not install UI libraries,
   change the stack or apply alternative visual styles solely because a skill
   mentions them. Use the existing project tools and honor the user's scope.
-- After creating a PR, wait approximately 30 seconds and read both conversation
-  comments and inline review threads. Address actionable feedback within scope
-  and report the outcome; do not merge or deploy without authorization.
