@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.0 implements the agreed glass catalog layout. The selected visual
+Version 0.24.1 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -17,8 +17,8 @@ and the two-row mobile header from `brand-mobile-light.png`.
   use the updated mark. The outlined wordmark needs no font download.
 - Mobile places the logo above navigation and theme controls inside one glass
   header. Desktop uses one header row. Both light and dark themes are supported.
-- Route fields are grouped and aligned, with advanced parameters expanded on
-  entry and still collapsible. The desktop search button is 240px wide and
+- All route fields share one aligned, always-visible grid without an extra
+  parameters heading, divider or accordion. The desktop search button is 240px wide and
   right aligned; mobile uses full width. Native inputs, labels, visible focus,
   at least 44px touch targets and 16px mobile field text remain in place.
 - Free and paid courses appear together by default, with price bounds applied
@@ -76,8 +76,9 @@ python3 scripts/release.py check --base-ref origin/main
 The fixed historical response fixture retains the same demo data, first page,
 12 offers, banner and 900px viewport height. Regression budgets are **1800px**
 at 390px width and **1400px** at 1440px width. The desktop limit increases from
-1250px because all advanced parameters are now visible by default; it is not
-met by hiding fields. Measured first-card positions are **1669.22px / 1306.66px**.
+1250px to accommodate all route fields; it is not met by hiding fields.
+Removing the accordion reduces the first-card positions from
+1669.22px / 1306.66px to **1579.39px / 1221.66px**.
 These are fixture coordinates, not conversion metrics or limits on diagnostic text.
 
 The regression checks also verify mobile tray/filter alignment, a minimum 48px
