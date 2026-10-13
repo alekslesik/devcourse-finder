@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.23.3] - 2026-10-13
+
+- Authorize agents to deploy published releases after merging and verify production health and version.
+
 ## [0.23.2] - 2026-10-13
 
 - Make the catalog introduction and filters more spacious across screen sizes, remove the decorative sphere and clarify the programming-course headline.

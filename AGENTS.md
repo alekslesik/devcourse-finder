@@ -11,8 +11,11 @@
 - After merging, ensure the Release workflow succeeds and verify that the matching
   version tag and published GitHub Release exist. Complete release publication
   yourself without asking for another confirmation; never move an existing tag.
-- Release publication and production deployment are separate actions. Keep the
-  manual deployment policy below unless the user explicitly requests deployment.
+- After release publication, dispatch the Deploy release workflow on main with
+  that exact published version tag yourself, without asking for another
+  confirmation. Wait for deployment to finish and verify production health and
+  the displayed version. Report any failure; do not claim deployment succeeded
+  until verified.
 
 # Release workflow
 
@@ -24,8 +27,10 @@
 - Run `python3 scripts/release.py check --base-ref origin/main` before opening a PR.
 - After a PR merges, the Release workflow pushes `v<VERSION>` and creates a
   GitHub Release from that version's changelog. Never move an existing tag.
-- Deployment is manual through the Deploy release workflow, selecting a published
-  tag. Never enable deployment on pushes, merges, tags, or release publication.
+- Deploy through an explicit dispatch of the Deploy release workflow, selecting
+  the published tag. The agent is authorized to perform this dispatch after its
+  PR merges and its release is published. Keep the workflow dispatch-only; do not
+  add deployment triggers on pushes, merges, tags, or release publication.
 - Keep passwords and production `.env` out of Git and logs. Keep the pinned public
   SSH host key in `.github/vds_known_hosts`; change it only after verifying a host
   key change with the user.
