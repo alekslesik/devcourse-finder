@@ -57,3 +57,10 @@ Preview only, not implemented or deployed. The user selected the thin golden-pat
 - [Desktop light](assembled-desktop-light.png)
 - [Mobile dark](assembled-mobile-dark.png)
 - [Mobile light](assembled-mobile-light.png)
+
+## Compact desktop search button
+
+Preview-only revision: desktop submit button approximately 240px wide, aligned right; mobile retains its full-width button. All earlier selected design elements are retained.
+
+- [Desktop dark](compact-cta-desktop-dark.png)
+- [Desktop light](compact-cta-desktop-light.png)
