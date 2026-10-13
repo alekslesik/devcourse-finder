@@ -48,3 +48,12 @@ Preview-only revision. Removes the closed/unknown-enrollment control, adds verti
 - [Mobile dark](brand-mobile-dark.png)
 - [Mobile light](brand-mobile-light.png)
 - [Logo concept](book-path-logo.png)
+
+## Assembled mockups: Найди свой курс
+
+Preview only, not implemented or deployed. The user selected the thin golden-path book logo from brand-mobile-dark.png, and the two-row rounded glass header layout from brand-mobile-light.png. The requested headline is «Найди свой курс», without punctuation. Retain muted language tints, desktop diagonal tray, generous spacing and an expanded route form without opt-in checkboxes or redundant submit guidance. The mockup generator may render small logo details differently; the selected source remains authoritative for implementation.
+
+- [Desktop dark](assembled-desktop-dark.png)
+- [Desktop light](assembled-desktop-light.png)
+- [Mobile dark](assembled-mobile-dark.png)
+- [Mobile light](assembled-mobile-light.png)
