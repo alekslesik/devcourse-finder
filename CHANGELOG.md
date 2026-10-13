@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.2] - 2026-10-13
+
+- Unify the logo and interface accents around the purple brand palette, with a visible ambient background and more translucent glass panels in both themes.
+
 ## [0.24.1] - 2026-10-13
 
 - Unify all catalog route fields in one always-visible form without the extra-parameters accordion.

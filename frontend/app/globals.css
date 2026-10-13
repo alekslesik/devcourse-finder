@@ -7,10 +7,10 @@
   --ink: #202638;
   --muted: #596579;
   --line: #dbe1eb;
-  --accent: #6140cc;
-  --accent-hover: #5030b6;
+  --accent: #6845a8;
+  --accent-hover: #58368f;
   --accent-text: #ffffff;
-  --accent-soft: #eee9ff;
+  --accent-soft: #ece5f8;
   --success: #176747;
   --success-soft: #e8f5ee;
   --warning: #785318;
@@ -203,7 +203,7 @@ dialog.overlay::backdrop { background: transparent; }
   color-scheme: dark;
   --bg: #0f1320; --surface: #171d2b; --surface-raised: #20283a;
   --surface-subtle: #20283a; --ink: #edf0f8; --muted: #aab5ca;
-  --line: #343f54; --accent: #b6a1ff; --accent-hover: #c5b5ff;
+  --line: #343f54; --accent: #b8a0eb; --accent-hover: #cab7f2;
   --accent-text: #171024; --accent-soft: #2d2344;
   --success: #80e7b2; --success-soft: #17392e;
   --warning: #f5d087; --warning-soft: #3b3020;
@@ -262,9 +262,8 @@ dialog.overlay::backdrop { background: transparent; }
 .languageChoice span {min-height: 44px;}
 .externalMark {display: inline-block; width: 1em; height: 1em; margin-left: 4px; vertical-align: -1px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;}
 /* DevCourseFinder identity: scalable wordmark and restrained flat graphics. */
-.brand {width: 286px; max-width: 100%; min-height: 44px; color: var(--ink); --logo-accent: #7555e8;}
+.brand {width: 286px; max-width: 100%; min-height: 44px; color: var(--ink); --logo-accent: var(--accent);}
 .brand svg {display: block; width: 100%; height: auto;}
-:root[data-theme="dark"] .brand {--logo-accent: #b6a1ff;}
 footer .brand {width: 238px;}
 .stateIcon svg {width: 32px; height: 32px;}
 @media(max-width: 1050px) {header {gap: 18px;} header .brand {width: 252px;}}
