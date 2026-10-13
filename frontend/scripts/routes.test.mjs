@@ -31,7 +31,7 @@ test('production routes: server HTML, unpublished 404, comparison URL, sitemap a
  for(const slug of ['missing','archived'])assert.equal((await fetch(origin+'/courses/'+slug)).status,404);
  const compare=await fetch(origin+'/compare?offers='+result.offer.id+',removed');const comparison=await compare.text();assert.equal(compare.status,200);assert.match(comparison,/Предложение недоступно/);assert.match(comparison,/noindex/);
  // Crawler responses must contain complete metadata in the initial HTML head.
- const expected=[['/','DevCourseFinder — найди свой курс'],['/courses?language=go','Каталог курсов для разработчиков — DevCourseFinder'],['/about','О сервисе — DevCourseFinder'],['/compare?offers='+result.offer.id,'Сравнение тарифов — DevCourseFinder'],['/courses/'+course.slug,course.title+' — DevCourseFinder']];
+ const expected=[['/','DevCourseFinder — найди свой курс программирования'],['/courses?language=go','Каталог курсов для разработчиков — DevCourseFinder'],['/about','О сервисе — DevCourseFinder'],['/compare?offers='+result.offer.id,'Сравнение тарифов — DevCourseFinder'],['/courses/'+course.slug,course.title+' — DevCourseFinder']];
  const meta=(head,name)=>{
   const tag=head.match(new RegExp('<meta (?:property|name)="'+name+'" content="([^\"]*)"'));
   assert.ok(tag,`Missing ${name} in the HTML head`);
@@ -46,15 +46,15 @@ test('production routes: server HTML, unpublished 404, comparison URL, sitemap a
    assert.equal(new URL(meta(head,'og:url')).href,new URL(path.split('?')[0],'https://courses.example').href);
    assert.equal(meta(head,'og:site_name'),'DevCourseFinder');assert.equal(meta(head,'og:locale'),'ru_RU');
    assert.equal(meta(head,'twitter:card'),'summary_large_image');
-   assert.equal(meta(head,'og:image'),'https://courses.example/social-preview-v3.png');
+   assert.equal(meta(head,'og:image'),'https://courses.example/social-preview-v4.png');
    assert.equal(meta(head,'twitter:image'),meta(head,'og:image'));
-   assert.equal(meta(head,'og:image:alt'),'DevCourseFinder — найди свой курс. Go, Python, Java и JavaScript.');
+   assert.equal(meta(head,'og:image:alt'),'DevCourseFinder — найди свой курс программирования. Go, Python, Java и JavaScript.');
    assert.equal(meta(head,'twitter:image:alt'),meta(head,'og:image:alt'));
    assert.equal(meta(head,'og:image:width'),'1200');assert.equal(meta(head,'og:image:height'),'630');
    if(path.startsWith('/courses/'))assert.equal(meta(head,'og:description'),course.summary);
   }
  }
- const image=await fetch(origin+'/social-preview-v3.png',{headers:{'User-Agent':'TelegramBot'}});
+ const image=await fetch(origin+'/social-preview-v4.png',{headers:{'User-Agent':'TelegramBot'}});
  assert.equal(image.status,200);assert.match(image.headers.get('content-type'),/^image\/png/);
  const png=Buffer.from(await image.arrayBuffer());assert.ok(png.length>10000&&png.length<5*1024*1024);
  assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');

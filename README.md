@@ -258,8 +258,9 @@ The test builds and starts the stack under a temporary Compose project, validate
 DevCourseFinder uses an outlined SVG wordmark with a lilac `finder` segment and
 an open-book symbol with a thin gold route. The shared header and footer adapt it to light and dark themes.
 The catalog introduction pairs its headline with a slightly tilted desktop
-language tray; mobile keeps the tray straight. Language tints are muted and
-consistent across shortcuts, selected filters and course badges. A sun/system/moon capsule selects the theme. The mobile glass header places
+language tray; mobile keeps the tray straight. Language shortcuts pair minimal flat SVG marks with their full names;
+source revisions and the Devicon MIT license are in `frontend/public/languages/`.
+Dark idle tiles keep a cool glass surface with colored marks instead of brown fills. A sun/system/moon capsule selects the theme. The mobile glass header places
 the wordmark above navigation and the theme control.
 The logo, buttons, links, focus and generic selection share purple accent tokens.
 A static blue/lilac background shows through the translucent glass surfaces in
@@ -279,7 +280,7 @@ Public pages include Open Graph and `summary_large_image` Twitter metadata in
 server HTML. Telegram, WhatsApp, and other supporting messengers can show the
 DevCourseFinder cover, page title, and description without running JavaScript. Course
 links use the program's own title and summary; all pages share a branded
-1200 × 630 PNG at `/social-preview-v3.png`.
+1200 × 630 PNG at `/social-preview-v4.png`.
 
 Set `SITE_URL` to the public HTTPS origin **before building** production images.
 Compose forwards it to the frontend build and runtime. Rebuild the frontend when
@@ -293,7 +294,7 @@ committed, so production needs no fonts or rendering service. To regenerate it,
 install Open Sans locally and run from `frontend/`:
 
 ```sh
-node --input-type=module -e "import sharp from 'sharp'; await sharp('scripts/social-preview.svg').png().toFile('public/social-preview-v3.png')"
+node --input-type=module -e "import sharp from 'sharp'; await sharp('scripts/social-preview.svg').png().toFile('public/social-preview-v4.png')"
 ```
 
 Bump the image filename and metadata reference when changing the cover so image
