@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.7] - 2026-10-13
+
+- Balance language artwork with optical sizes and intrinsic widths, preserving each mark’s proportions on desktop and mobile.
+
 ## [0.24.6] - 2026-10-13
 
 - Slightly strengthen glass form controls and course details buttons with accent borders and translucent fills in both themes.

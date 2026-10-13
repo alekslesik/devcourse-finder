@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.6 implements the agreed glass catalog layout. The selected visual
+Version 0.24.7 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -13,7 +13,10 @@ and the two-row mobile header from `brand-mobile-light.png`.
   Language shortcuts pair the maintainer's glass-style icon artwork with the
   full name: cyan Go, amber Java, gold JS letters and blue/yellow Python. A local
   transparent WebP atlas supplies all four images; per-mark view boxes preserve
-  proportions. Text labels remain the accessible button names. The earlier
+  proportions. Intrinsic widths replace the shared square slot; optical heights
+  balance Java’s fine outline and Go’s broad lettering with JS and Python
+  (desktop 34–48px, mobile 24–34px).
+  Text labels remain the accessible button names. The earlier
   Devicon vectors and source/license notices remain available in `public/languages/`.
   Selection still uses a light tint, outline and checkmark.
 - The open-book logo has a thin gold path and a lilac `finder` segment. Header,
