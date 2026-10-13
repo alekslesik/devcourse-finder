@@ -6,3 +6,10 @@ These are generated design mockups for discussion, not production screenshots. E
 - [B: one row](B-row-desktop-mobile.png)
 - [C: list](C-list-desktop-mobile.png)
 - [Download all variants as ZIP](https://github.com/alekslesik/devcourse-finder/raw/refs/heads/codex/design-preview-downloads/design-previews/devcoursefinder-design-options.zip)
+
+## Softer, more expressive proposals
+
+- [D: live glass, tilted desktop panel](D-live-glass-desktop-mobile.png)
+- [E: tactile language cards](E-tactile-cards-desktop-mobile.png)
+
+These static concepts illustrate selected states. Proposed motion: subtle card straightening on desktop hover, short press feedback on touch, and a persistent checkmark for selection. Movement respects reduced-motion preferences; selection remains a draft until search is submitted.
