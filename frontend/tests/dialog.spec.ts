@@ -60,3 +60,25 @@ test('dialog keeps keyboard focus during loading and error, and passes axe at 36
  await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Найти обучение'})).toBeFocused();
 });
+
+for(const scenario of [
+ {name:'portrait cutout',width:390,height:900,top:47,right:0,bottom:34,left:0},
+ {name:'landscape cutouts',width:844,height:390,top:0,right:47,bottom:21,left:47},
+])test(`long comparison stays within synthetic safe areas: ${scenario.name}`,async({page})=>{
+ await page.setViewportSize({width:scenario.width,height:scenario.height});
+ await page.goto(comparison);
+ const dialog=page.getByRole('dialog',{name:'Сравнение тарифов'});
+ await expect(dialog.getByRole('table')).toBeVisible();
+ // Chromium has no iPhone cutout; substitute only the platform inset tokens.
+ await page.addStyleTag({content:`:root {--safe-top:${scenario.top}px;--safe-right:${scenario.right}px;--safe-bottom:${scenario.bottom}px;--safe-left:${scenario.left}px;}`});
+ const modal=(await dialog.locator('.modal').boundingBox())!;
+ expect(modal.y).toBeGreaterThanOrEqual(scenario.top);
+ expect(modal.y+modal.height).toBeLessThanOrEqual(scenario.height-scenario.bottom);
+ expect(modal.x).toBeGreaterThanOrEqual(scenario.left);
+ expect(modal.x+modal.width).toBeLessThanOrEqual(scenario.width-scenario.right);
+ const close=dialog.getByRole('button',{name:'Закрыть',exact:true});
+ const box=(await close.boundingBox())!;
+ expect(box.y).toBeGreaterThanOrEqual(scenario.top);
+ expect(box.x+box.width).toBeLessThanOrEqual(scenario.width-scenario.right);
+ await close.click();await expect(dialog).toHaveCount(0);
+});
