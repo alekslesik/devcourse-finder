@@ -57,3 +57,22 @@ services:
     environment:
       <<: *catalog-worker-env
       CATALOG_WORKER: publisher
+
+  catalog-ai:
+    <<: *catalog-worker
+    profiles: ["ai"]
+    command: ["catalog-ai", "serve"]
+    environment:
+      <<: *catalog-worker-env
+      CATALOG_WORKER: ai
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      OPENAI_VERIFY_MODEL: ${OPENAI_VERIFY_MODEL:-gpt-4.1}
+      CATALOG_AI_BATCH_SIZE: ${CATALOG_AI_BATCH_SIZE:-20}
+      CATALOG_AI_DAILY_REQUEST_LIMIT: ${CATALOG_AI_DAILY_REQUEST_LIMIT:-40}
+    healthcheck:
+      test: ["CMD", "devcourse-finder", "catalog-ai", "health"]
+      interval: 30s
+      timeout: 7s
+      retries: 3
+      start_period: 15s

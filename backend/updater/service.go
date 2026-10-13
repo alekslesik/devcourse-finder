@@ -305,7 +305,7 @@ func merge(ctx context.Context, tx pgx.Tx, old []catalog.Course, template catalo
 	if o.Schedule != "" {
 		current.Schedule = o.Schedule
 	}
-	if o.DurationObserved && (o.DurationMonths != nil || current.DurationCollected) {
+	if current.LearningOwnership&(learningDuration<<aiOwnershipShift) == 0 && o.DurationObserved && (o.DurationMonths != nil || current.DurationCollected) {
 		current.DurationMonths = o.DurationMonths
 		current.Weeks = nil
 		current.DurationCollected = o.DurationMonths != nil

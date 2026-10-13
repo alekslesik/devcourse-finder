@@ -90,6 +90,44 @@ func run() error {
 	defer db.Pool.Close()
 	if len(args) > 0 {
 		switch args[0] {
+		case "catalog-ai":
+			if len(args) != 2 {
+				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health", nil)
+			}
+			stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+			defer cancel()
+			if args[1] == "health" {
+				bounded, done := context.WithTimeout(stop, 5*time.Second)
+				defer done()
+				if err := updater.AIHealth(bounded, db); err != nil {
+					return commandFailure("ai_health", "ai_unhealthy", "AI collector is not healthy", err)
+				}
+				return nil
+			}
+			if args[1] == "status" {
+				return updater.AIStatus(stop, db, os.Stdout)
+			}
+			if args[1] != "serve" && args[1] != "once" {
+				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health", nil)
+			}
+			config, err := updater.LoadAIConfig()
+			if err != nil {
+				return commandFailure("ai_config", "invalid_ai_configuration", "Set OPENAI_API_KEY and validate the AI collector configuration", err)
+			}
+			service := updater.AIService{DB: db, Config: config}
+			if args[1] == "serve" {
+				if err = service.Serve(stop); err != nil {
+					return commandFailure("ai_collection", "ai_collection_failed", "AI collection failed", err)
+				}
+				return nil
+			}
+			bounded, done := context.WithTimeout(stop, 30*time.Minute)
+			defer done()
+			result, err := service.Run(bounded)
+			if err != nil {
+				return commandFailure("ai_collection", "ai_collection_failed", "AI collection failed", err)
+			}
+			return json.NewEncoder(os.Stdout).Encode(result)
 		case "catalog-update":
 			if len(args) != 2 {
 				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-update serve|once|status|health", nil)

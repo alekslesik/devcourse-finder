@@ -387,6 +387,12 @@ func (s *Service) Publish(ctx context.Context) (result Result, err error) {
 		}
 		slog.Info("catalog observation processed", "event_id", id, "code", code, "published", n)
 	}
+	aiUpdated, aiErr := s.publishAI(ctx)
+	if aiErr != nil {
+		return result, aiErr
+	}
+	result.Published += aiUpdated
+	result.RefreshedCourses += aiUpdated
 	slog.Info("catalog publication finished", "accepted_course_updates", result.Published, "new_courses", result.NewCourses, "refreshed_courses", result.RefreshedCourses)
 	// Retain recent diagnostics while incrementally trimming old/overflow done rows.
 	_, err = s.DB.Pool.Exec(ctx, `DELETE FROM catalog_observations WHERE id IN (SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL AND (processed_at<now()-interval '7 days' OR id<=(SELECT id FROM catalog_observations WHERE processed_at IS NOT NULL ORDER BY id DESC OFFSET $1 LIMIT 1)) ORDER BY id LIMIT 1000)`, processedObservationRetention)

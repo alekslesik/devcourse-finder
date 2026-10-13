@@ -132,6 +132,11 @@ func (d *DB) Import(ctx context.Context, data catalog.Dataset, operator string, 
 	data.Courses = append([]catalog.Course(nil), data.Courses...)
 	for i := range data.Courses {
 		data.Courses[i].ProfileOwnership = 0
+		data.Courses[i].Offers = append([]catalog.Offer(nil), data.Courses[i].Offers...)
+		for j := range data.Courses[i].Offers {
+			data.Courses[i].Offers[j].LearningOwnership = 0
+			data.Courses[i].Offers[j].DurationCollected = false
+		}
 	}
 	if e = importTx(ctx, tx, old, data, operator); e != nil {
 		return e

@@ -3,6 +3,14 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.23.0] - 2026-10-12
+
+- Add an optional OpenAI collector for verified Stepik and Practicum courses, using source-selected quotations and independent semantic verification.
+- Cache unchanged scoped documents, cap daily requests persistently and run metadata enrichment in a separate twice-daily worker with health/status and a manual trigger.
+- Publish protected profile and learning facts atomically through the existing publisher without changing identities, prices, enrollment or financial verification dates.
+- Match verified experience intervals without blindly expanding beginner labels; preserve literal curated legacy classifications.
+- Add PostgreSQL rollback, operator ownership, quota, cache and source-isolation regressions plus an opt-in read-only OpenAI benchmark.
+
 ## [0.22.0] - 2026-10-12
 
 - Display the root release version in the site footer and include the selected tag in manual deployment run and job names.

@@ -496,3 +496,7 @@ For an extra collection, use **Actions → Collect catalog → Run workflow** on
 `main`. It runs the currently deployed worker and prints coverage in the logs;
 no terminal or deployment is needed. Persisted detail-check due times and the
 regular schedule remain in effect.
+
+### Optional OpenAI catalog collector
+
+The separately scheduled `catalog-ai` service enriches verified Stepik and Practicum courses with independently checked source quotations. It is disabled by default, uses a persistent request budget and leaves financial verification to existing workers. See [setup and operations](docs/ai-catalog-collector.md) and [the pilot specification](docs/ai-catalog-pilot-spec.md).

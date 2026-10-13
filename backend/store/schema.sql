@@ -143,3 +143,53 @@ ALTER TABLE offers ADD COLUMN IF NOT EXISTS learning_ownership integer NOT NULL 
 
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS profile jsonb;
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS profile_ownership integer NOT NULL DEFAULT 0;
+
+-- Optional AI metadata enrichment is independent of financial observations.
+CREATE TABLE IF NOT EXISTS catalog_ai_cache (
+ course_id text NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+ bundle_digest text NOT NULL, model text NOT NULL, policy text NOT NULL,
+ extraction jsonb NOT NULL CHECK(octet_length(extraction::text)<=32768),
+ verification jsonb NOT NULL CHECK(octet_length(verification::text)<=8192),
+ used_at timestamptz NOT NULL DEFAULT now(),
+ PRIMARY KEY(course_id,bundle_digest,model,policy)
+);
+CREATE TABLE IF NOT EXISTS catalog_ai_daily_budget (
+ day date PRIMARY KEY, requests integer NOT NULL CHECK(requests>=0),
+ total_tokens bigint NOT NULL DEFAULT 0 CHECK(total_tokens>=0)
+);
+CREATE TABLE IF NOT EXISTS catalog_ai_sources (
+ course_id text PRIMARY KEY REFERENCES courses(id) ON DELETE CASCADE,
+ attempted_at timestamptz NOT NULL, verified_at timestamptz,
+ next_attempt_at timestamptz NOT NULL DEFAULT now(),
+ code text NOT NULL DEFAULT 'pending',failures integer NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS catalog_ai_observations (
+ id bigserial PRIMARY KEY,course_id text NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+ observed_at timestamptz NOT NULL,payload jsonb NOT NULL CHECK(octet_length(payload::text)<=262144),
+ processed_at timestamptz,code text NOT NULL DEFAULT 'pending',
+ UNIQUE(course_id,observed_at)
+);
+CREATE INDEX IF NOT EXISTS catalog_ai_observations_pending ON catalog_ai_observations(id) WHERE processed_at IS NULL;
+CREATE TABLE IF NOT EXISTS catalog_ai_watermarks (
+ course_id text PRIMARY KEY REFERENCES courses(id) ON DELETE CASCADE,
+ observed_at timestamptz NOT NULL,event_id bigint NOT NULL
+);
+
+-- Low bits retain native collector ownership; bits 8..12/13 mark AI priority.
+-- Every AI-owned fact must also have its ordinary collector-ownership bit.
+ALTER TABLE offers DROP CONSTRAINT IF EXISTS offers_learning_ownership_check;
+ALTER TABLE offers ADD CONSTRAINT offers_learning_ownership_check CHECK (
+ learning_ownership>=0 AND (learning_ownership & ~7967)=0
+ AND ((learning_ownership>>8) & ~learning_ownership)=0
+);
+ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_profile_ownership_check;
+ALTER TABLE courses ADD CONSTRAINT courses_profile_ownership_check CHECK (
+ profile_ownership>=0 AND (profile_ownership & ~16191)=0
+ AND ((profile_ownership>>8) & ~profile_ownership)=0
+);
+CREATE TABLE IF NOT EXISTS catalog_ai_runs (
+ id bigserial PRIMARY KEY,started_at timestamptz NOT NULL DEFAULT now(),finished_at timestamptz,
+ status text NOT NULL DEFAULT 'running',attempted integer NOT NULL DEFAULT 0,
+ queued integer NOT NULL DEFAULT 0,cached integer NOT NULL DEFAULT 0,
+ failed integer NOT NULL DEFAULT 0,tokens bigint NOT NULL DEFAULT 0
+);
