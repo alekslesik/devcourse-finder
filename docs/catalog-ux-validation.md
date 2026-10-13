@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.5 implements the agreed glass catalog layout. The selected visual
+Version 0.24.6 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -29,7 +29,9 @@ and the two-row mobile header from `brand-mobile-light.png`.
   surfaces, with prefixed backdrop filtering for Safari.
 - Clearer control panels use thinner tint, a masked bevel rim, localized inner
   highlights and a smaller saturating backdrop blur; controls inside a panel do
-  not add another backdrop blur. Reading cards use a slightly denser material.
+  not add another backdrop blur. Form fields now use a slightly stronger translucent
+  fill and accent border; course details buttons use a light accent tint and
+  matching text/border to stay identifiable. Reading cards use a slightly denser material.
   Viewport safe areas keep content clear of iPhone cutouts; fixed dialogs apply
   their own inset padding and dynamic-height limit rather than relying on body; page backgrounds and supported browser theme-color metadata follow both
   system and explicitly chosen themes, including before React loads. Increased contrast and reduced transparency use solid surfaces.
