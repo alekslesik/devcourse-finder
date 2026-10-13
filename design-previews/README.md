@@ -38,3 +38,13 @@ Preview-only revision with aligned form fields and grouped advanced parameters. 
 - [Desktop light](route-desktop-light.png)
 - [Mobile dark](route-mobile-dark.png)
 - [Mobile light](route-mobile-light.png)
+
+## New logo and quieter route form
+
+Preview-only revision. Removes the closed/unknown-enrollment control, adds vertical hero space, and explores an open-book/path mark with lilac finder lettering. The logo sheet shows its light/dark treatment.
+
+- [Desktop dark](brand-desktop-dark.png)
+- [Desktop light](brand-desktop-light.png)
+- [Mobile dark](brand-mobile-dark.png)
+- [Mobile light](brand-mobile-light.png)
+- [Logo concept](book-path-logo.png)
