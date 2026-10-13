@@ -263,8 +263,10 @@ source revisions and the Devicon MIT license are in `frontend/public/languages/`
 Dark idle tiles keep a cool glass surface with colored marks instead of brown fills. A sun/system/moon capsule selects the theme. The mobile glass header places
 the wordmark above navigation and the theme control.
 The logo, buttons, links, focus and generic selection share purple accent tokens.
-A static blue/lilac background shows through the translucent glass surfaces in
-both themes. Reduced-transparency preferences and browsers without backdrop
+A static blue/lilac background shows through thin glass surfaces with bevel rims
+and localized highlights in both themes. iPhone safe areas and browser theme
+metadata follow the selected appearance. The effect is a CSS adaptation of
+Liquid Glass, not Apple's native rendering. Reduced-transparency preferences and browsers without backdrop
 filtering use solid readable surfaces. State illustrations use the same semantic
 theme colors.
 

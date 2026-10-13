@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.4] - 2026-10-13
+
+- Refine the interface with clearer iOS-inspired glass rims and thinner fills, and align browser chrome and safe areas with the selected iPhone theme.
+
 ## [0.24.3] - 2026-10-13
 
 - Replace muddy language tiles with clean glass tints and minimal recognizable language marks, restore the programming-course headline, and increase light-theme transparency.

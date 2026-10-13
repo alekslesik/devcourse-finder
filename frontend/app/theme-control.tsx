@@ -1,5 +1,6 @@
 'use client';
 import {useEffect, useState} from 'react';
+import {applyTheme} from '../lib/theme';
 type Preference = 'system' | 'light' | 'dark';
 const valid = (value: string | null): value is Preference => ['system', 'light', 'dark'].includes(value || '');
 export default function ThemeControl() {
@@ -12,7 +13,7 @@ export default function ThemeControl() {
   useEffect(() => {
     if (!ready) return;
     const media = matchMedia('(prefers-color-scheme: dark)');
-    const apply = () => {document.documentElement.dataset.theme = preference === 'system' ? (media.matches ? 'dark' : 'light') : preference;};
+    const apply = () => applyTheme(preference === 'system' ? (media.matches ? 'dark' : 'light') : preference);
     apply(); media.addEventListener('change', apply);
     return () => media.removeEventListener('change', apply);
   }, [preference, ready]);

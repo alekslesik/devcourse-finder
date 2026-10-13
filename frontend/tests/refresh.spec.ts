@@ -34,25 +34,36 @@ test('empty catalog, no matches, and malformed service responses are distinct', 
 });
 
 test('theme persists across routes and follows system changes with blocked storage', async ({page}) => {
+  const chrome=async(theme:'light'|'dark')=>{
+    await expect(page.locator('#site-theme-color')).toHaveCount(1);
+    await expect(page.locator('#site-theme-color')).toHaveAttribute('content',theme==='dark'?'#0c1730':'#edf3ff');
+    await expect(page.locator('meta[name="theme-color"]').first()).toHaveAttribute('id','site-theme-color');
+  };
   await page.emulateMedia({colorScheme:'dark'});
   await page.goto('/courses');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await chrome('dark');
   await page.getByRole('radio',{name:'Светлая тема',exact:true}).check();
   await page.goto('/about');
   await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+  await chrome('light');
   await expect(page.getByRole('radio',{name:'Светлая тема',exact:true})).toBeChecked();
   await page.getByRole('radio',{name:'Системная тема',exact:true}).focus();
   await page.keyboard.press('Space');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await chrome('dark');
   await page.keyboard.press('ArrowLeft');
   await expect(page.getByRole('radio',{name:'Светлая тема',exact:true})).toBeChecked();
   await page.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new Error('Storage blocked')}})});
   await page.goto('/compare?offers=demo-go-1-standard');
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await chrome('dark');
   await page.emulateMedia({colorScheme:'light'});
   await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+  await chrome('light');
   await page.getByRole('radio',{name:'Тёмная тема',exact:true}).check();
   await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await chrome('dark');
 });
 
 test('sorting preserves drafts, budgets validate, and chips/history restore applied filters', async ({page}) => {
@@ -93,6 +104,9 @@ test('saved theme is applied before React loads, without hydration errors',async
  await page.route('**/_next/static/**/*.js',route=>route.abort());
  await page.goto('/about');
  await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+ await expect(page.locator('#site-theme-color')).toHaveAttribute('content','#0c1730');
+ await expect(page.locator('meta[name="theme-color"]').first()).toHaveAttribute('id','site-theme-color');
+ await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content',/viewport-fit=cover/);
  await page.unroute('**/_next/static/**/*.js');
  await page.reload();await expect(page.getByRole('radio',{name:'Тёмная тема',exact:true})).toBeChecked();
  expect(errors.filter(message=>/hydration|didn't match|did not match/i.test(message))).toEqual([]);

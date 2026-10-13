@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.3 implements the agreed glass catalog layout. The selected visual
+Version 0.24.4 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -26,6 +26,12 @@ and the two-row mobile header from `brand-mobile-light.png`.
   lightly tinted glass panels, with further reduced white opacity in light mode. Raised dropdown/table surfaces stay opaque;
   unsupported backdrop filtering and reduced-transparency preferences use solid
   surfaces, with prefixed backdrop filtering for Safari.
+- Clearer control panels use thinner tint, a masked bevel rim, localized inner
+  highlights and a smaller saturating backdrop blur; controls inside a panel do
+  not add another backdrop blur. Reading cards use a slightly denser material.
+  Viewport safe areas keep content clear of iPhone cutouts; fixed dialogs apply
+  their own inset padding and dynamic-height limit rather than relying on body; page backgrounds and supported browser theme-color metadata follow both
+  system and explicitly chosen themes, including before React loads. Increased contrast and reduced transparency use solid surfaces.
 - All route fields share one aligned, always-visible grid without an extra
   parameters heading, divider or accordion. The desktop search button is 240px wide and
   right aligned; mobile uses full width. Native inputs, labels, visible focus,
@@ -120,3 +126,15 @@ Keep #98 open until real-device or assistive-technology evidence is recorded:
 Fixtures and browser automation do not establish provider coverage or physical
 phone performance. This change preserves catalog data, pricing rules and backend
 contracts. Release and deployment use the established workflows.
+
+## Liquid Glass references and limits
+
+Apple's [iOS 27 overview](https://www.apple.com/os/ios/) describes refined
+refraction/contrast and a system transparency range. The
+[Meet Liquid Glass session](https://developer.apple.com/videos/play/wwdc2025/219/)
+explains rim highlights, hierarchy, single material layers and accessibility
+modifiers. These inform the web adaptation; CSS blur, saturation and masked
+edges do not reproduce Apple's native adaptive lensing or system rendering.
+Safari controls its own chrome tint; metadata support differs by browser.
+No native-device performance or Safari chrome behavior is claimed from Chromium
+emulation. Physical iPhone/Safari acceptance remains part of #98.
