@@ -13,3 +13,10 @@ These are generated design mockups for discussion, not production screenshots. E
 - [E: tactile language cards](E-tactile-cards-desktop-mobile.png)
 
 These static concepts illustrate selected states. Proposed motion: subtle card straightening on desktop hover, short press feedback on touch, and a persistent checkmark for selection. Movement respects reduced-motion preferences; selection remains a draft until search is submitted.
+
+## Language colors in both themes
+
+Preview-only concepts with a tilted desktop tray and more space between sections. Python is yellow, JavaScript golden, Java coral, Go blue.
+
+- [Dark theme, desktop and mobile](F-language-colors-dark.png)
+- [Light theme, desktop and mobile](G-language-colors-light.png)
