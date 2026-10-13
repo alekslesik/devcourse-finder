@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.7 implements the agreed glass catalog layout. The selected visual
+Version 0.24.8 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -15,7 +15,7 @@ and the two-row mobile header from `brand-mobile-light.png`.
   transparent WebP atlas supplies all four images; per-mark view boxes preserve
   proportions. Intrinsic widths replace the shared square slot; optical heights
   balance Java’s fine outline and Go’s broad lettering with JS and Python
-  (desktop 34–48px, mobile 24–34px).
+  (desktop 40–48px, mobile 28–34px); Go is enlarged further for readability.
   Text labels remain the accessible button names. The earlier
   Devicon vectors and source/license notices remain available in `public/languages/`.
   Selection still uses a light tint, outline and checkmark.
@@ -37,11 +37,16 @@ and the two-row mobile header from `brand-mobile-light.png`.
   matching text/border to stay identifiable. Reading cards use a slightly denser material.
   Viewport safe areas keep content clear of iPhone cutouts; fixed dialogs apply
   their own inset padding and dynamic-height limit rather than relying on body; page backgrounds and supported browser theme-color metadata follow both
-  system and explicitly chosen themes, including before React loads. Increased contrast and reduced transparency use solid surfaces.
+  system and explicitly chosen themes, including before React loads. The ambient
+  background fades from the solid browser theme color at the top edge, avoiding
+  an abrupt color seam; actual Safari status-bar behavior still needs phone validation. Increased contrast and reduced transparency use solid surfaces.
 - All route fields share one aligned, always-visible grid without an extra
   parameters heading, divider or accordion. The desktop search button is 240px wide and
   right aligned; mobile uses full width. Native inputs, labels, visible focus,
-  at least 44px touch targets and 16px mobile field text remain in place.
+  at least 44px touch targets and 16px mobile field text remain in place. Empty
+  comparison checkboxes use a transparent fill and clear outline; selected boxes
+  have an accent fill and checkmark, with native forced-color rendering retained.
+  Active header navigation uses heavier text rather than an underline.
 - Free and paid courses appear together by default, with price bounds applied
   equally. The frontend requests incomplete profiles by default through the
   existing API; these remain in a separate **Условия нужно уточнить** section,

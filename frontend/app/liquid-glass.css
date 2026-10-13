@@ -40,7 +40,8 @@
 html {background:var(--bg); scroll-padding-top:24px; -webkit-text-size-adjust:100%; scrollbar-color:var(--muted) var(--bg);}
 body {font-family:'Golos Text',sans-serif; background:var(--bg); isolation:isolate; padding:var(--safe-top) var(--safe-right) 0 var(--safe-left);}
 /* Static atmosphere stays behind the glass without another image download. */
-body::before {content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:var(--ambient);}
+/* Fade into the same solid color used by theme-color at the browser edge. */
+body::before {content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:var(--ambient); -webkit-mask-image:linear-gradient(to bottom,transparent,#000 calc(var(--safe-top) + 160px)); mask-image:linear-gradient(to bottom,transparent,#000 calc(var(--safe-top) + 160px));}
 ::selection {background:var(--accent); color:var(--accent-text);}
 input,textarea {caret-color:var(--accent);}
 header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;border:0;border-radius:24px;padding:12px 25px;background:var(--glass);-webkit-backdrop-filter:var(--glass-filter);backdrop-filter:var(--glass-filter);box-shadow:var(--shadow)}main{padding:0 30px}.siteNav{gap:30px;color:var(--ink)}.themeControl{background:var(--surface);box-shadow:inset 0 1px 1px var(--control-highlight)}
@@ -134,13 +135,13 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 .languageIcon {width:auto; height:40px; flex-shrink:0;}
 /* Optical compensation: Java is a fine outline, Go is broad lettering. */
 .languageIcon[data-language=java] {height:48px;}
-.languageIcon[data-language=go] {height:34px;}
+.languageIcon[data-language=go] {height:40px;}
 .languageIcon[data-language=python] {height:42px;}
 @media(max-width:700px) {
  .glassHero h1 {font-size:clamp(28px,8.4vw,34px);}
  .languageIcon {height:28px;}
  .languageIcon[data-language=java] {height:34px;}
- .languageIcon[data-language=go] {height:24px;}
+ .languageIcon[data-language=go] {height:30px;}
  .languageIcon[data-language=python] {height:30px;}
  .languageScene>button {gap:8px; padding-inline:6px;}
 }
@@ -171,6 +172,23 @@ header::before,.languageScene::before,.workspace aside::before {
 }
 .card {background:var(--surface); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);}
 input,select {border-radius:16px;}
+/* Native semantics with a consistent empty box, instead of browser gray fills. */
+.checkbox input {
+ -webkit-appearance:none; appearance:none; display:grid; place-content:center; padding:0;
+ border:1.5px solid color-mix(in srgb,var(--ink) 60%,transparent); border-radius:5px;
+ background:var(--control-surface); box-shadow:inset 0 1px 1px var(--control-highlight); cursor:pointer;
+}
+.checkbox input::before {
+ content:''; width:10px; height:6px; border:solid var(--accent-text); border-width:0 0 2px 2px;
+ transform:translateY(-1px) rotate(-45deg); opacity:0;
+}
+.checkbox input:checked {background:var(--accent); border-color:var(--accent);}
+.checkbox input:checked::before {opacity:1;}
+.checkbox input:disabled {opacity:.5; cursor:not-allowed;}
+@media(forced-colors:active) {
+ .checkbox input {-webkit-appearance:auto; appearance:auto; background:Canvas; box-shadow:none;}
+ .checkbox input::before {display:none;}
+}
 .primary,.linkButton.primary {
  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 92%,transparent),color-mix(in srgb,var(--accent) 86%,transparent));
  box-shadow:inset 0 1px 1px #ffffff70,inset 0 -1px 1px #ffffff1a,0 4px 12px #30224f18;
@@ -196,6 +214,7 @@ input,select {border-radius:16px;}
 @media(prefers-contrast:more) {
  :root,:root[data-theme=dark] {--glass:var(--surface-raised); --surface:var(--surface-raised); --control-surface:var(--surface-raised); --secondary-surface:var(--accent-soft); --control-border:var(--ink); --shadow:none;}
  header,.languageScene,.workspace aside,.card,input,select {border:1px solid var(--ink); -webkit-backdrop-filter:none; backdrop-filter:none;}
+ .checkbox input {border-color:var(--ink);}
  header::before,.languageScene::before,.workspace aside::before {display:none;}
 }
 
