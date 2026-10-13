@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.4 implements the agreed glass catalog layout. The selected visual
+Version 0.24.5 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -10,11 +10,12 @@ and the two-row mobile header from `brand-mobile-light.png`.
 
 - The headline is **Найди свой курс программирования**, without punctuation. The desktop language
   tray sits beside it at a slight angle; mobile uses a straight two-by-two grid.
-  Language shortcuts pair a flat recognizable SVG mark with the full name.
-  Devicon source revisions and the MIT license are recorded in `public/languages/`.
-  Python/Java/Go use their familiar logo geometry; JavaScript uses the community
-  JS square. Dark idle tiles use a cool glass surface and colored marks, avoiding
-  brown fills; selection uses a light tint, outline and checkmark.
+  Language shortcuts pair the maintainer's glass-style icon artwork with the
+  full name: cyan Go, amber Java, gold JS letters and blue/yellow Python. A local
+  transparent WebP atlas supplies all four images; per-mark view boxes preserve
+  proportions. Text labels remain the accessible button names. The earlier
+  Devicon vectors and source/license notices remain available in `public/languages/`.
+  Selection still uses a light tint, outline and checkmark.
 - The open-book logo has a thin gold path and a lilac `finder` segment. Header,
   footer, downloadable SVGs, browser/Apple icons and the versioned social preview
   use the updated mark. The outlined wordmark needs no font download.

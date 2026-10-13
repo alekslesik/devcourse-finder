@@ -14,3 +14,12 @@ JavaScript retains its yellow square and dark lettering. Java and Go use one
 interface color.
 The inline data in `frontend/lib/language-marks.ts` comes from these SVGs.
 Names and marks remain the property of their respective owners.
+
+## Glass artwork
+
+`glass-icons-v1.webp` is a transparent web-optimized atlas adapted from the
+maintainer-provided glass icon reference using image generation/background
+removal. It contains the cyan Go mark, amber Java cup, gold JS letters and
+blue/yellow Python mark. It is separate from the MIT-licensed Devicon SVG assets
+above; that license is not asserted for the supplied artwork. Language names
+and marks remain their respective owners' property.

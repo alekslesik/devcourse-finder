@@ -258,8 +258,9 @@ The test builds and starts the stack under a temporary Compose project, validate
 DevCourseFinder uses an outlined SVG wordmark with a lilac `finder` segment and
 an open-book symbol with a thin gold route. The shared header and footer adapt it to light and dark themes.
 The catalog introduction pairs its headline with a slightly tilted desktop
-language tray; mobile keeps the tray straight. Language shortcuts pair minimal flat SVG marks with their full names;
-source revisions and the Devicon MIT license are in `frontend/public/languages/`.
+language tray; mobile keeps the tray straight. Language shortcuts pair the supplied glass artwork with full names, using a
+local transparent WebP atlas. Artwork provenance and the earlier Devicon SVG
+source/license notices are in `frontend/public/languages/`.
 Dark idle tiles keep a cool glass surface with colored marks instead of brown fills. A sun/system/moon capsule selects the theme. The mobile glass header places
 the wordmark above navigation and the theme control.
 The logo, buttons, links, focus and generic selection share purple accent tokens.
