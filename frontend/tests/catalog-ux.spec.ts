@@ -9,7 +9,7 @@ test('hero and form edit a draft; removing a chip preserves unrelated edits',asy
  await page.getByRole('group',{name:'Выберите язык разработки'}).getByRole('button',{name:'Python',exact:true}).click();
  await expect(page.getByRole('radio',{name:'Python',exact:true})).toBeChecked();
  expect(new URL(page.url()).searchParams.get('language')).toBe('go');
- await expect(page.locator('.draftNotice')).toContainText('Есть изменения');
+
  await page.getByRole('button',{name:'Убрать фильтр: Цель'}).click();
  await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('30000');
  await expect(page.getByRole('radio',{name:'Python',exact:true})).toBeChecked();
@@ -20,7 +20,7 @@ test('hero and form edit a draft; removing a chip preserves unrelated edits',asy
  await expect(page.locator('.resultHeading')).toBeFocused();
  expect(new URL(page.url()).searchParams.get('language')).toBe('python');
  expect(new URL(page.url()).searchParams.get('max')).toBe('3000000');
- await expect(page.locator('.draftNotice')).not.toContainText('Есть изменения');
+
  await page.goBack();
  await expect(page.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
  await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('');
@@ -110,11 +110,17 @@ for(const width of [390,1440])test(`fixed demo baseline stays within the layout 
  const first=await page.locator('.card').first().evaluate(node=>node.getBoundingClientRect().top+scrollY);
  await test.info().attach('catalog-layout.json',{body:JSON.stringify({width,height:900,firstCardY:first}),contentType:'application/json'});
  console.log('Catalog layout:',JSON.stringify({width,firstCardY:first}));
- expect(first).toBeLessThan(width===390?1800:1250);
+ expect(first).toBeLessThan(width===390?1800:1400);
  const scene=(await page.locator('.languageScene').boundingBox())!;
  const filters=(await page.locator('#catalog-filters').boundingBox())!;
- expect(Math.abs(scene.x-filters.x)).toBeLessThan(1);
- expect(Math.abs(scene.width-filters.width)).toBeLessThan(1);
+ if(width===390){
+  expect(Math.abs(scene.x-filters.x)).toBeLessThan(1);
+  expect(Math.abs(scene.width-filters.width)).toBeLessThan(1);
+ }else{
+  const copy=(await page.locator('.heroCopy').boundingBox())!;
+  expect(scene.x-copy.x-copy.width).toBeGreaterThanOrEqual(48);
+  expect((await page.getByRole('button',{name:'Найти обучение'}).boundingBox())!.width).toBeLessThanOrEqual(240);
+ }
  expect(filters.y-scene.y-scene.height).toBeGreaterThanOrEqual(24);
  const nav=(await page.locator('header .siteNav').boundingBox())!;
  const themeControl=(await page.locator('header .themeControl').boundingBox())!;

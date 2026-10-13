@@ -30,52 +30,91 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
  .resultsHeading:not(:has(.filterChip)) .sort {grid-row:2;}
 }
 
-/* A spacious, full-width introduction keeps the next action easy to scan. */
-.glassHero {grid-template-columns:minmax(0,1fr); gap:28px; padding:40px 0;}
-.glassHero h1 {max-width:24ch; font-size:clamp(36px,4vw,56px); line-height:1.15; letter-spacing:-.03em; margin-bottom:16px; text-wrap:balance;}
+/* Approved catalog: quiet language colors, a tilted tray and an aligned route form. */
+.glassHero {grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:80px; padding:80px 16px 88px;}
+.glassHero h1 {font-size:clamp(36px,3.8vw,56px); line-height:1.15; letter-spacing:-.03em; margin:0 0 20px; text-wrap:balance;}
 .glassHero p {font-size:18px; max-width:65ch;}
-.languageScene {height:auto; transform:none; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; padding:24px; border-radius:24px; margin:0;}
+.languageScene {height:auto; transform:rotate(-3deg); grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:28px; border-radius:28px; margin:0;}
 .sceneCaption {position:static; grid-column:1/-1; font-size:15px; line-height:1.5;}
-.languageScene>button {justify-content:center; min-height:76px; padding:16px; gap:12px; font-size:16px;}
+.languageScene>button {position:relative; justify-content:center; min-height:88px; padding:20px 12px; gap:12px; font-size:16px;}
 .languageCode {font-size:24px;}
-.workspace aside {padding:32px; margin-bottom:40px;}
-.filterTitle {margin-bottom:28px;}
-aside form {column-gap:24px; row-gap:24px;}
+.workspace aside {padding:32px; margin-bottom:56px;}
+.filterTitle {margin-bottom:24px;}
+.workspace .routeForm {grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px;}
+.routeForm>fieldset {grid-column:1/-1; margin:0;}
+.routeForm legend {font-size:13px; margin-bottom:12px;}
 .languageGrid {gap:10px;}
 .languageChoice span {padding:12px 16px; font-size:14px;}
-.profileOptions {gap:12px;}
+.routeForm>.priceInputs {grid-column:3/5; gap:24px;}
+.routeForm>.budgetNote {grid-column:3/5; margin:-12px 0 0;}
+.routeForm>.routeAdvanced {grid-column:1/-1; grid-row:auto; margin:0; padding-top:24px;}
+.routeAdvanced summary {display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:15px;}
+.routeAdvanced summary span {display:flex; transform:rotate(180deg);}
+.routeAdvanced summary svg {width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+.routeAdvanced[open] summary span {transform:none;}
+.advancedFields {display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; padding-top:16px;}
+.advancedFields>label {margin:0; font-size:13px; font-weight:600; min-width:0;}
+.routeForm>.searchButton {grid-column:1/-1; grid-row:auto; justify-self:end; width:240px; margin:0;}
 .resultHeading {scroll-margin-top:24px;}
+.brand {--logo-accent:#8064bb; --logo-path:#cba263;}
+:root[data-theme=dark] .brand {--logo-accent:#b8a0eb;}
 @media(max-width:1000px) {
+ .glassHero {grid-template-columns:minmax(0,1fr); gap:32px; padding:48px 0;}
+ .languageScene {transform:none;}
+ .workspace .routeForm {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .routeForm>.priceInputs,.routeForm>.budgetNote {grid-column:1/-1;}
+ .advancedFields {grid-template-columns:repeat(2,minmax(0,1fr));}
  .workspace aside {padding:28px;}
 }
 @media(max-width:700px) {
- header {padding:20px 16px; gap:16px 8px;}
+ header {padding:20px 16px; gap:20px 8px;}
+ header .brand {width:270px;}
  header .siteNav {font-size:12px; gap:12px;}
- .glassHero {gap:24px; padding:32px 0;}
+ .glassHero {gap:32px; padding:40px 0;}
  .glassHero h1 {font-size:34px; margin-bottom:16px;}
- .glassHero h1 br {display:none;}
  .glassHero p {font-size:16px; line-height:1.6;}
- .languageScene {grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:20px; border-radius:20px;}
+ .languageScene {gap:12px; padding:20px; border-radius:20px; transform:none;}
  .sceneCaption {font-size:14px;}
  .languageScene>button {min-height:68px; padding:12px 8px; gap:8px; font-size:14px;}
  .languageCode {font-size:22px;}
  .workspace aside {padding:24px 20px; margin-bottom:32px;}
- .filterTitle {margin-bottom:24px;}
- aside form {gap:24px 16px;}
+ .workspace .routeForm {gap:24px 16px;}
+ .routeForm>.priceInputs,.advancedFields {gap:24px 16px;}
  .languageChoice span {padding:10px 12px; font-size:13px;}
+ .routeForm>.searchButton {width:100%;}
  .resultsHeading {margin-bottom:24px;}
 }
-
-.draftNotice {grid-column:1/5; margin:0; color:var(--muted); font-size:13px; align-self:center;}
-@media(max-width:1000px) {.draftNotice {grid-column:1/-1;}}
-
-.draftNotice:empty {display:none;}
-
-/* Keep both opt-ins together, alongside the existing price explanation. */
-.profileOptions {grid-column:3/5; grid-row:2; display:grid; gap:12px;}
-@media(max-width:1350px) and (min-width:1001px) {
- .profileOptions {grid-column:1/4; grid-row:3;}
- aside form>.searchButton {grid-row:4/6;}
- aside form>details {grid-row:5;}
+:root {
+ --python-soft:#f4e4bd; --python-ink:#5c4821; --python-selected:#e9cd91; --python-selected-ink:#3e3017;
+ --javascript-soft:#ead9bb; --javascript-ink:#594323; --javascript-selected:#dcc18f; --javascript-selected-ink:#3c2e1b;
+ --java-soft:#edcfc5; --java-ink:#713d30; --java-selected:#dcae9e; --java-selected-ink:#50291f;
+ --go-soft:#d3e2eb; --go-ink:#31556a; --go-selected:#adcbdc; --go-selected-ink:#233f50;
 }
-@media(max-width:1000px) {.profileOptions {grid-column:1/-1; grid-row:auto;}}
+:root[data-theme=dark] {
+ --python-soft:#49402d; --python-ink:#ecdbb3;
+ --javascript-soft:#473b2c; --javascript-ink:#e6d1ac;
+ --java-soft:#483333; --java-ink:#edc5b8;
+ --go-soft:#283f50; --go-ink:#c2ddea;
+}
+[data-language=python],.languageBadge.python {--language-soft:var(--python-soft); --language-ink:var(--python-ink); --language-selected:var(--python-selected); --language-selected-ink:var(--python-selected-ink);}
+[data-language=javascript],.languageBadge.javascript {--language-soft:var(--javascript-soft); --language-ink:var(--javascript-ink); --language-selected:var(--javascript-selected); --language-selected-ink:var(--javascript-selected-ink);}
+[data-language=java],.languageBadge.java {--language-soft:var(--java-soft); --language-ink:var(--java-ink); --language-selected:var(--java-selected); --language-selected-ink:var(--java-selected-ink);}
+[data-language=go],.languageBadge.go {--language-soft:var(--go-soft); --language-ink:var(--go-ink); --language-selected:var(--go-selected); --language-selected-ink:var(--go-selected-ink);}
+.languageScene>button[data-language],.languageBadge:is(.python,.javascript,.java,.go) {background:var(--language-soft); color:var(--language-ink);}
+.languageScene .languageCode {color:inherit;}
+.languageScene>button[data-language] {transition:transform 160ms cubic-bezier(.23,1,.32,1);}
+.languageScene>button[data-language][aria-pressed=true],.languageChoice[data-language] input:checked+span {background:var(--language-selected); color:var(--language-selected-ink);}
+.languageScene>button[data-language][aria-pressed=true] {outline:2px solid var(--language-ink); outline-offset:3px;}
+.languageSelected {display:none; position:absolute; top:8px; right:8px; width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;}
+.languageScene>button[aria-pressed=true] .languageSelected {display:block;}
+@media(hover:hover) and (pointer:fine) {
+ .languageScene>button[data-language]:hover {background:var(--language-selected); color:var(--language-selected-ink); transform:translateY(-3px);}
+}
+@media(min-width:1001px) and (hover:hover) and (pointer:fine) {
+ .languageScene>button[data-language]:hover {transform:translateY(-3px) rotate(3deg);}
+}
+.languageScene>button[data-language]:active:not(:focus-visible) {transform:scale(.98);}
+.languageScene>button[data-language]:focus-visible {transition:none;}
+@media(prefers-reduced-motion:reduce) {
+ .languageScene>button[data-language]:hover,.languageScene>button[data-language]:active {transform:none;}
+}

@@ -136,7 +136,8 @@ The production `.env` stays at `/srv/devcourse-finder/.env`, and the Compose
 project remains `devcourse-finder` so the existing database volume is reused.
 Nginx, HTTPS configuration, and catalog data are preserved. After checks pass,
 `/srv/devcourse-finder/current` points to the release and `DEPLOYED_VERSION`
-records its tag, commit, and deployment time. Old source releases and backups
+records its tag, commit, and deployment time after checking that the frontend
+footer displays the selected release version. Old source releases and backups
 are retained.
 
 A failed deployment is reported as failed, and its version is not recorded as
@@ -254,10 +255,12 @@ The test builds and starts the stack under a temporary Compose project, validate
 
 ## Brand assets
 
-DevCourseFinder uses an outlined SVG wordmark and a code/route symbol with a mint
-waypoint. The shared header and footer adapt it to light and dark themes.
-The catalog introduction stays focused on its headline and search, with subtle
-circular background accents. A sun/system/moon capsule selects the theme.
+DevCourseFinder uses an outlined SVG wordmark with a lilac `finder` segment and
+an open-book symbol with a thin gold route. The shared header and footer adapt it to light and dark themes.
+The catalog introduction pairs its headline with a slightly tilted desktop
+language tray; mobile keeps the tray straight. Language tints are muted and
+consistent across shortcuts, selected filters and course badges. A sun/system/moon capsule selects the theme. The mobile glass header places
+the wordmark above navigation and the theme control.
 State illustrations use the same semantic theme colors.
 
 Reusable light/dark lockups and the symbol live in `frontend/public/brand/`.
@@ -272,7 +275,7 @@ Public pages include Open Graph and `summary_large_image` Twitter metadata in
 server HTML. Telegram, WhatsApp, and other supporting messengers can show the
 DevCourseFinder cover, page title, and description without running JavaScript. Course
 links use the program's own title and summary; all pages share a branded
-1200 × 630 PNG at `/social-preview-v2.png`.
+1200 × 630 PNG at `/social-preview-v3.png`.
 
 Set `SITE_URL` to the public HTTPS origin **before building** production images.
 Compose forwards it to the frontend build and runtime. Rebuild the frontend when
@@ -286,7 +289,7 @@ committed, so production needs no fonts or rendering service. To regenerate it,
 install Open Sans locally and run from `frontend/`:
 
 ```sh
-node --input-type=module -e "import sharp from 'sharp'; await sharp('scripts/social-preview.svg').png().toFile('public/social-preview-v2.png')"
+node --input-type=module -e "import sharp from 'sharp'; await sharp('scripts/social-preview.svg').png().toFile('public/social-preview-v3.png')"
 ```
 
 Bump the image filename and metadata reference when changing the cover so image

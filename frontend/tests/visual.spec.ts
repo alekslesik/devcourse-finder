@@ -21,6 +21,15 @@ for(const width of [360,390,768,1440])for(const theme of ['light','dark'] as con
    }
    if(name==='dialog')await expect(page.getByRole('dialog').getByRole('table')).toBeVisible();
    await inspect(name);
+   if(name==='catalog'){
+    const group=page.getByRole('group',{name:'Выберите язык разработки'});
+    for(const language of ['Python','JavaScript','Java','Go']){
+     const choice=group.getByRole('button',{name:language,exact:true});
+     await choice.click();
+     await expect(choice).toHaveAttribute('aria-pressed','true');
+     await inspect('selected-'+language.toLowerCase());
+    }
+   }
   }
   await page.evaluate(()=>localStorage.removeItem('devcourse-offers'));
   let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve});
