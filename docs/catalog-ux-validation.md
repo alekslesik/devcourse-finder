@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.1 implements the agreed glass catalog layout. The selected visual
+Version 0.24.2 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -17,6 +17,12 @@ and the two-row mobile header from `brand-mobile-light.png`.
   use the updated mark. The outlined wordmark needs no font download.
 - Mobile places the logo above navigation and theme controls inside one glass
   header. Desktop uses one header row. Both light and dark themes are supported.
+- The logo, primary actions, links, focus and generic selection share the purple
+  accent tokens (light `#6845a8`, dark `#b8a0eb`); language and status colors keep
+  their semantic roles. A static blue/lilac ambient canvas is visible through
+  lightly tinted glass panels. Raised dropdown/table surfaces stay opaque;
+  unsupported backdrop filtering and reduced-transparency preferences use solid
+  surfaces, with prefixed backdrop filtering for Safari.
 - All route fields share one aligned, always-visible grid without an extra
   parameters heading, divider or accordion. The desktop search button is 240px wide and
   right aligned; mobile uses full width. Native inputs, labels, visible focus,

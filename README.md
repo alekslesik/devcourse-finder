@@ -261,7 +261,11 @@ The catalog introduction pairs its headline with a slightly tilted desktop
 language tray; mobile keeps the tray straight. Language tints are muted and
 consistent across shortcuts, selected filters and course badges. A sun/system/moon capsule selects the theme. The mobile glass header places
 the wordmark above navigation and the theme control.
-State illustrations use the same semantic theme colors.
+The logo, buttons, links, focus and generic selection share purple accent tokens.
+A static blue/lilac background shows through the translucent glass surfaces in
+both themes. Reduced-transparency preferences and browsers without backdrop
+filtering use solid readable surfaces. State illustrations use the same semantic
+theme colors.
 
 Reusable light/dark lockups and the symbol live in `frontend/public/brand/`.
 `frontend/scripts/brand-lockup.svg` is the vector source; the wordmark contains
