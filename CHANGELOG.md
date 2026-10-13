@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.3] - 2026-10-13
+
+- Replace muddy language tiles with clean glass tints and minimal recognizable language marks, restore the programming-course headline, and increase light-theme transparency.
+
 ## [0.24.2] - 2026-10-13
 
 - Unify the logo and interface accents around the purple brand palette, with a visible ambient background and more translucent glass panels in both themes.

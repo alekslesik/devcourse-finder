@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.2 implements the agreed glass catalog layout. The selected visual
+Version 0.24.3 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -8,10 +8,13 @@ and the two-row mobile header from `brand-mobile-light.png`.
 
 ## Current behaviour
 
-- The headline is **Найди свой курс**, without punctuation. The desktop language
+- The headline is **Найди свой курс программирования**, without punctuation. The desktop language
   tray sits beside it at a slight angle; mobile uses a straight two-by-two grid.
-  Language colors are muted and consistent in shortcuts, selected filters and
-  course badges. Selection uses a checkmark as well as color.
+  Language shortcuts pair a flat recognizable SVG mark with the full name.
+  Devicon source revisions and the MIT license are recorded in `public/languages/`.
+  Python/Java/Go use their familiar logo geometry; JavaScript uses the community
+  JS square. Dark idle tiles use a cool glass surface and colored marks, avoiding
+  brown fills; selection uses a light tint, outline and checkmark.
 - The open-book logo has a thin gold path and a lilac `finder` segment. Header,
   footer, downloadable SVGs, browser/Apple icons and the versioned social preview
   use the updated mark. The outlined wordmark needs no font download.
@@ -20,7 +23,7 @@ and the two-row mobile header from `brand-mobile-light.png`.
 - The logo, primary actions, links, focus and generic selection share the purple
   accent tokens (light `#6845a8`, dark `#b8a0eb`); language and status colors keep
   their semantic roles. A static blue/lilac ambient canvas is visible through
-  lightly tinted glass panels. Raised dropdown/table surfaces stay opaque;
+  lightly tinted glass panels, with further reduced white opacity in light mode. Raised dropdown/table surfaces stay opaque;
   unsupported backdrop filtering and reduced-transparency preferences use solid
   surfaces, with prefixed backdrop filtering for Safari.
 - All route fields share one aligned, always-visible grid without an extra
@@ -83,8 +86,8 @@ The fixed historical response fixture retains the same demo data, first page,
 12 offers, banner and 900px viewport height. Regression budgets are **1800px**
 at 390px width and **1400px** at 1440px width. The desktop limit increases from
 1250px to accommodate all route fields; it is not met by hiding fields.
-Removing the accordion reduces the first-card positions from
-1669.22px / 1306.66px to **1579.39px / 1221.66px**.
+With the unified form and restored programming headline, measured first-card
+positions are **1615.64px / 1221.66px**.
 These are fixture coordinates, not conversion metrics or limits on diagnostic text.
 
 The regression checks also verify mobile tray/filter alignment, a minimum 48px

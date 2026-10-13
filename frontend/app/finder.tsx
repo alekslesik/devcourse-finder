@@ -4,6 +4,7 @@ import type {Response,ComparisonItem} from '../lib/catalog';
 import Modal from './modal';
 import ComparisonTable from './comparison-table';
 import CourseCard from './course-card';
+import LanguageIcon from './language-icon';
 import ResultState from './result-state';
 import {rememberCatalog,takeCatalogRestore} from '../lib/catalog-navigation';
 import {recordEvent as event} from '../lib/analytics';
@@ -76,7 +77,7 @@ export default function Finder({resultsPath='/courses'}:{resultsPath?:string}){
  const counts=!loading&&!error?data?.diagnostics:undefined;
  const hasFilters=Array.from(params?.keys()||[]).some(key=>!['sort','page','page_size','compare'].includes(key));
  return <>
- <main><section className="intro glassHero"><div className="heroCopy"><h1>Найди свой <span>курс</span></h1><p>Сравните курсы по опыту, цели и бюджету.</p></div><div className="languageScene" role="group" aria-label="Выберите язык разработки"><span className="sceneCaption">Выберите язык для обучения</span>{Object.entries(languages).map(([key,name])=><button key={key} data-language={key} type="button" aria-pressed={draftLanguage===key} onClick={()=>chooseLanguage(key)}><span className="languageCode" aria-hidden="true">{{python:'Py',javascript:'JS',java:'Ja',go:'Go'}[key]}</span>{name}<svg className="languageSelected" aria-hidden="true" viewBox="0 0 24 24"><path d="m6 12 4 4 8-8"/></svg></button>)}</div></section>
+ <main><section className="intro glassHero"><div className="heroCopy"><h1>Найди свой <span>курс программирования</span></h1><p>Сравните курсы по опыту, цели и бюджету.</p></div><div className="languageScene" role="group" aria-label="Выберите язык разработки"><span className="sceneCaption">Выберите язык для обучения</span>{Object.entries(languages).map(([key,name])=><button key={key} data-language={key} type="button" aria-pressed={draftLanguage===key} onClick={()=>chooseLanguage(key)}><LanguageIcon language={key}/><span>{name}</span><svg className="languageSelected" aria-hidden="true" viewBox="0 0 24 24"><path d="m6 12 4 4 8-8"/></svg></button>)}</div></section>
  <div className="workspace"><aside id="catalog-filters" aria-label="Ваш маршрут"><div className="filterTitle"><h2>Ваш маршрут</h2><button className="textButton" onClick={()=>navigate(new URLSearchParams())}>Сбросить</button></div>
  {params&&<form className="routeForm" ref={formRef} key={formRevision} onSubmit={search} onChange={e=>{focusResults.current=false;const form=e.currentTarget;const input=form.elements.namedItem('max') as HTMLInputElement;input.setCustomValidity('');setDraftLanguage(String(new FormData(form).get('language')||''))}}>
  <fieldset><legend className="visuallyHidden">Язык разработки</legend><div className="languageGrid"><label className="languageChoice"><input type="radio" name="language" value="" checked={!draftLanguage} onChange={()=>setDraftLanguage('')}/><span>Все языки</span></label>{Object.entries(languages).map(([k,v])=><label className="languageChoice" key={k} data-language={k}><input type="radio" name="language" value={k} checked={draftLanguage===k} onChange={()=>setDraftLanguage(k)}/><span>{v}</span></label>)}</div></fieldset>
