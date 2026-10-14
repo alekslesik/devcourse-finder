@@ -70,7 +70,7 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 }
 
 /* Approved catalog: quiet language colors, a tilted tray and an aligned route form. */
-.glassHero {grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:80px; padding:80px 16px 88px;}
+.glassHero {grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:80px; padding:80px 16px;}
 .glassHero h1 {font-size:clamp(36px,3.8vw,56px); line-height:1.15; letter-spacing:-.03em; margin:0 0 20px; text-wrap:balance;}
 .glassHero p {font-size:18px; max-width:65ch;}
 .languageScene {height:auto; transform:rotate(-3deg); grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:28px; border-radius:28px; margin:0;}
@@ -171,8 +171,28 @@ header::before,.languageScene::before,.workspace aside::before {
  -webkit-mask-composite:xor; mask-composite:exclude;
 }
 .card {background:var(--surface); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);}
+/* A lifted glass surface replaces title underlines as the hover affordance. */
+.card {position:relative; isolation:isolate; transition:transform 180ms cubic-bezier(.23,1,.32,1);}
+.card::before {
+ content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none;
+ background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,transparent),transparent 65%);
+ opacity:0; transition:opacity 180ms cubic-bezier(.23,1,.32,1);
+}
+.card .titleButton {text-decoration:none;}
+.card .titleButton:focus-visible {color:var(--accent); text-decoration:none;}
+.card:has(:focus-visible) {border-color:var(--accent);}
+.card:has(:focus-visible)::before,.card:active::before {opacity:1;}
+@media(hover:hover) and (pointer:fine) {
+ .card:hover {transform:translateY(-4px); border-color:var(--accent); box-shadow:var(--shadow),0 18px 36px color-mix(in srgb,var(--accent) 16%,transparent);}
+ .card:hover::before {opacity:1;}
+ .card:hover .titleButton {color:var(--accent); text-decoration:none;}
+ .card:has(:focus-visible) {transform:none; transition:none;}
+}
+@media(prefers-reduced-motion:reduce) {.card:hover {transform:none;}}
+
 input,select {border-radius:16px;}
 /* Native semantics with a consistent empty box, instead of browser gray fills. */
+.checkbox {-webkit-tap-highlight-color:transparent; user-select:none;}
 .checkbox input {
  -webkit-appearance:none; appearance:none; display:grid; place-content:center; padding:0;
  border:1.5px solid color-mix(in srgb,var(--ink) 60%,transparent); border-radius:5px;
@@ -215,6 +235,7 @@ input,select {border-radius:16px;}
  :root,:root[data-theme=dark] {--glass:var(--surface-raised); --surface:var(--surface-raised); --control-surface:var(--surface-raised); --secondary-surface:var(--accent-soft); --control-border:var(--ink); --shadow:none;}
  header,.languageScene,.workspace aside,.card,input,select {border:1px solid var(--ink); -webkit-backdrop-filter:none; backdrop-filter:none;}
  .checkbox input {border-color:var(--ink);}
+ .card:hover {box-shadow:none;}
  header::before,.languageScene::before,.workspace aside::before {display:none;}
 }
 
