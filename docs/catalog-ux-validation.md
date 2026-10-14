@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.10 implements the agreed glass catalog layout. The selected visual
+Version 0.24.11 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -68,6 +68,9 @@ and the two-row mobile header from `brand-mobile-light.png`.
   Direct entry, unavailable storage and untrusted context use a safe fallback.
 - Mobile comparison keeps both axes of context in a bounded scroll region;
   horizontal scrolling inside the table is intentional, page overflow is not.
+- Card source links and title links have at least 44px-high hit areas without
+  enlarging their type. Source link focus uses zero outline offset so the card
+  does not clip it; footer text stays aligned with a compact padded row.
 - Course cards use an accent rim, a translucent light wash and a 4px lift on
   pointer hover, without underlining the title. Keyboard focus highlights the
   card without moving it; touch presses get the light wash without sticky hover.
