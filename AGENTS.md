@@ -17,6 +17,24 @@
   the displayed version. Report any failure; do not claim deployment succeeded
   until verified.
 
+# GitHub authentication retries
+
+- The maintainer uses a long-lived GitHub token. Do not conclude that it expired
+  or request replacement after a single `401 Bad credentials` / authentication
+  failure. Make up to four attempts total, pausing 15, 30 and 60 seconds between
+  attempts; refresh managed credential readiness when that tool is available.
+- Use the configured `GHTOKEN` binding for CLI requests (`GH_TOKEN="$GHTOKEN"`
+  for that command). Preserve the session proxy and credential-injection setup;
+  never print credentials, change tokens or start an interactive login yourself.
+- For mutations, inspect remote state before retrying so a PR, merge, release or
+  workflow dispatch is not duplicated. Retry only if the action was not applied;
+  monitor an existing deployment of the same tag instead of dispatching another.
+- If authentication still fails after these attempts, report the exact operation
+  and error, finish unaffected work using available connector tools, and ask for
+  credential repair only when the remaining action is actually blocked. A 401
+  alone is not evidence that a long-lived token has expired. Permission denials
+  and rate limits need their own diagnosis, rather than repeated blind retries.
+
 # Release workflow
 
 - Every PR must increase the root `VERSION` and add its English release notes to

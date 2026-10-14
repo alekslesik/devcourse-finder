@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.9] - 2026-10-14
+
+- Document bounded GitHub authentication retries for the long-lived token, with remote-state checks to avoid duplicate mutations.
+
 ## [0.24.8] - 2026-10-13
 
 - Enlarge Go artwork, clarify comparison checkboxes, use text weight for active navigation, and blend the ambient background into the browser chrome color at the top edge.
