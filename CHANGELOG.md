@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.11] - 2026-10-14
+
+- Enlarge course source and title link hit areas to 44px while keeping compact text and visible keyboard focus.
+
 ## [0.24.10] - 2026-10-14
 
 - Remove native tap-highlight flashes from comparison checkbox labels.

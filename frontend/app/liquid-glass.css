@@ -171,6 +171,11 @@ header::before,.languageScene::before,.workspace aside::before {
  -webkit-mask-composite:xor; mask-composite:exclude;
 }
 .card {background:var(--surface); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);}
+/* Compact text with a full touch target; keep the focus ring clear of clipping. */
+.cardFooter {align-items:center; padding-block:4px;}
+.cardFooter a {display:inline-flex; align-items:center; gap:4px; min-height:44px; padding-inline:8px; margin-inline-end:-8px; border-radius:8px; user-select:none;}
+.cardFooter a:focus-visible {outline-offset:0;}
+
 /* A lifted glass surface replaces title underlines as the hover affordance. */
 .card {position:relative; isolation:isolate; transition:transform 180ms cubic-bezier(.23,1,.32,1);}
 .card::before {
@@ -178,7 +183,7 @@ header::before,.languageScene::before,.workspace aside::before {
  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,transparent),transparent 65%);
  opacity:0; transition:opacity 180ms cubic-bezier(.23,1,.32,1);
 }
-.card .titleButton {text-decoration:none;}
+.card .titleButton {display:flex; align-items:center; min-height:44px; text-decoration:none;}
 .card .titleButton:focus-visible {color:var(--accent); text-decoration:none;}
 .card:has(:focus-visible) {border-color:var(--accent);}
 .card:has(:focus-visible)::before,.card:active::before {opacity:1;}
