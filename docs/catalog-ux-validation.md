@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.8 implements the agreed glass catalog layout. The selected visual
+Version 0.24.10 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -9,7 +9,8 @@ and the two-row mobile header from `brand-mobile-light.png`.
 ## Current behaviour
 
 - The headline is **Найди свой курс программирования**, without punctuation. The desktop language
-  tray sits beside it at a slight angle; mobile uses a straight two-by-two grid.
+  tray sits beside it at a slight angle, with matching 80px top/bottom hero
+  spacing; mobile uses a straight two-by-two grid.
   Language shortcuts pair the maintainer's glass-style icon artwork with the
   full name: cyan Go, amber Java, gold JS letters and blue/yellow Python. A local
   transparent WebP atlas supplies all four images; per-mark view boxes preserve
@@ -67,6 +68,9 @@ and the two-row mobile header from `brand-mobile-light.png`.
   Direct entry, unavailable storage and untrusted context use a safe fallback.
 - Mobile comparison keeps both axes of context in a bounded scroll region;
   horizontal scrolling inside the table is intentional, page overflow is not.
+- Course cards use an accent rim, a translucent light wash and a 4px lift on
+  pointer hover, without underlining the title. Keyboard focus highlights the
+  card without moving it; touch presses get the light wash without sticky hover.
 - Hover motion requires a fine pointer with hover capability. Keyboard actions
   and reduced-motion preferences avoid animated transforms. Touch gets short
   press feedback rather than persistent hover.

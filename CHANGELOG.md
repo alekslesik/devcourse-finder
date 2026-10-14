@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.10] - 2026-10-14
+
+- Remove native tap-highlight flashes from comparison checkbox labels.
+- Match desktop hero top and bottom spacing around the language tray.
+- Highlight hovered course cards with a lifted glass surface, accent rim and soft light wash instead of title underlines, preserving keyboard and reduced-motion behavior.
+
 ## [0.24.9] - 2026-10-14
 
 - Document bounded GitHub authentication retries for the long-lived token, with remote-state checks to avoid duplicate mutations.
