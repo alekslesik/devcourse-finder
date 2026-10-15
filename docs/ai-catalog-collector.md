@@ -1,6 +1,6 @@
 # AI course metadata collector
 
-Optional separate `catalog-ai` container for verified Stepik, Practicum and Netology courses.
+Optional separate `catalog-ai` container for verified Stepik, Practicum, CodeBasics and supported-contract Netology courses.
 The native workers discover URLs and validate identities, prices and enrollment;
 OpenAI (or automatic DeepSeek backup) extracts learning/profile facts from complete official documents. Newly
 published courses become eligible automatically. No frontend or deployment trigger
@@ -234,7 +234,7 @@ See the [DeepSeek diagnostic report](ai-deepseek-diagnostics-2026-10-15.md).
 ## Supported providers and staged expansion
 
 `catalog-ai status` includes `supported_providers`. This release enables only
-`netology`, `stepik` and `yandex`; having a native parser does not automatically
+`codebasics`, `netology`, `stepik` and `yandex`; having a native parser does not automatically
 permit paid AI calls for the remaining schools. A shared registry controls
 canonical candidate recognition, due-course selection, document validation and
 publisher source domains. Unregistered providers and noncanonical/foreign URLs
@@ -247,3 +247,11 @@ freshness changes, cache replay, changed-family rejection before model calls and
 changed-binding rejection after enqueue. This does not claim live model accuracy
 or complete coverage of Netology's current HTML. No paid provider requests were
 made to implement this stage. Budgets and Monday/Thursday scheduling are unchanged.
+
+CodeBasics requires its stored course/primary-offer mapping, fresh anonymous
+Inertia identity/curriculum validation and the independent official free-policy
+page. It sends explicit public landing fields and curriculum descriptions, not
+authentication state or lesson solutions. Its single course offer receives only
+landing-level condition text. Total curriculum hours are not calendar duration
+or weekly workload. A queued mapping change is rejected transactionally. The
+current Python source-only check passed; no live semantic model benchmark was run.

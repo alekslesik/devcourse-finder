@@ -145,7 +145,7 @@ func TestAINetologyPipelineCacheIdentityFailuresAndManualTariffs(t *testing.T) {
 		t.Fatal("changed family spent requests", failed, err)
 	}
 	var status bytes.Buffer
-	if err = AIStatus(ctx, db, &status); err != nil || !strings.Contains(status.String(), `"supported_providers":["netology","stepik","yandex"]`) {
+	if err = AIStatus(ctx, db, &status); err != nil || !strings.Contains(status.String(), `"supported_providers":["codebasics","netology","stepik","yandex"]`) {
 		t.Fatal(status.String(), err)
 	}
 	loaded, _ = db.Load(ctx)

@@ -16,12 +16,13 @@ and tariff contracts rather than treating every native source as model input.
 | #140 | Skypro | Planned |
 | #141 | OTUS | Planned |
 | #142 | Hexlet | Planned |
-| #143 | CodeBasics | Planned |
+| #143 | CodeBasics | Implemented; current source-only check passed |
 | #144 | JavaRush | Planned |
 | #145 | RS School | Planned |
 | #146 | Whole-epic coverage/resource/operations acceptance | Pending remaining adapters |
 
-This first combined PR contains one implementation commit per delivered task.
+This first combined PR contains separate commits for the registry, the scoped
+Netology work and CodeBasics. Only #134 and #143 are closed by this stage.
 The epic and remaining platform issues stay open. Each platform requires official
 source identity checks, isolated course/tariff documents, independent quotation
 verification, cache/budget preservation and PostgreSQL publication regression tests.
@@ -69,3 +70,26 @@ Repeat the source-only test with
 `AI_NETOLOGY_SOURCE_CHECK=1 go test ./backend/updater -run '^TestAINetologyLiveSource$' -v`.
 It makes no model calls and performs no database writes. A source-contract error
 is an actual failed acceptance check, not a successful semantic benchmark.
+
+## CodeBasics source and acceptance — 2026-10-15
+
+The current official Python page and independent `/ru` free-policy page returned
+HTTP 200. The existing native Inertia contract verified course/landing IDs,
+published/built flags, matching Russian curriculum and an accessible first lesson.
+The new reader prepared 13,968 bytes of course text (9 source segments) and
+229 bytes for the single bound full-course offer (1 segment). This is a source
+preparation result, not a paid model accuracy measurement.
+
+Only explicit public landing descriptions, usage/outcome descriptions and course
+module/lesson names/descriptions enter the course document. Auth/contact state,
+other landings, source/test code and solutions are excluded. Offer input contains
+only that landing's header, description and original duration wording; total
+curriculum hours are not converted into weeks or hours-per-week. Operator-added
+offers are not enriched. A fresh native free-policy check is required before
+cache lookup/model reservation; AI never changes the free price or its date.
+
+PostgreSQL tests cover extraction/review → queue → publisher, cached recovery,
+queued source-remap rejection, financial freshness and operator-offer protection.
+The extraction/review responses in these tests are mocks. No paid API calls were
+made. Repeat the optional anonymous source-only check with
+`AI_CODEBASICS_SOURCE_CHECK=1 go test ./backend/updater -run '^TestAICodeBasicsLiveSource$' -v`.

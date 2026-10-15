@@ -144,6 +144,9 @@ func aiNetologyBindingDigest(courseID string, binding aiNetologyBinding) string 
 }
 
 func aiEventSourceIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool, error) {
+	if e.Candidate.Adapter == "codebasics" {
+		return aiCodeBasicsEventIdentityValid(ctx, tx, e)
+	}
 	if e.Candidate.Adapter != "netology" {
 		return true, nil
 	}

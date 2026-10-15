@@ -5,9 +5,10 @@ import "sort"
 // Only providers with implemented document/identity contracts belong here.
 // Native parser support alone never opts a provider into paid AI enrichment.
 var aiProviders = map[string]string{
-	"netology": "https://netology.ru/programs/%",
-	"stepik":   "https://stepik.org/course/%",
-	"yandex":   "https://practicum.yandex.ru/%",
+	"codebasics": "https://code-basics.com/ru/languages/%",
+	"netology":   "https://netology.ru/programs/%",
+	"stepik":     "https://stepik.org/course/%",
+	"yandex":     "https://practicum.yandex.ru/%",
 }
 
 func aiCandidateURL(raw string) (Candidate, bool) {

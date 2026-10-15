@@ -23,7 +23,7 @@ func TestAIRegistryRejectsUnsupportedAndNoncanonicalCandidates(t *testing.T) {
 	}
 }
 func TestAIRegistrySourcesRemainValidAndBudgetScheduleUnchanged(t *testing.T) {
-	for _, url := range []string{"https://stepik.org/course/42/promo", "https://practicum.yandex.ru/backend-developer", "https://netology.ru/programs/go"} {
+	for _, url := range []string{"https://stepik.org/course/42/promo", "https://practicum.yandex.ru/backend-developer", "https://netology.ru/programs/go", "https://code-basics.com/ru/languages/python"} {
 		c, ok := aiCandidateURL(url)
 		if !ok {
 			t.Fatal(url)

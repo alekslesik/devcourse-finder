@@ -50,6 +50,9 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 		return c, nil, err
 	}
 	var docs []AIDocument
+	if adapter == "codebasics" {
+		return aiFetchCodeBasicsDocuments(ctx, db, client, course, c, raw, digest)
+	}
 	if adapter == "netology" {
 		return aiFetchNetologyDocuments(ctx, db, course, c, raw, digest)
 	}
