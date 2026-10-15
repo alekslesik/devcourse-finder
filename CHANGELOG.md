@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.25.3] - 2026-10-15
+
+- Schedule paid AI enrichment only on Mondays and Thursdays at 21:00 Moscow time, with bounded same-slot restart recovery and no off-schedule startup runs.
+
 ## [0.25.2] - 2026-10-15
 
 - Extract identity-bound PurpleSchool profile facts with provenance and safely prioritize targeted published-candidate rechecks.
