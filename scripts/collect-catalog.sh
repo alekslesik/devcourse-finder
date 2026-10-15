@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Sent over SSH by Collect catalog; no script installation on the VDS is needed.
 set -Eeuo pipefail
-[[ $# -le 1 ]] || { echo 'Usage: collect-catalog.sh [DEPLOYMENT_DIRECTORY]' >&2; exit 1; }
+[[ $# -le 1 || $# -eq 3 ]] || { echo 'Usage: collect-catalog.sh [DEPLOYMENT_DIRECTORY [RECHECK_ADAPTER RECHECK_ID]]' >&2; exit 1; }
 base=${1:-/srv/devcourse-finder}
+if [[ $# -eq 3 ]]; then
+  [[ $2 =~ ^[a-z]{1,24}$ && $3 =~ ^[a-zA-Z0-9_-]{1,120}$ ]] || { echo 'Invalid recheck identity.' >&2; exit 1; }
+fi
 [[ $base == /* && -d $base ]] || { echo 'Deployment directory is missing.' >&2; exit 1; }
 for command in docker flock readlink; do
   command -v "$command" >/dev/null || { echo "Missing $command" >&2; exit 1; }
@@ -29,6 +32,10 @@ for worker in "${workers[@]}"; do
   container=$("${compose[@]}" ps --status running -q "$worker" </dev/null)
   [[ -n $container ]] || { echo "The deployed $worker is not running. Inspect its service logs." >&2; exit 1; }
 done
+if [[ $# -eq 3 ]]; then
+  echo '[STEP] Scheduling one published candidate for normal source verification'
+  "${compose[@]}" exec --interactive=false -T catalog-updater devcourse-finder catalog-update recheck "$2" "$3" </dev/null
+fi
 result=0
 for worker in "${workers[@]}"; do
   echo "[STEP] Running deployed $worker"

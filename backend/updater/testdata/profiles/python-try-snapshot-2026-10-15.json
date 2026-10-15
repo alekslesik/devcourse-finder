@@ -1,0 +1,992 @@
+{
+  "source": "http://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48",
+  "captured_pages_at": [
+    "2026-10-15T08:46:55.263798876Z",
+    "2026-10-15T09:05:02.347468715Z"
+  ],
+  "scope": "Minimal profile-only frozen projection of two public API pages; not an atomic database snapshot or full catalog import. Counts and unique IDs checked while capturing. Prices and unrelated data deliberately omitted.",
+  "confirmed_before": 3,
+  "unverified_before": 83,
+  "courses": [
+    {
+      "id": "codebasics-python",
+      "language": "python",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-python-generation",
+      "language": "python",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "yandex-python-free",
+      "language": "python",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "try",
+        "switch"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "skillbox-python-basic",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "profile": {
+        "audience": {
+          "values": [
+            "none",
+            "switch"
+          ],
+          "evidence": {
+            "source": "https://otus.ru/lessons/python-basic",
+            "locator": "course-section[heading=для кого этот курс?]",
+            "digest": "e004e9734d0f5cd2b8aade06f8bda80d16f83d4d7cec4e9c5131c29638841975",
+            "checked_at": "2026-10-15T06:00:51.716647615Z"
+          }
+        }
+      },
+      "id": "otus-python-basic",
+      "language": "python",
+      "audience": [
+        "none",
+        "switch"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "skillbox-profession-python",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "purpleschool-python-start",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "otus-python-specialization",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "purpleschool-python-basics",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "purpleschool-python-advanced",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "profile": {
+        "audience": {
+          "values": [
+            "none"
+          ],
+          "evidence": {
+            "source": "https://skillfactory.ru/python-developer",
+            "locator": ".tn-atom[course-audience=Подходит новичкам без опыта в IT]",
+            "digest": "ea154f9cf6aae8c55bc6ad603e0e33b054d32c29c5a4f96d18018efffc93fa0d",
+            "checked_at": "2026-10-13T06:00:39.596925452Z"
+          }
+        }
+      },
+      "id": "skillfactory-python-developer",
+      "language": "python",
+      "audience": [
+        "none"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-245654",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-245638",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-245606",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-245274",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-245038",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-245021",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-245014",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-244516",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-244422",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-244062",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243867",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243826",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243689",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243488",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243484",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243483",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243175",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243094",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243048",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-243047",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242962",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242959",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242958",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242935",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240915",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242839",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240914",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240913",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240912",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240857",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240790",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240761",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240760",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240462",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240391",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242535",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240388",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240373",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240369",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240203",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240140",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242424",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242221",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-242094",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241971",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241938",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241839",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241837",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241708",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241477",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241436",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241376",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-241341",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-239925",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-239757",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-239591",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-239526",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-239442",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-239042",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-238963",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-238815",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-238675",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-238582",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-238420",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-237860",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-237836",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-237718",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-237652",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-237433",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-237150",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-237034",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-236742",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240962",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-236697",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    },
+    {
+      "id": "stepik-240166",
+      "language": "python",
+      "audience": [
+        "unknown"
+      ],
+      "goals": [
+        "unknown"
+      ],
+      "status": "published"
+    }
+  ]
+}

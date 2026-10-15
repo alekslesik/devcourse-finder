@@ -22,15 +22,17 @@ type PurpleTariff struct {
 	Mentor   bool   `json:"mentor"`
 }
 type purpleCourse struct {
-	ID       int64   `json:"id"`
-	CourseID int64   `json:"courseId"`
-	Alias    string  `json:"alias"`
-	Title    string  `json:"title"`
-	Summary  string  `json:"metaDescription"`
-	Status   string  `json:"status"`
-	OnSite   *bool   `json:"isOnSite"`
-	Planned  *string `json:"plannedReleaseDate"`
-	Tariffs  []struct {
+	ID           int64    `json:"id"`
+	CourseID     int64    `json:"courseId"`
+	Alias        string   `json:"alias"`
+	Title        string   `json:"title"`
+	Summary      string   `json:"metaDescription"`
+	Description  string   `json:"description"`
+	Requirements []string `json:"requirements"`
+	Status       string   `json:"status"`
+	OnSite       *bool    `json:"isOnSite"`
+	Planned      *string  `json:"plannedReleaseDate"`
+	Tariffs      []struct {
 		ID            int64             `json:"id"`
 		CourseID      int64             `json:"courseId"`
 		Name          string            `json:"name"`
@@ -404,6 +406,7 @@ func collectPurpleSchoolRecord(data []byte, c Candidate, now time.Time) (catalog
 		record.Offers = append(record.Offers, catalog.Offer{ID: record.ID + "-t" + strconv.FormatInt(t.ID, 10), Name: t.Name, Price: &amount, PriceKind: "exact", Free: amount == 0, PriceCheckedAt: now, ValidUntil: &deadline, SupportKnown: &known, Review: t.Review, Mentor: t.Mentor, Schedule: "flexible", Enrollment: "continuous", URL: c.URL})
 	}
 	record, o = purpleLearning(data, doc, p, record, o, c, now)
+	record, o = profileAttach(record, o, purpleProfile(data, p, c, record.Language, now))
 	return record, o, nil
 }
 
