@@ -73,3 +73,18 @@ func TestOpenAISeparateReviewerAndSafeQuotaClassification(t *testing.T) {
 		t.Fatal("unsafe provider error", err)
 	}
 }
+
+func TestAIProviderCannotSetLocalPartialObservationMetadata(t *testing.T) {
+	c, docs, x, _ := aiFixture()
+	x.DiscardedClaims = 1
+	payload, _ := json.Marshal(x)
+	response, _ := json.Marshal(map[string]any{"choices": []any{map[string]any{"finish_reason": "stop", "message": map[string]any{"content": string(payload)}}}})
+	for _, provider := range []string{"", "deepseek"} {
+		model := &OpenAIModel{Key: "test", Model: "test", provider: provider, Client: &http.Client{Transport: roundTrip(func(*http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(string(response)))}, nil
+		})}}
+		if _, _, err := model.Extract(context.Background(), c, docs); err == nil {
+			t.Fatal("provider supplied trusted partial flag")
+		}
+	}
+}

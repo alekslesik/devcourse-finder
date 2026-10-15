@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.25.1] - 2026-10-15
+
+- Isolate invalid AI metadata claims while preserving prior facts and evidence dates; clarify DeepSeek grounding and verification contracts.
+
 ## [0.25.0] - 2026-10-15
 
 - Add automatic DeepSeek fallback for OpenAI provider failures, restarting grounded extraction and independent verification without a manual provider selector.

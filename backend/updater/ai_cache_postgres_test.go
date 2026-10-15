@@ -107,3 +107,43 @@ func TestAICompletePairRequiredBeforePaidExtraction(t *testing.T) {
 		})
 	}
 }
+
+// The invalid first claim must neither poison the course nor shift the verifier's
+// indices; only independently approved, surviving claims may reach publication.
+type mixedAIModel struct{ calls int }
+
+func (m *mixedAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocument) (AIExtraction, AIUsage, error) {
+	m.calls++
+	_, _, x, _ := aiFixture()
+	bad := x.Claims[1]
+	bad.Field = "duration"
+	bad.Unit = "month"
+	bad.Max = valueFloat(99)
+	x.Claims = append([]AIClaim{bad}, x.Claims...)
+	return x, AIUsage{Prompt: 100, Total: 100}, nil
+}
+func (m *mixedAIModel) Verify(ctx context.Context, c Candidate, docs []AIDocument, x AIExtraction) (AIVerification, AIUsage, error) {
+	m.calls++
+	if len(x.Claims) != 2 || x.DiscardedClaims != 1 || x.Claims[0].Field != "audience" || *x.Claims[1].Max != 12 {
+		return AIVerification{}, AIUsage{}, ErrAI
+	}
+	return AIVerification{Complete: true, Verified: []int{0}}, AIUsage{Prompt: 50, Total: 50}, nil
+}
+func TestAIPartialAnalysisCachesOnlyIndependentlyVerifiedFacts(t *testing.T) {
+	record, engine, docs := aiImportedCourse(t)
+	c, _, _, _ := aiFixture()
+	model := &mixedAIModel{}
+	engine.Model = model
+	first, err := engine.Resolve(context.Background(), record.ID, c, docs, time.Now())
+	if err != nil || first.Cached || first.Extraction.DiscardedClaims != 1 {
+		t.Fatal(first, err)
+	}
+	facts, err := aiCompile(c, docs, first.Extraction, first.Verification, time.Now())
+	if err != nil || facts.Profile == nil || facts.Learning[docs[1].OfferID] != nil {
+		t.Fatal(facts, err)
+	}
+	second, err := engine.Resolve(context.Background(), record.ID, c, docs, time.Now())
+	if err != nil || !second.Cached || second.Extraction.DiscardedClaims != 1 || model.calls != 2 {
+		t.Fatal("partial flag or cache lost", second, err, model.calls)
+	}
+}

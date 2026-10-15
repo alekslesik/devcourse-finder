@@ -54,14 +54,10 @@ func (m *OpenAIModel) request(ctx context.Context, prompt string, input any, sch
 	request := map[string]any{"model": m.Model, "messages": []map[string]string{{"role": "system", "content": prompt}, {"role": "user", "content": string(body)}}, "max_completion_tokens": 4096, "store": false, "response_format": map[string]any{"type": "json_schema", "json_schema": map[string]any{"name": "course_facts", "strict": true, "schema": schema}}}
 	if provider == "deepseek" {
 		// DeepSeek JSON mode does not enforce OpenAI's strict response schema.
-		// Supply the same schema as instructions and retain local validation.
-		encodedSchema, _ := json.Marshal(schema)
-		example := `{"course_url":"","complete":true,"claims":[]}`
-		if _, verifying := input.(map[string]any)["proposed_claims"]; verifying {
-			example = `{"complete":true,"verified_claim_ids":[]}`
-		}
+		// Give a compact output contract, not a repeated nested schema that hides
+		// the source text. Grounding and all field checks remain local.
 		request["messages"] = []map[string]string{
-			{"role": "system", "content": prompt + "\nReturn JSON only. Output JSON schema: " + string(encodedSchema) + "\nShape example (use supplied identities): " + example},
+			{"role": "system", "content": prompt + "\n" + aiDeepSeekOutputInstructions(input)},
 			{"role": "user", "content": string(body)},
 		}
 		request["response_format"] = map[string]any{"type": "json_object"}
@@ -229,6 +225,9 @@ func (m *OpenAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocumen
 	}
 	properties["claims"].(map[string]any)["items"] = map[string]any{"anyOf": branches}
 	usage, err := m.request(ctx, aiExtractionPrompt, map[string]any{"course_url": c.URL, "documents": aiPromptDocuments(docs)}, schema, &out)
+	if err == nil && out.DiscardedClaims != 0 {
+		err = ErrAI
+	}
 	if err == nil {
 		err = aiGroundQuotes(docs, &out)
 	}
