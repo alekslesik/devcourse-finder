@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDeepSeekJSONModeFixedEndpointAndSeparateVerifier(t *testing.T) {
@@ -92,6 +93,38 @@ func TestDeepSeekStillRejectsMalformedRefusedAndUngroundedOutput(t *testing.T) {
 		})}}
 		if _, _, err := m.Extract(context.Background(), c, docs); err == nil {
 			t.Fatal("unsafe output accepted")
+		}
+	}
+}
+
+func TestDeepSeekUnknownQuoteIDsDoNotPoisonValidClaims(t *testing.T) {
+	c, docs, x, _ := aiFixture()
+	good := x.Claims[0]
+	good.QuoteID = "s0"
+	good.Quote = ""
+	bad := AIClaim{Field: "prerequisites", DocumentID: "course", QuoteID: "unknown", Value: "none", Scope: "programming"}
+	x.Claims = []AIClaim{bad, good}
+	for _, badDoc := range []bool{false, true} {
+		if badDoc {
+			x.Claims[0].DocumentID = "unknown"
+			x.Claims[0].QuoteID = "s0"
+		}
+		payload, _ := json.Marshal(x)
+		envelope, _ := json.Marshal(map[string]any{"choices": []any{map[string]any{"finish_reason": "stop", "message": map[string]any{"content": string(payload)}}}})
+		m := &DeepSeekModel{Key: "test", Model: "test", Client: &http.Client{Transport: roundTrip(func(*http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(string(envelope)))}, nil
+		})}}
+		raw, _, err := m.Extract(context.Background(), c, docs)
+		if err != nil {
+			t.Fatal("whole response failed before isolation", err)
+		}
+		isolated, err := aiIsolateClaims(c, docs, raw, time.Now())
+		if err != nil || isolated.DiscardedClaims != 1 || len(isolated.Claims) != 1 || isolated.Claims[0].Quote != aiNormalize(docs[0].Text) {
+			t.Fatal("valid claim lost or wrong source copied", isolated, err)
+		}
+		facts, err := aiCompile(c, docs, isolated, AIVerification{Complete: true, Verified: []int{0}}, time.Now())
+		if err != nil || facts.Profile.Audience == nil || facts.Profile.Prerequisites != nil {
+			t.Fatal(facts, err)
 		}
 	}
 }

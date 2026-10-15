@@ -119,12 +119,16 @@ func (m *mixedAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocume
 	bad.Field = "duration"
 	bad.Unit = "month"
 	bad.Max = valueFloat(99)
-	x.Claims = append([]AIClaim{bad}, x.Claims...)
+	badDocument := AIClaim{Field: "prerequisites", DocumentID: "nonexistent", QuoteID: "s0", Value: "none", Scope: "programming"}
+	badQuote := AIClaim{Field: "excluded_audience", DocumentID: "course", QuoteID: "nonexistent", Values: []string{"switch"}}
+	x.Claims[0].QuoteID = "s0"
+	x.Claims[0].Quote = "" // Must be copied locally from the source before review.
+	x.Claims = append([]AIClaim{bad, badDocument, badQuote}, x.Claims...)
 	return x, AIUsage{Prompt: 100, Total: 100}, nil
 }
 func (m *mixedAIModel) Verify(ctx context.Context, c Candidate, docs []AIDocument, x AIExtraction) (AIVerification, AIUsage, error) {
 	m.calls++
-	if len(x.Claims) != 2 || x.DiscardedClaims != 1 || x.Claims[0].Field != "audience" || *x.Claims[1].Max != 12 {
+	if len(x.Claims) != 2 || x.DiscardedClaims != 3 || x.Claims[0].Field != "audience" || *x.Claims[1].Max != 12 {
 		return AIVerification{}, AIUsage{}, ErrAI
 	}
 	return AIVerification{Complete: true, Verified: []int{0}}, AIUsage{Prompt: 50, Total: 50}, nil
@@ -135,7 +139,7 @@ func TestAIPartialAnalysisCachesOnlyIndependentlyVerifiedFacts(t *testing.T) {
 	model := &mixedAIModel{}
 	engine.Model = model
 	first, err := engine.Resolve(context.Background(), record.ID, c, docs, time.Now())
-	if err != nil || first.Cached || first.Extraction.DiscardedClaims != 1 {
+	if err != nil || first.Cached || first.Extraction.DiscardedClaims != 3 {
 		t.Fatal(first, err)
 	}
 	facts, err := aiCompile(c, docs, first.Extraction, first.Verification, time.Now())
@@ -143,7 +147,7 @@ func TestAIPartialAnalysisCachesOnlyIndependentlyVerifiedFacts(t *testing.T) {
 		t.Fatal(facts, err)
 	}
 	second, err := engine.Resolve(context.Background(), record.ID, c, docs, time.Now())
-	if err != nil || !second.Cached || second.Extraction.DiscardedClaims != 1 || model.calls != 2 {
+	if err != nil || !second.Cached || second.Extraction.DiscardedClaims != 3 || model.calls != 2 {
 		t.Fatal("partial flag or cache lost", second, err, model.calls)
 	}
 }

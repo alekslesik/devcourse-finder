@@ -228,9 +228,8 @@ func (m *OpenAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocumen
 	if err == nil && out.DiscardedClaims != 0 {
 		err = ErrAI
 	}
-	if err == nil {
-		err = aiGroundQuotes(docs, &out)
-	}
+	// Ground source IDs per claim in aiIsolateClaims; one bad ID must not
+	// reject unrelated proposals before independent verification.
 	return out, usage, err
 }
 

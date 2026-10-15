@@ -30,7 +30,9 @@ at enrichment. Ordinary CI makes no paid provider requests.
 - A malformed or ungrounded individual claim no longer poisons valid claims from
   the same observation. All-invalid output, wrong identities and incomplete
   responses still fail closed. Conflicting duplicate field/tariff claims are both
-  discarded. Remaining indices are independently verified after filtering.
+  discarded. Remaining indices are independently verified after filtering. Quote IDs are grounded per
+  claim during isolation, so one nonexistent document/segment ID cannot reject
+  unrelated valid proposals before the isolation step.
 - Partial observations retain omitted old facts, dates and ownership. Verified
   surviving facts can refresh normally. Fully complete observations retain the
   previous disappearance semantics. Prices and enrollment remain native-only.
@@ -42,7 +44,8 @@ at enrichment. Ordinary CI makes no paid provider requests.
   v3 prevents reuse of older prompt/validation cache entries.
 
 Regression coverage includes source-scope numeric failures, duplicates, identity
-protection, forged provider partial metadata, partial cache replay and PostgreSQL
+protection, HTTP-provider replies with unknown document/segment IDs, forged
+provider partial metadata, partial cache replay and PostgreSQL
 publication preserving evidence freshness/ownership while updating verified facts.
 
 ## Production acceptance after deployment

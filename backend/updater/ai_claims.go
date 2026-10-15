@@ -15,12 +15,15 @@ func aiIsolateClaims(c Candidate, docs []AIDocument, x AIExtraction, at time.Tim
 	valid := make([]AIClaim, 0, len(x.Claims))
 	for _, claim := range x.Claims {
 		one := AIExtraction{CourseURL: x.CourseURL, Complete: true, Claims: []AIClaim{claim}}
-		_, err := aiCompile(c, docs, one, AIVerification{Complete: true}, at)
+		err := aiGroundQuotes(docs, &one)
+		if err == nil {
+			_, err = aiCompile(c, docs, one, AIVerification{Complete: true}, at)
+		}
 		if err != nil || counts[claim.OfferID+":"+claim.Field] != 1 {
 			x.DiscardedClaims++
 			continue
 		}
-		valid = append(valid, claim)
+		valid = append(valid, one.Claims[0])
 	}
 	if len(x.Claims) > 0 && len(valid) == 0 {
 		return x, ErrAI
