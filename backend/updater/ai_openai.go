@@ -97,7 +97,7 @@ func (m *OpenAIModel) request(ctx context.Context, prompt string, input any, sch
 			code = provider + "_authentication_failed"
 		} else if res.StatusCode == 402 {
 			code = provider + "_insufficient_quota"
-		} else if res.StatusCode == 422 {
+		} else if res.StatusCode == 422 || provider == "deepseek" && res.StatusCode == 400 {
 			code = provider + "_protocol_rejected"
 		} else if res.StatusCode == 429 {
 			code = provider + "_rate_limited"

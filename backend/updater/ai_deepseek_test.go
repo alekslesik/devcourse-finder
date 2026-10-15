@@ -41,7 +41,7 @@ func TestDeepSeekJSONModeFixedEndpointAndSeparateVerifier(t *testing.T) {
 
 func TestAIProviderErrorsAndNoCredentialCrossing(t *testing.T) {
 	c, docs, _, _ := aiFixture()
-	for _, test := range []struct { status int; code string }{{402,"deepseek_insufficient_quota"}, {401,"deepseek_authentication_failed"}, {429,"deepseek_rate_limited"}, {503,"deepseek_unavailable"}, {422,"deepseek_protocol_rejected"}} {
+	for _, test := range []struct { status int; code string }{{400,"deepseek_protocol_rejected"}, {402,"deepseek_insufficient_quota"}, {401,"deepseek_authentication_failed"}, {429,"deepseek_rate_limited"}, {503,"deepseek_unavailable"}, {422,"deepseek_protocol_rejected"}} {
 		model := &DeepSeekModel{Key: "deep-only", Model: "deepseek-flash", Client: &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
 			if r.URL.Host != "api.deepseek.com" || r.Header.Get("Authorization") != "Bearer deep-only" { t.Fatal("credential crossed providers") }
 			return &http.Response{StatusCode: test.status, Body: io.NopCloser(strings.NewReader(`{"error":{"message":"private-body"}}`))}, nil

@@ -60,3 +60,14 @@ func TestAIPrimarySuccessAndAbsentBackup(t *testing.T) {
 	r = aiFallbackResolver{fallback: backup}
 	if _, err = r.Resolve(context.Background(), "course", c, docs, time.Now()); err != nil || backup.calls != 1 { t.Fatal(err) }
 }
+
+func TestAIBackupProtocolErrorStopsCollection(t *testing.T) {
+	c, docs, _, _ := aiFixture()
+	primary := &resolutionStub{err: &AIProviderError{Code: "openai_unavailable"}}
+	backup := &resolutionStub{err: &AIProviderError{Code: "deepseek_protocol_rejected"}}
+	r := aiFallbackResolver{primary: primary, fallback: backup}
+	_, err := r.Resolve(context.Background(), "course", c, docs, time.Now())
+	if err == nil || err.Error() != "deepseek_protocol_rejected" || !aiProviderUnavailable(err) || primary.calls != 1 || backup.calls != 1 {
+		t.Fatal("deterministic backup error did not stop the run", err)
+	}
+}

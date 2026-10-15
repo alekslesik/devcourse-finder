@@ -165,7 +165,8 @@ can be recovered. See the dated acceptance report for measured results.
 ## Verify the fallback after deployment
 
 1. Add the backup key to the protected `.env`, retain the OpenAI settings, and run
-   the activation command above again with `--force-recreate` before `catalog-ai`.
+   the activation command above again with `--no-deps --force-recreate` before
+   `catalog-ai`, after the deployed database and migration services are healthy.
    A container restart alone does not reload changed environment variables.
 2. Check `catalog-ai health`, then `catalog-ai status` using the Compose prefix
    above. Health proves worker liveness, not provider API access.
