@@ -17,8 +17,19 @@ for command in docker jq curl getent; do
     echo "Missing $command. Run setup-vds.sh first." >&2; exit 1;
   }
 done
-cd /srv/devcourse-finder
-compose=(docker compose -f compose.yaml -f compose.production.yaml)
+base=${DEPLOYMENT_DIRECTORY:-/srv/devcourse-finder}
+[[ $base == /* && -d $base ]] || { echo 'Deployment directory is missing.' >&2; exit 1; }
+command -v flock >/dev/null || { echo 'Missing flock.' >&2; exit 1; }
+exec 9>"$base/.deploy.lock"
+flock --nonblock 9 || { echo 'Deployment or catalog collection is running; retry after it finishes.' >&2; exit 1; }
+[[ -f "$base/.env" && ! -L "$base/.env" ]] || { echo 'Production .env is missing or is a symlink.' >&2; exit 1; }
+# Releases are immutable and current is switched only after a healthy deployment.
+# Do not inspect the obsolete Compose files left in the original base directory.
+release=$base
+if [[ -L "$base/current" ]]; then release=$(readlink -f "$base/current"); fi
+[[ -f "$release/compose.yaml" && -f "$release/compose.production.yaml" ]] || { echo 'Deployed Compose files are missing.' >&2; exit 1; }
+cd "$release"
+compose=(docker compose --project-name devcourse-finder --env-file "$base/.env" -f "$release/compose.yaml" -f "$release/compose.production.yaml")
 if ! "${compose[@]}" config --format json |
   jq -e --arg origin "https://$domain" '
     .services.frontend.environment.SITE_URL == $origin and
