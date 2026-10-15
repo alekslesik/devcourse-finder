@@ -307,7 +307,7 @@ func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 	if err = db.Pool.QueryRow(ctx, "SELECT count(*) FROM catalog_ai_observations WHERE processed_at IS NULL").Scan(&pending); err != nil {
 		return err
 	}
-	if err = json.NewEncoder(w).Encode(map[string]any{"ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy()}); err != nil {
+	if err = json.NewEncoder(w).Encode(map[string]any{"ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
 		return err
 	}
 	rows, err := db.Pool.Query(ctx, "SELECT course_id,code,attempted_at,verified_at,next_attempt_at,failures FROM catalog_ai_sources ORDER BY attempted_at DESC LIMIT 40")

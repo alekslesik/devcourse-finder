@@ -5,8 +5,9 @@ import "sort"
 // Only providers with implemented document/identity contracts belong here.
 // Native parser support alone never opts a provider into paid AI enrichment.
 var aiProviders = map[string]string{
-	"stepik": "https://stepik.org/course/%",
-	"yandex": "https://practicum.yandex.ru/%",
+	"netology": "https://netology.ru/programs/%",
+	"stepik":   "https://stepik.org/course/%",
+	"yandex":   "https://practicum.yandex.ru/%",
 }
 
 func aiCandidateURL(raw string) (Candidate, bool) {
@@ -25,4 +26,22 @@ func aiSourcePatterns() []string {
 	}
 	sort.Strings(patterns)
 	return patterns
+}
+
+func aiSourceHosts() []string {
+	hosts := make([]string, 0, len(aiProviders))
+	for adapter := range aiProviders {
+		hosts = append(hosts, providerHosts[adapter])
+	}
+	sort.Strings(hosts)
+	return hosts
+}
+
+func aiProviderIDs() []string {
+	ids := make([]string, 0, len(aiProviders))
+	for id := range aiProviders {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
 }

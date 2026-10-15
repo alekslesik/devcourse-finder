@@ -15,7 +15,7 @@ func TestNetologyLiveVerification(t *testing.T) {
 	defer cancel()
 	for _, slug := range []string{"java-developer", "go"} {
 		c := Candidate{Adapter: "netology", ExternalID: slug, URL: "https://netology.ru/programs/" + slug, FeedID: "netology-catalog"}
-		data, _, err := fetch(ctx, NewClient(), c.URL)
+		data, _, err := fetch(ctx, NewClient(), candidateEndpoint(c))
 		if err != nil {
 			t.Fatal(slug, err)
 		}

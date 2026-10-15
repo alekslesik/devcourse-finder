@@ -291,7 +291,7 @@ func (s *Service) publishAI(ctx context.Context) (int, error) {
 		var e AIEvent
 		valid := aiStrictJSON(raw, &e) == nil && e.valid() && e.CourseID == courseID && e.ObservedAt.Equal(at)
 		code := "invalid_ai_observation"
-		n, err := s.DB.UpdateVerified(ctx, []string{"stepik.org", "practicum.yandex.ru"}, "automatic-ai-catalog-publisher", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
+		n, err := s.DB.UpdateVerified(ctx, aiSourceHosts(), "automatic-ai-catalog-publisher", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
 			var courses []catalog.Course
 			if valid {
 				var last *time.Time
@@ -303,9 +303,17 @@ func (s *Service) publishAI(ctx context.Context) (int, error) {
 				if stale {
 					code = "stale_ai_observation"
 				} else {
-					courses, err = mergeAI(old, e, &code)
-					if err != nil {
-						return nil, err
+					identityOK, identityErr := aiEventSourceIdentityValid(ctx, tx, e)
+					if identityErr != nil {
+						return nil, identityErr
+					}
+					if !identityOK {
+						code = "protected_ai_identity"
+					} else {
+						courses, err = mergeAI(old, e, &code)
+						if err != nil {
+							return nil, err
+						}
 					}
 					if _, err = tx.Exec(ctx, "INSERT INTO catalog_ai_watermarks(course_id,observed_at,event_id) VALUES($1,$2,$3) ON CONFLICT(course_id) DO UPDATE SET observed_at=EXCLUDED.observed_at,event_id=EXCLUDED.event_id", courseID, at, id); err != nil {
 						return nil, err

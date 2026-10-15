@@ -23,12 +23,12 @@ func TestAIRegistryRejectsUnsupportedAndNoncanonicalCandidates(t *testing.T) {
 	}
 }
 func TestAIRegistrySourcesRemainValidAndBudgetScheduleUnchanged(t *testing.T) {
-	for _, url := range []string{"https://stepik.org/course/42/promo", "https://practicum.yandex.ru/backend-developer"} {
+	for _, url := range []string{"https://stepik.org/course/42/promo", "https://practicum.yandex.ru/backend-developer", "https://netology.ru/programs/go"} {
 		c, ok := aiCandidateURL(url)
 		if !ok {
 			t.Fatal(url)
 		}
-		docs := []AIDocument{{ID: "course", Scope: "course", Source: c.URL, Text: "Официальный текст программы обучения.", Digest: fingerprint([]byte("source"))}}
+		docs := []AIDocument{{ID: "course", Scope: "course", Source: c.URL, Text: "Официальный текст программы обучения.", BindingDigest: fingerprint([]byte("binding")), Digest: fingerprint([]byte("source"))}}
 		if !aiDocumentsValid(c, docs) {
 			t.Fatal(c)
 		}

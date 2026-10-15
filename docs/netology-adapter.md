@@ -59,3 +59,15 @@ NETOLOGY_LIVE_CHECK=1 go test ./backend/updater -run TestNetologyLiveVerificatio
 Default tests use reduced public-page fixtures and do not require the Internet.
 Deploy through the existing manual **Deploy release** workflow after merge and
 release publication. Merging or publishing a release does not deploy the VDS.
+
+## Current source limitation — 2026-10-15
+
+Fetch `/programs/<slug>/` directly while keeping the stored canonical URL without
+the trailing slash. The current source redirects the unsuffixed URL; the loader
+continues to forbid redirects.
+
+A source-only check of Go, Java and Python found registration-only SSR payloads
+without the previously verified program/family IDs, activity flags and bound
+payment cards. They remain unsupported and are rejected rather than loosening
+price or identity checks. The AI expansion reader shares that boundary; details
+and the open follow-up are recorded in [AI provider expansion](ai-provider-expansion.md).

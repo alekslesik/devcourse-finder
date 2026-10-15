@@ -50,6 +50,9 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 		return c, nil, err
 	}
 	var docs []AIDocument
+	if adapter == "netology" {
+		return aiFetchNetologyDocuments(ctx, db, course, c, raw, digest)
+	}
 	if adapter == "stepik" {
 		var payload struct {
 			Courses []stepikCourse `json:"courses"`
