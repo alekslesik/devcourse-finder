@@ -119,7 +119,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			err = e
 		}
 	}()
-	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND (c.source LIKE 'https://stepik.org/course/%' OR c.source LIKE 'https://practicum.yandex.ru/%') AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize)
+	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns())
 	if err != nil {
 		return result, err
 	}

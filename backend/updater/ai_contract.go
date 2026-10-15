@@ -90,7 +90,8 @@ func aiNumberInQuote(n float64, q string) bool {
 }
 
 func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
-	if c.Adapter != "stepik" && c.Adapter != "yandex" || len(docs) == 0 || len(docs) > 9 {
+	identity, supported := aiCandidateURL(c.URL)
+	if !supported || identity.Adapter != c.Adapter || identity.ExternalID != c.ExternalID || len(docs) == 0 || len(docs) > 9 {
 		return false
 	}
 	seen := map[string]bool{}
