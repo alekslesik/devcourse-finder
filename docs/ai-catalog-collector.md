@@ -19,7 +19,15 @@ periods cannot become mandatory prerequisites, mentorship or learning duration.
 Default models: `gpt-4.1-mini` for extraction and `gpt-4.1` for verification. Both
 are configurable. Verified source quotes, URLs, digests and dates survive in the
 durable metadata queue/audit; the public facts expose source/evidence references.
-Unknown or rejected claims are omitted. Invalid replies, refusals, truncation,
+Unknown or rejected claims are omitted. Individually invalid shapes, scopes or
+unsupported numeric claims are discarded before independent review of the remaining
+claims. Duplicate claims for the same field/tariff are both discarded. Wrong course
+identity, incomplete replies and replies with no surviving claims still fail closed.
+A partially discarded observation preserves all omitted prior facts, their original
+evidence dates and AI/native/operator ownership; it can update only independently
+verified surviving facts. Partial results are cached to avoid repeatedly paying for
+the same unchanged text. The policy version changes, so old-policy caches are not
+reused for new analyses. Invalid replies, refusals, truncation,
 wrong identities, oversized inputs and source failures retain previous dates.
 
 The existing publisher merges metadata and acknowledges its queue in one catalog
@@ -89,7 +97,11 @@ Existing pre-provider cache keys are not reused for new analyses.
 
 No secrets or raw provider error bodies enter logs. A switch logs
 `AI provider fallback from=openai to=deepseek code=openai_...`.
-Course log lines include `model=deepseek:...`, `cached` and `tokens`.
+Course log lines include `model=deepseek:...`, `cached`, `tokens`,
+`discarded_claims` (local validation failures) and `verified_claims` (independently
+approved claims). A successful provider reply can still have zero verified claims.
+DeepSeek receives compact per-field JSON contracts and explicit enum translations;
+Russian source text need not literally contain internal English codes such as `none`.
 No fallback can repair an unavailable Stepik/Practicum source page.
 Native discovery, pricing and publication workers remain independent.
 
@@ -189,3 +201,14 @@ network/5xx errors, failure during verification, separate caches, no budget bypa
 and both-provider failure. Run `go test -race ./backend/...` with the existing
 `TEST_DATABASE_URL` test database to repeat these acceptance scenarios without
 paid API calls. No live DeepSeek accuracy or production failover is claimed by CI.
+
+## Diagnosing `invalid_ai_response`
+
+Nonzero tokens with `invalid_ai_response` means the provider was reached but the
+response did not pass the pipeline. It does not mean the API key is missing.
+For example, a claim of 8 months or 15 hours citing only a 36-payment price block
+is not grounded. That claim must not be published. With policy v3 it is isolated
+and logged in `discarded_claims`; surviving claims still need independent review.
+A valid cached analysis can have `verified_claims=0`, and `queued` alone does not
+prove enrichment. Check source availability separately before spending requests.
+See the [DeepSeek diagnostic report](ai-deepseek-diagnostics-2026-10-15.md).

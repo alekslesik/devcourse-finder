@@ -19,14 +19,14 @@ import (
 )
 
 type AIConfig struct {
-	Key         string `json:"-"`
-	Model       string
-	VerifyModel string
-	DeepSeekKey string `json:"-"`
-	DeepSeekModel string
+	Key                 string `json:"-"`
+	Model               string
+	VerifyModel         string
+	DeepSeekKey         string `json:"-"`
+	DeepSeekModel       string
 	DeepSeekVerifyModel string
-	BatchSize   int
-	DailyLimit  int
+	BatchSize           int
+	DailyLimit          int
 }
 
 func LoadAIConfig() (AIConfig, error) {
@@ -161,9 +161,9 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	}
 	if strings.TrimSpace(s.Config.DeepSeekKey) != "" {
 		resolver.fallback = &AIEngine{
-			DB: s.DB,
-			Model: &DeepSeekModel{Key: s.Config.DeepSeekKey, Model: s.Config.DeepSeekModel, VerifyModel: s.Config.DeepSeekVerifyModel},
-			ModelName: "deepseek:" + s.Config.DeepSeekModel + "+" + s.Config.DeepSeekVerifyModel,
+			DB:         s.DB,
+			Model:      &DeepSeekModel{Key: s.Config.DeepSeekKey, Model: s.Config.DeepSeekModel, VerifyModel: s.Config.DeepSeekVerifyModel},
+			ModelName:  "deepseek:" + s.Config.DeepSeekModel + "+" + s.Config.DeepSeekVerifyModel,
 			DailyLimit: s.Config.DailyLimit,
 		}
 	}
@@ -188,10 +188,15 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 		candidate, docs, readErr := aiFetchDocuments(local, s.DB, client, c)
 		code := "source_unavailable"
 		modelUsed, cached, tokens := "", false, 0
+		discarded, verified := 0, 0
 		if readErr == nil {
 			var resolved AIResolved
 			resolved, readErr = resolver.Resolve(local, id, candidate, docs, at)
 			modelUsed, cached, tokens = resolved.ModelName, resolved.Cached, resolved.Usage.Total
+			discarded = resolved.Extraction.DiscardedClaims
+			if readErr == nil {
+				verified = len(resolved.Verification.Verified)
+			}
 			code = "invalid_ai_response"
 			result.Tokens += resolved.Usage.Total
 			if readErr == nil {
@@ -221,7 +226,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 				return result, err
 			}
 		}
-		slog.Info("AI course checked", "course_id", id, "code", code, "model", modelUsed, "cached", cached, "tokens", tokens)
+		slog.Info("AI course checked", "course_id", id, "code", code, "model", modelUsed, "cached", cached, "tokens", tokens, "discarded_claims", discarded, "verified_claims", verified)
 		if aiProviderUnavailable(readErr) {
 			break
 		}

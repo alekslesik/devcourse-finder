@@ -157,3 +157,79 @@ func TestAIPublicationRollbackPoisonAndStaleIdentity(t *testing.T) {
 		t.Fatal(codes)
 	}
 }
+
+func TestAIPartialPublicationPreservesMissingFactsDatesAndOwnership(t *testing.T) {
+	s, _, event := aiEventFixture(t)
+	ctx := context.Background()
+	if err := s.enqueueAI(ctx, event); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Publish(ctx); err != nil {
+		t.Fatal(err)
+	}
+	old, err := s.DB.Load(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	beforeAudience := *old[0].Profile.Audience
+	beforeWorkload := *old[0].Offers[0].LearningConditions.WeeklyWorkload
+	profileOwn, learningOwn := old[0].ProfileOwnership, old[0].Offers[0].LearningOwnership
+	event.ObservedAt = event.ObservedAt.Add(time.Second)
+	event.Extraction.Claims = event.Extraction.Claims[:1]
+	event.Extraction.DiscardedClaims = 1
+	event.Verification.Verified = []int{} // The independent reviewer rejected the remaining proposal.
+	if err = s.enqueueAI(ctx, event); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Publish(ctx); err != nil {
+		t.Fatal(err)
+	}
+	after, err := s.DB.Load(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if after[0].Profile == nil || after[0].Offers[0].LearningConditions == nil {
+		t.Fatal("partial response cleared prior facts")
+	}
+	a := after[0]
+	if !a.Profile.Audience.Evidence.CheckedAt.Equal(beforeAudience.Evidence.CheckedAt) || !a.Offers[0].LearningConditions.WeeklyWorkload.Evidence.CheckedAt.Equal(beforeWorkload.Evidence.CheckedAt) || a.ProfileOwnership != profileOwn || a.Offers[0].LearningOwnership != learningOwn {
+		t.Fatal("partial response freshened or changed ownership of preserved facts")
+	}
+	applyCourseProfile(&a, nil)
+	applyLearningConditions(&a.Offers[0], nil)
+	if a.Profile == nil || a.Offers[0].LearningConditions == nil {
+		t.Fatal("preserved facts lost AI protection")
+	}
+	// A surviving independently approved fact refreshes while an omitted one
+	// retains its original evidence date and ownership.
+	event.ObservedAt = event.ObservedAt.Add(time.Second)
+	event.Verification.Verified = []int{0}
+	if err = s.enqueueAI(ctx, event); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Publish(ctx); err != nil {
+		t.Fatal(err)
+	}
+	after, err = s.DB.Load(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !after[0].Profile.Audience.Evidence.CheckedAt.Equal(event.ObservedAt) || !after[0].Offers[0].LearningConditions.WeeklyWorkload.Evidence.CheckedAt.Equal(beforeWorkload.Evidence.CheckedAt) {
+		t.Fatal("partial update did not isolate freshness", after)
+	}
+	// An explicitly complete later read still clears disappeared AI facts.
+	event.ObservedAt = event.ObservedAt.Add(time.Second)
+	event.Extraction.DiscardedClaims = 0
+	event.Extraction.Claims = nil
+	event.Verification.Verified = nil
+	if err = s.enqueueAI(ctx, event); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Publish(ctx); err != nil {
+		t.Fatal(err)
+	}
+	after, _ = s.DB.Load(ctx)
+	if after[0].Profile != nil || after[0].Offers[0].LearningConditions != nil {
+		t.Fatal("complete disappearance no longer clears AI-owned facts")
+	}
+}

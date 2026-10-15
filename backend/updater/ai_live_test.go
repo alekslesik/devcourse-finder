@@ -66,7 +66,8 @@ func TestOpenAIRecordedSourceBenchmark(t *testing.T) {
 		if err != nil {
 			t.Fatal("OpenAI extraction failed", err)
 		}
-		if _, err = aiCompile(c, docs, x, AIVerification{Complete: true}, time.Now()); err != nil {
+		x, err = aiIsolateClaims(c, docs, x, time.Now())
+		if err != nil {
 			t.Fatalf("extraction shape or source quote rejected: %+v", x)
 		}
 		v, more, err := model.Verify(ctx, c, docs, x)

@@ -85,6 +85,10 @@ func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, do
 	if err != nil {
 		return out, err
 	}
+	out.Extraction, err = aiIsolateClaims(c, docs, out.Extraction, at)
+	if err != nil {
+		return out, err
+	}
 	out.Extraction, err = e.carryForward(ctx, courseID, c, docs, out.Extraction, at)
 	if err != nil {
 		return out, err

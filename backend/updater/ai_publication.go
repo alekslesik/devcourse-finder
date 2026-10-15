@@ -82,7 +82,7 @@ func (s *Service) enqueueAI(ctx context.Context, e AIEvent) error {
 	}
 	return tx.Commit(ctx)
 }
-func applyAIProfile(c *catalog.Course, incoming *catalog.CourseProfile) {
+func applyAIProfile(c *catalog.Course, incoming *catalog.CourseProfile, partial bool) {
 	old, next := catalog.CourseProfile{}, catalog.CourseProfile{}
 	if c.Profile != nil {
 		old = *c.Profile
@@ -90,23 +90,49 @@ func applyAIProfile(c *catalog.Course, incoming *catalog.CourseProfile) {
 	if incoming != nil {
 		next = *incoming
 	}
+	previousOwnership := c.ProfileOwnership
+	preserved := 0
+	if partial {
+		if next.Prerequisites == nil {
+			preserved |= profilePrerequisites
+		}
+		if next.Audience == nil {
+			preserved |= profileAudience
+		}
+		if next.Goals == nil {
+			preserved |= profileGoals
+		}
+		if next.Direction == nil {
+			preserved |= profileDirectionBit
+		}
+		if next.TargetLevel == nil {
+			preserved |= profileTarget
+		}
+		if next.ExcludedAudience == nil {
+			preserved |= profileExclusions
+		}
+	}
+	defer func() {
+		bits := preserved | (preserved << aiOwnershipShift)
+		c.ProfileOwnership = (c.ProfileOwnership &^ bits) | (previousOwnership & bits)
+	}()
 	previousAI := (c.ProfileOwnership >> aiOwnershipShift) & aiProfileMask
-	if next.Prerequisites == nil && previousAI&profilePrerequisites == 0 {
+	if next.Prerequisites == nil && (partial || previousAI&profilePrerequisites == 0) {
 		next.Prerequisites = old.Prerequisites
 	}
-	if next.Audience == nil && previousAI&profileAudience == 0 {
+	if next.Audience == nil && (partial || previousAI&profileAudience == 0) {
 		next.Audience = old.Audience
 	}
-	if next.Goals == nil && previousAI&profileGoals == 0 {
+	if next.Goals == nil && (partial || previousAI&profileGoals == 0) {
 		next.Goals = old.Goals
 	}
-	if next.Direction == nil && previousAI&profileDirectionBit == 0 {
+	if next.Direction == nil && (partial || previousAI&profileDirectionBit == 0) {
 		next.Direction = old.Direction
 	}
-	if next.TargetLevel == nil && previousAI&profileTarget == 0 {
+	if next.TargetLevel == nil && (partial || previousAI&profileTarget == 0) {
 		next.TargetLevel = old.TargetLevel
 	}
-	if next.ExcludedAudience == nil && previousAI&profileExclusions == 0 {
+	if next.ExcludedAudience == nil && (partial || previousAI&profileExclusions == 0) {
 		next.ExcludedAudience = old.ExcludedAudience
 	}
 	c.ProfileOwnership &^= aiProfileMask << aiOwnershipShift
@@ -126,7 +152,7 @@ func applyAIProfile(c *catalog.Course, incoming *catalog.CourseProfile) {
 	mark(profileTarget, incoming.TargetLevel != nil && c.Profile.TargetLevel == incoming.TargetLevel)
 	mark(profileExclusions, incoming.ExcludedAudience != nil && c.Profile.ExcludedAudience == incoming.ExcludedAudience)
 }
-func applyAILearning(o *catalog.Offer, incoming *catalog.LearningConditions) {
+func applyAILearning(o *catalog.Offer, incoming *catalog.LearningConditions, partial bool) {
 	old, next := catalog.LearningConditions{}, catalog.LearningConditions{}
 	if o.LearningConditions != nil {
 		old = *o.LearningConditions
@@ -134,20 +160,43 @@ func applyAILearning(o *catalog.Offer, incoming *catalog.LearningConditions) {
 	if incoming != nil {
 		next = *incoming
 	}
+	previousOwnership := o.LearningOwnership
+	preserved := 0
+	if partial {
+		if next.Duration == nil {
+			preserved |= learningDuration
+		}
+		if next.WeeklyWorkload == nil {
+			preserved |= learningWorkload
+		}
+		if next.Review == nil {
+			preserved |= learningReview
+		}
+		if next.Mentor == nil {
+			preserved |= learningMentor
+		}
+		if next.Community == nil {
+			preserved |= learningCommunity
+		}
+	}
+	defer func() {
+		bits := preserved | (preserved << aiOwnershipShift)
+		o.LearningOwnership = (o.LearningOwnership &^ bits) | (previousOwnership & bits)
+	}()
 	previousAI := (o.LearningOwnership >> aiOwnershipShift) & aiLearningMask
-	if next.Duration == nil && previousAI&learningDuration == 0 {
+	if next.Duration == nil && (partial || previousAI&learningDuration == 0) {
 		next.Duration = old.Duration
 	}
-	if next.WeeklyWorkload == nil && previousAI&learningWorkload == 0 {
+	if next.WeeklyWorkload == nil && (partial || previousAI&learningWorkload == 0) {
 		next.WeeklyWorkload = old.WeeklyWorkload
 	}
-	if next.Review == nil && previousAI&learningReview == 0 {
+	if next.Review == nil && (partial || previousAI&learningReview == 0) {
 		next.Review = old.Review
 	}
-	if next.Mentor == nil && previousAI&learningMentor == 0 {
+	if next.Mentor == nil && (partial || previousAI&learningMentor == 0) {
 		next.Mentor = old.Mentor
 	}
-	if next.Community == nil && previousAI&learningCommunity == 0 {
+	if next.Community == nil && (partial || previousAI&learningCommunity == 0) {
 		next.Community = old.Community
 	}
 	o.LearningOwnership &^= aiLearningMask << aiOwnershipShift
@@ -196,10 +245,10 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 				}
 			}
 		}
-		applyAIProfile(&c, facts.Profile)
+		applyAIProfile(&c, facts.Profile, e.Extraction.DiscardedClaims > 0)
 		for i := range c.Offers {
 			if incoming, observed := facts.Learning[c.Offers[i].ID]; observed {
-				applyAILearning(&c.Offers[i], incoming)
+				applyAILearning(&c.Offers[i], incoming, e.Extraction.DiscardedClaims > 0)
 			}
 		}
 		if !c.Profile.Valid() {

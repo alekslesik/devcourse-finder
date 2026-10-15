@@ -16,7 +16,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-const aiPolicyVersion = "course-facts-v2"
+const aiPolicyVersion = "course-facts-v3"
 const aiMaxText = 96000
 const aiMaxClaims = 40
 const aiOwnershipShift = 8
@@ -48,9 +48,10 @@ type AIClaim struct {
 	Available  *bool    `json:"available"`
 }
 type AIExtraction struct {
-	CourseURL string    `json:"course_url"`
-	Complete  bool      `json:"complete"`
-	Claims    []AIClaim `json:"claims"`
+	CourseURL       string    `json:"course_url"`
+	Complete        bool      `json:"complete"`
+	Claims          []AIClaim `json:"claims"`
+	DiscardedClaims int       `json:"discarded_claims,omitempty"` // Set locally only, never trusted from a provider.
 }
 type AIVerification struct {
 	Complete bool  `json:"complete"`
@@ -121,7 +122,7 @@ func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
 }
 func aiCompile(c Candidate, docs []AIDocument, extraction AIExtraction, verification AIVerification, at time.Time) (AIFacts, error) {
 	out := AIFacts{Profile: &catalog.CourseProfile{}, Learning: map[string]*catalog.LearningConditions{}}
-	if !aiDocumentsValid(c, docs) || extraction.CourseURL != c.URL || !extraction.Complete || !verification.Complete || len(extraction.Claims) > aiMaxClaims {
+	if !aiDocumentsValid(c, docs) || extraction.CourseURL != c.URL || !extraction.Complete || !verification.Complete || len(extraction.Claims) > aiMaxClaims || extraction.DiscardedClaims < 0 || extraction.DiscardedClaims > aiMaxClaims {
 		return out, ErrAI
 	}
 	documents := map[string]AIDocument{}
