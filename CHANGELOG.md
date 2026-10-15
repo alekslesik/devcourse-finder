@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.24.12] - 2026-10-15
+
+- Preserve real system-color panel borders in forced-color palettes even when increased contrast is not reported.
+- Keep dialog frames and close controls stationary while their content scrolls.
+- Use the route panel’s glass rim, corners and shadow consistently across headers, course cards and other panels, preserving card hover and focus highlights.
+
 ## [0.24.11] - 2026-10-14
 
 - Enlarge course source and title link hit areas to 44px while keeping compact text and visible keyboard focus.

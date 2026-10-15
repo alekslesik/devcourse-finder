@@ -1,6 +1,6 @@
 # Catalog UX: approved design and acceptance
 
-Version 0.24.11 implements the agreed glass catalog layout. The selected visual
+Version 0.24.12 implements the agreed glass catalog layout. The selected visual
 references are recorded in the separate `codex/design-preview-downloads` branch:
 `compact-cta-desktop-{light,dark}.png`, `assembled-mobile-{light,dark}.png`,
 with the authoritative book/path mark selected from `brand-mobile-dark.png`
@@ -31,7 +31,14 @@ and the two-row mobile header from `brand-mobile-light.png`.
   lightly tinted glass panels, with further reduced white opacity in light mode. Raised dropdown/table surfaces stay opaque;
   unsupported backdrop filtering and reduced-transparency preferences use solid
   surfaces, with prefixed backdrop filtering for Safari.
-- Clearer control panels use thinner tint, a masked bevel rim, localized inner
+- Header, language tray, route panel, course/tariff cards, summary, empty states,
+  comparison bar and dialogs share the route panel’s 1px masked glass rim,
+  32px desktop / 28px mobile corners and panel shadow. Card hover/focus keeps
+  its accent rim; backgrounds retain their existing reading opacity. Dialogs
+  scroll their content inside a stationary frame with a reachable close control.
+  Forced-color palettes use real CanvasText borders even when contrast:more
+  does not match; card hover/focus uses the system Highlight color.
+- Clearer control panels use thinner tint, a shared masked bevel rim, localized inner
   highlights and a smaller saturating backdrop blur; controls inside a panel do
   not add another backdrop blur. Form fields now use a slightly stronger translucent
   fill and accent border; course details buttons use a light accent tint and
