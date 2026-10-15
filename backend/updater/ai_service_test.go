@@ -3,6 +3,7 @@ package updater
 import "testing"
 
 func TestAIConfigurationRequiresSecretAndBoundsSpending(t *testing.T) {
+	t.Setenv("DEEPSEEK_API_KEY", "")
 	t.Setenv("OPENAI_API_KEY", "")
 	if _, err := LoadAIConfig(); err == nil {
 		t.Fatal("missing key accepted")
@@ -24,4 +25,17 @@ func TestAIConfigurationRequiresSecretAndBoundsSpending(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAIConfigAutomaticDeepSeekBackup(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "openai-test")
+	t.Setenv("DEEPSEEK_API_KEY", "deepseek-test")
+	t.Setenv("DEEPSEEK_MODEL", "")
+	t.Setenv("DEEPSEEK_VERIFY_MODEL", "")
+	c, err := LoadAIConfig()
+	if err != nil || c.DeepSeekModel != "deepseek-flash" || c.DeepSeekVerifyModel != "deepseek-v4-pro" { t.Fatal("invalid backup defaults", err) }
+	t.Setenv("OPENAI_API_KEY", "")
+	if _, err := LoadAIConfig(); err != nil { t.Fatal("missing primary cannot fall back", err) }
+	t.Setenv("DEEPSEEK_MODEL", "https://untrusted.invalid")
+	if _, err := LoadAIConfig(); err == nil { t.Fatal("configurable endpoint accepted") }
 }

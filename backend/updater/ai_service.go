@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"devcourse-finder/catalog"
@@ -21,20 +22,34 @@ type AIConfig struct {
 	Key         string `json:"-"`
 	Model       string
 	VerifyModel string
+	DeepSeekKey string `json:"-"`
+	DeepSeekModel string
+	DeepSeekVerifyModel string
 	BatchSize   int
 	DailyLimit  int
 }
 
 func LoadAIConfig() (AIConfig, error) {
-	c := AIConfig{Key: os.Getenv("OPENAI_API_KEY"), Model: os.Getenv("OPENAI_MODEL"), VerifyModel: os.Getenv("OPENAI_VERIFY_MODEL"), BatchSize: 20, DailyLimit: 40}
+	c := AIConfig{DeepSeekKey: os.Getenv("DEEPSEEK_API_KEY"), DeepSeekModel: os.Getenv("DEEPSEEK_MODEL"), DeepSeekVerifyModel: os.Getenv("DEEPSEEK_VERIFY_MODEL"), Key: os.Getenv("OPENAI_API_KEY"), Model: os.Getenv("OPENAI_MODEL"), VerifyModel: os.Getenv("OPENAI_VERIFY_MODEL"), BatchSize: 20, DailyLimit: 40}
 	if c.Model == "" {
 		c.Model = "gpt-4.1-mini"
 	}
 	if c.VerifyModel == "" {
 		c.VerifyModel = "gpt-4.1"
 	}
-	if c.Key == "" || !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$`).MatchString(c.Model) || !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$`).MatchString(c.VerifyModel) {
+	if c.DeepSeekModel == "" {
+		c.DeepSeekModel = "deepseek-flash"
+	}
+	if c.DeepSeekVerifyModel == "" {
+		c.DeepSeekVerifyModel = "deepseek-v4-pro"
+	}
+	if strings.TrimSpace(c.Key) == "" && strings.TrimSpace(c.DeepSeekKey) == "" || !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$`).MatchString(c.Model) || !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$`).MatchString(c.VerifyModel) {
 		return c, ErrAI
+	}
+	for _, model := range []string{c.DeepSeekModel, c.DeepSeekVerifyModel} {
+		if !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$`).MatchString(model) {
+			return c, ErrAI
+		}
 	}
 	for _, item := range []struct {
 		name   string
@@ -139,7 +154,19 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	if model == nil {
 		model = &OpenAIModel{Key: s.Config.Key, Model: s.Config.Model, VerifyModel: s.Config.VerifyModel}
 	}
-	engine := AIEngine{DB: s.DB, Model: model, ModelName: s.Config.Model + "+" + s.Config.VerifyModel, DailyLimit: s.Config.DailyLimit}
+	primary := &AIEngine{DB: s.DB, Model: model, ModelName: "openai:" + s.Config.Model + "+" + s.Config.VerifyModel, DailyLimit: s.Config.DailyLimit}
+	resolver := aiFallbackResolver{primary: primary}
+	if s.Model == nil && strings.TrimSpace(s.Config.Key) == "" {
+		resolver.primary = nil
+	}
+	if strings.TrimSpace(s.Config.DeepSeekKey) != "" {
+		resolver.fallback = &AIEngine{
+			DB: s.DB,
+			Model: &DeepSeekModel{Key: s.Config.DeepSeekKey, Model: s.Config.DeepSeekModel, VerifyModel: s.Config.DeepSeekVerifyModel},
+			ModelName: "deepseek:" + s.Config.DeepSeekModel + "+" + s.Config.DeepSeekVerifyModel,
+			DailyLimit: s.Config.DailyLimit,
+		}
+	}
 	publisher := Service{DB: s.DB}
 	for _, id := range ids {
 		if err = ctx.Err(); err != nil {
@@ -157,16 +184,18 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			return result, err
 		}
 		result.Attempted++
-		local, cancel := context.WithTimeout(ctx, 150*time.Second)
+		local, cancel := context.WithTimeout(ctx, 300*time.Second)
 		candidate, docs, readErr := aiFetchDocuments(local, s.DB, client, c)
 		code := "source_unavailable"
+		modelUsed, cached, tokens := "", false, 0
 		if readErr == nil {
 			var resolved AIResolved
-			resolved, readErr = engine.Resolve(local, id, candidate, docs, at)
+			resolved, readErr = resolver.Resolve(local, id, candidate, docs, at)
+			modelUsed, cached, tokens = resolved.ModelName, resolved.Cached, resolved.Usage.Total
 			code = "invalid_ai_response"
 			result.Tokens += resolved.Usage.Total
 			if readErr == nil {
-				event := AIEvent{Version: 1, CourseID: id, IdentityDigest: aiIdentityDigest(c), Candidate: candidate, ObservedAt: at, Model: s.Config.Model + "+" + s.Config.VerifyModel, Policy: aiEffectivePolicy(), Documents: docs, Extraction: resolved.Extraction, Verification: resolved.Verification}
+				event := AIEvent{Version: 1, CourseID: id, IdentityDigest: aiIdentityDigest(c), Candidate: candidate, ObservedAt: at, Model: resolved.ModelName, Policy: aiEffectivePolicy(), Documents: docs, Extraction: resolved.Extraction, Verification: resolved.Verification}
 				readErr = publisher.enqueueAI(local, event)
 				code = "ai_queue_failed"
 				if readErr == nil {
@@ -192,9 +221,8 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 				return result, err
 			}
 		}
-		slog.Info("AI course checked", "course_id", id, "code", code)
-		var fatalProvider *AIProviderError
-		if errors.As(readErr, &fatalProvider) && (fatalProvider.Code == "openai_authentication_failed" || fatalProvider.Code == "openai_insufficient_quota" || fatalProvider.Code == "openai_model_unavailable" || fatalProvider.Code == "openai_rate_limited" || fatalProvider.Code == "openai_protocol_rejected") {
+		slog.Info("AI course checked", "course_id", id, "code", code, "model", modelUsed, "cached", cached, "tokens", tokens)
+		if aiProviderUnavailable(readErr) {
 			break
 		}
 		if errors.Is(readErr, ErrAIBudget) {
