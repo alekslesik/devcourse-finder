@@ -130,7 +130,33 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 [data-language=javascript],.languageBadge.javascript {--language-mark:var(--javascript-mark); --language-selected-mark:var(--javascript-selected-mark); --language-soft:var(--javascript-soft); --language-ink:var(--javascript-ink); --language-selected:var(--javascript-selected); --language-selected-ink:var(--javascript-selected-ink);}
 [data-language=java],.languageBadge.java {--language-mark:var(--java-mark); --language-selected-mark:var(--java-selected-mark); --language-soft:var(--java-soft); --language-ink:var(--java-ink); --language-selected:var(--java-selected); --language-selected-ink:var(--java-selected-ink);}
 [data-language=go],.languageBadge.go {--language-mark:var(--go-mark); --language-selected-mark:var(--go-selected-mark); --language-soft:var(--go-soft); --language-ink:var(--go-ink); --language-selected:var(--go-selected); --language-selected-ink:var(--go-selected-ink);}
-.languageScene>button[data-language],.languageBadge:is(.python,.javascript,.java,.go) {background:var(--language-soft); color:var(--language-ink);}
+.languageScene>button[data-language] {background:var(--language-soft); color:var(--language-ink);}
+/* Small course labels carry the language hue in both their fill and contour. */
+.languageBadge:is(.python,.javascript,.java,.go) {
+ background:color-mix(in srgb,var(--language-selected) 92%,transparent);
+ color:var(--language-selected-ink); border:1px solid var(--language-selected-mark);
+}
+/* Brand-inspired, contrast-adjusted text; unknown schools retain the neutral fallback. */
+.provider {color:var(--provider-light,var(--muted)); font-weight:600;}
+:root[data-theme=dark] .provider {color:var(--provider-dark,var(--muted));}
+.document .provider {font-size:inherit;}
+.provider[data-provider=javarush] {--provider-light:#497017; --provider-dark:#cdf567;}
+.provider[data-provider=skypro] {--provider-light:#176782; --provider-dark:#6fe4ff;}
+.provider[data-provider=skillfactory] {--provider-light:#316c32; --provider-dark:#b5e916;}
+.provider[data-provider=skillbox] {--provider-light:#5834bb; --provider-dark:#bca6ff;}
+.provider[data-provider=htmlacademy] {--provider-light:#6b3daa; --provider-dark:#c4abf2;}
+.provider[data-provider=rsschool] {--provider-light:#786000; --provider-dark:#ffdb20;}
+.provider[data-provider=purpleschool] {--provider-light:#6c38bb; --provider-dark:#c6a5ff;}
+.provider[data-provider=netology] {--provider-light:#2459b7; --provider-dark:#8db9ff;}
+.provider[data-provider=stepik] {--provider-light:#28733b; --provider-dark:#88d79c;}
+.provider[data-provider=otus] {--provider-light:#6b6500; --provider-dark:#e1dd78;}
+.provider[data-provider=yandex] {--provider-light:#b13625; --provider-dark:#ffac94;}
+.provider[data-provider=hexlet] {--provider-light:#4842c4; --provider-dark:#b6b2ff;}
+.provider[data-provider=codebasics] {--provider-light:#286b78; --provider-dark:#90d4df;}
+@media(forced-colors:active) {
+ .provider,:root[data-theme=dark] .provider {color:CanvasText;}
+ .languageBadge:is(.python,.javascript,.java,.go) {background:Canvas; color:CanvasText; border-color:CanvasText;}
+}
 .languageScene>button[data-language] {border:1px solid color-mix(in srgb,var(--language-mark) 28%,transparent); box-shadow:inset 0 1px 0 var(--control-highlight);}
 .languageIcon {width:auto; height:40px; flex-shrink:0;}
 /* Optical compensation: Java is a fine outline, Go is broad lettering. */
