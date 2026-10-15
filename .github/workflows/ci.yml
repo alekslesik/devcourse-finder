@@ -28,6 +28,8 @@ jobs:
 
       - name: Test manual catalog collection helper
         run: python3 -m unittest discover -s scripts -p 'test_collect_catalog.py'
+      - name: Test public HTTPS acceptance checks
+        run: python3 -m unittest discover -s scripts -p 'test_public_https.py'
 
   backend:
     runs-on: ubuntu-latest
@@ -85,6 +87,12 @@ jobs:
       - run: npm run test:routes
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Install WebKit for cross-engine acceptance
+        run: npx playwright install --with-deps webkit
+      - name: Verify touch, keyboard, navigation and dialog behaviour in WebKit
+        env:
+          E2E_BROWSER: webkit
+        run: npm run test:e2e -- catalog-ux.spec.ts dialog.spec.ts device-acceptance.spec.ts --output=test-results/webkit
       - name: Save frontend visual checks and failure traces
         if: always()
         uses: actions/upload-artifact@v4

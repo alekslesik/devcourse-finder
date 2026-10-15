@@ -139,6 +139,10 @@ modal focus, comparison limits, themes, stale responses and analytics protection
 
 ## Remaining manual acceptance (#98)
 
+The combined follow-up and exact evidence limits are recorded in
+[remaining-issues-acceptance.md](remaining-issues-acceptance.md). WebKit/touch
+automation supplements this list; it does not mark the physical-device items done.
+
 Keep #98 open until real-device or assistive-technology evidence is recorded:
 
 - [ ] VoiceOver/NVDA: search counts, focused submitted results and loading/error/empty
