@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.25.2] - 2026-10-15
+
+- Extract identity-bound PurpleSchool profile facts with provenance and safely prioritize targeted published-candidate rechecks.
+- Fix HTTPS setup for the active release and add explicit TLS renewal and public-origin acceptance workflows.
+- Extend touch and WebKit browser acceptance and record frozen profile counts and remaining real-device checks.
+
 ## [0.25.1] - 2026-10-15
 
 - Isolate invalid AI metadata claims while preserving prior facts and evidence dates; clarify DeepSeek grounding and verification contracts.
