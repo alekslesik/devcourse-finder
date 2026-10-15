@@ -24,5 +24,5 @@ export default function Modal({label,onClose,fallbackFocus,children}:{label:stri
   if(!first){e.preventDefault();e.currentTarget.focus();return}
   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
- }}><section className="modal"><button className="close" aria-label="Закрыть" onClick={onClose}>×</button>{children}</section></dialog>;
+ }}><section className="modal"><button className="close" aria-label="Закрыть" onClick={onClose}>×</button><div className="modalContent">{children}</div></section></dialog>;
 }
