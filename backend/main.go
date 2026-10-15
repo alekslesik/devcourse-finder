@@ -129,6 +129,24 @@ func run() error {
 			}
 			return json.NewEncoder(os.Stdout).Encode(result)
 		case "catalog-update":
+			if len(args) == 4 && args[1] == "recheck" {
+				bounded, done := context.WithTimeout(ctx, 10*time.Minute)
+				defer done()
+				for {
+					err := updater.ScheduleRecheck(bounded, db, args[2], args[3])
+					if !errors.Is(err, updater.ErrBusy) {
+						if err != nil {
+							return commandFailure("updater_recheck", "recheck_failed", "Cannot schedule published candidate", err)
+						}
+						return json.NewEncoder(os.Stdout).Encode(map[string]string{"status": "scheduled", "adapter": args[2], "external_id": args[3]})
+					}
+					select {
+					case <-bounded.Done():
+						return bounded.Err()
+					case <-time.After(5 * time.Second):
+					}
+				}
+			}
 			if len(args) != 2 {
 				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-update serve|once|status|health", nil)
 			}

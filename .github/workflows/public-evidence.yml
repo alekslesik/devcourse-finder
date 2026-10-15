@@ -1,0 +1,22 @@
+name: Public acceptance evidence
+on:
+  pull_request:
+    paths:
+      - scripts/public-evidence.py
+      - .github/workflows/public-evidence.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/public-evidence.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-acceptance-evidence
+          path: public-evidence/
+          retention-days: 14

@@ -42,9 +42,9 @@ else:raise SystemExit('Unexpected Docker operation')
         docker.chmod(0o755)
         self.env = dict(os.environ, PATH=f'{self.bin}:{os.environ["PATH"]}', TEST_CALLS=str(self.calls))
 
-    def run_script(self, **overrides):
+    def run_script(self, recheck=None, **overrides):
         # Match the production SSH invocation: bash reads the entire script on stdin.
-        result = subprocess.run(['bash', '-s', '--', str(self.base)], input=SCRIPT.read_text(),
+        result = subprocess.run(['bash', '-s', '--', str(self.base)] + (recheck or []), input=SCRIPT.read_text(),
                                 text=True, capture_output=True, timeout=5,
                                 env=dict(self.env, **overrides))
         self.assertNotIn('do-not-print-this', result.stdout + result.stderr)
@@ -74,6 +74,17 @@ else:raise SystemExit('Unexpected Docker operation')
         self.assertEqual(result.returncode, 7)
         self.assertEqual([call[-1] for call in self.recorded()[-2:]], ['once', 'status'])
         self.assertIn('"queue":true', result.stdout)
+
+    def test_targeted_recheck_runs_before_normal_collection_and_rejects_shell_text(self):
+        result = self.run_script(recheck=['purpleschool', 'python-start'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [call for call in self.recorded() if 'exec' in call]
+        self.assertEqual(calls[0][-4:], ['catalog-update', 'recheck', 'purpleschool', 'python-start'])
+        self.assertEqual([call[-1] for call in calls[1:]], ['once', 'status'])
+        self.calls.unlink()
+        result = self.run_script(recheck=['purpleschool', "python-start'; echo unsafe"])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.recorded(), [])
 
     def test_diagnostics_failure_fails_the_action(self):
         self.assertEqual(self.run_script(TEST_STATUS_EXIT='8').returncode, 1)

@@ -1,0 +1,96 @@
+{
+  "checked_at": "2026-10-15T08:49:04.664189+00:00",
+  "tls_verification": "default trust store; never disabled",
+  "reads": [
+    {
+      "url": "http://alekslesik.fvds.ru/courses?language=python",
+      "final_url": "http://alekslesik.fvds.ru/courses?language=python",
+      "status": 200,
+      "sha256": "af6620565fcec425955359adda627069d4c83de1868d78a98e30a18df202a302",
+      "file": "http-0.txt"
+    },
+    {
+      "url": "http://alekslesik.fvds.ru/about",
+      "final_url": "http://alekslesik.fvds.ru/about",
+      "status": 200,
+      "sha256": "4112626aac94e339ca975adab9c7a8c4b7f982a2f1e1cc980e2026643ed866c2",
+      "file": "http-1.txt"
+    },
+    {
+      "url": "http://alekslesik.fvds.ru/sitemap.xml",
+      "final_url": "http://alekslesik.fvds.ru/sitemap.xml",
+      "status": 200,
+      "sha256": "1eb615bfe16e2d0c62a186ab14ef7c81666986d74f8e7ea809e29fa1533ec4fd",
+      "file": "http-2.txt"
+    },
+    {
+      "url": "http://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48",
+      "final_url": "http://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48",
+      "status": 200,
+      "sha256": "cc00204cd34692aa0c15920bd4b785c01770c3021766a0d0ec857ba973732967",
+      "file": "http-3.txt"
+    },
+    {
+      "url": "https://alekslesik.fvds.ru/courses?language=python",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "url": "https://alekslesik.fvds.ru/about",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "url": "https://alekslesik.fvds.ru/sitemap.xml",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "url": "https://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "url": "http://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48&page=1",
+      "final_url": "http://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48&page=1",
+      "status": 200,
+      "sha256": "93fc04a4f39da26a16e5f69a05989ebd66f5e9fc3d71af37c3f8643934b0daae",
+      "file": "catalog-1.json"
+    },
+    {
+      "url": "http://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48&page=2",
+      "final_url": "http://alekslesik.fvds.ru/api/v1/courses?language=python&experience=none&goal=try&include_unknown_profiles=true&page_size=48&page=2",
+      "status": 200,
+      "sha256": "f0707362ee5b90f8ae468ee7426c90014c45642149fd62849b023d8c5c27bacc",
+      "file": "catalog-2.json"
+    },
+    {
+      "url": "https://stepik.org/api/courses/58852",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "url": "https://stepik.org/api/courses/63085",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "url": "https://stepik.org/api/courses/67",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "url": "https://stepik.org/api/courses/245274",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "url": "https://stepik.org/api/courses/245606",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "url": "https://stepik.org/api/courses/244062",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "url": "https://stepik.org/api/courses/243826",
+      "error": "HTTP Error 502: Bad Gateway"
+    },
+    {
+      "url": "https://stepik.org/api/courses/243175",
+      "error": "HTTP Error 502: Bad Gateway"
+    }
+  ]
+}

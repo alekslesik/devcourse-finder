@@ -1,0 +1,34 @@
+name: Configure production HTTPS
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  https:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y sshpass
+      - name: Configure managed proxy and test certificate renewal
+        env:
+          SSHPASS: ${{ secrets.VDS_PASS }}
+          VDS_HOST: ${{ vars.VDS_HOST || '83.220.174.166' }}
+          VDS_USER: ${{ vars.VDS_USER || 'root' }}
+        run: |
+          set -euo pipefail
+          test -n "$SSHPASS"
+          [[ "$VDS_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$VDS_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          host_keys="$RUNNER_TEMP/vds_known_hosts"
+          cp .github/vds_known_hosts "$host_keys"
+          chmod 600 "$host_keys"
+          options=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$host_keys" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o PreferredAuthentications=password,keyboard-interactive -o NumberOfPasswordPrompts=1)
+          sshpass -e ssh -T "${options[@]}" "$VDS_USER@$VDS_HOST" 'bash -s' < scripts/setup-https.sh
+      - name: Verify public HTTPS and redirect from an independent network
+        run: python3 scripts/check-public-https.py

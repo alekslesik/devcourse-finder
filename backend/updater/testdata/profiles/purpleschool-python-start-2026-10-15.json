@@ -1,0 +1,15 @@
+{
+  "source": "https://purpleschool.ru/course/python-start",
+  "checked_at": "2026-10-15T08:56:05.062350+00:00",
+  "page_sha256": "160b21c1579bf5cd01df89057f1d18d9274431e8c54328a43590f9e070c31205",
+  "scope": "Recorded course-field excerpt from the single identity-bound RSC course object; not a complete tariff payload.",
+  "course": {
+    "id": 42,
+    "alias": "python-start",
+    "title": "Старт в Python",
+    "description": "<p>Мы начнём с самого нуля и научимся, объявлять переменные, работать с типами данных и управлять потоком.</p>\n<p>Далее разберём создание функций и применим их на практике для создания консольного приложения оформления товара и доставки.</p>\n<p>Этот курс расчитан на тех, что хочет познакомиться с Python и попробовать его на практике</p> ",
+    "requirements": [
+      "Требований нет"
+    ]
+  }
+}
