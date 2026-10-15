@@ -131,14 +131,15 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 [data-language=java],.languageBadge.java {--language-mark:var(--java-mark); --language-selected-mark:var(--java-selected-mark); --language-soft:var(--java-soft); --language-ink:var(--java-ink); --language-selected:var(--java-selected); --language-selected-ink:var(--java-selected-ink);}
 [data-language=go],.languageBadge.go {--language-mark:var(--go-mark); --language-selected-mark:var(--go-selected-mark); --language-soft:var(--go-soft); --language-ink:var(--go-ink); --language-selected:var(--go-selected); --language-selected-ink:var(--go-selected-ink);}
 .languageScene>button[data-language] {background:var(--language-soft); color:var(--language-ink);}
-/* Small course labels carry the language hue in both their fill and contour. */
+/* Quiet language tints keep course titles ahead of the metadata. */
 .languageBadge:is(.python,.javascript,.java,.go) {
- background:color-mix(in srgb,var(--language-selected) 92%,transparent);
- color:var(--language-selected-ink); border:1px solid var(--language-selected-mark);
+ background:color-mix(in srgb,var(--language-mark) 10%,transparent);
+ color:var(--language-ink); border:1px solid color-mix(in srgb,var(--language-mark) 25%,transparent);
 }
+:root[data-theme=dark] .languageBadge:is(.python,.javascript,.java,.go) {background:color-mix(in srgb,var(--language-mark) 14%,transparent);}
 /* Brand-inspired, contrast-adjusted text; unknown schools retain the neutral fallback. */
-.provider {color:var(--provider-light,var(--muted)); font-weight:600;}
-:root[data-theme=dark] .provider {color:var(--provider-dark,var(--muted));}
+.provider {color:color-mix(in srgb,var(--provider-light,var(--muted)) 50%,var(--muted)); font-weight:600;}
+:root[data-theme=dark] .provider {color:color-mix(in srgb,var(--provider-dark,var(--muted)) 35%,var(--muted));}
 .document .provider {font-size:inherit;}
 .provider[data-provider=javarush] {--provider-light:#497017; --provider-dark:#cdf567;}
 .provider[data-provider=skypro] {--provider-light:#176782; --provider-dark:#6fe4ff;}
@@ -155,7 +156,7 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 .provider[data-provider=codebasics] {--provider-light:#286b78; --provider-dark:#90d4df;}
 @media(forced-colors:active) {
  .provider,:root[data-theme=dark] .provider {color:CanvasText;}
- .languageBadge:is(.python,.javascript,.java,.go) {background:Canvas; color:CanvasText; border-color:CanvasText;}
+ .languageBadge:is(.python,.javascript,.java,.go),:root[data-theme=dark] .languageBadge:is(.python,.javascript,.java,.go) {background:Canvas; color:CanvasText; border-color:CanvasText;}
 }
 .languageScene>button[data-language] {border:1px solid color-mix(in srgb,var(--language-mark) 28%,transparent); box-shadow:inset 0 1px 0 var(--control-highlight);}
 .languageIcon {width:auto; height:40px; flex-shrink:0;}

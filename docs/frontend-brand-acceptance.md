@@ -4,14 +4,19 @@ Follow-up to #131 and #98, 2026-10-15.
 
 ## Course label palette
 
-Course language badges now use a pastel language-colored fill and a matching
-contour: Python yellow, JavaScript gold, Java coral/orange and Go cyan. Text uses
-the existing dark selected-language ink in both themes. These small labels are
-independent of the hero tray's translucent controls and selected states.
+The initial v0.25.4 pastel fills and pronounced contours were softened following
+the maintainer's feedback. Course badges use a low-opacity language tint (10%
+in light mode, 14% in dark mode) and a 25% tinted contour: Python yellow,
+JavaScript gold, Java coral/orange and Go cyan. Text uses the normal theme ink
+for readability. These labels are independent of the hero tray's controls and
+selected states.
 
 School names use a shared display component in cards and course details. Matching
 uses published display names; unknown schools keep neutral text. Display names,
 links and catalog facts are unchanged. Forced colors use the system text palette.
+Following the same feedback, school accents are blended with muted theme text
+(50% brand color in light mode, 35% in dark mode). Their hue remains recognizable
+without competing with course titles.
 
 The palette references official school sites and their current visual identities,
 with light/dark derivatives for readable small text rather than exact brandbook
