@@ -70,11 +70,14 @@ runs UX/navigation/dialog/touch checks in Playwright WebKit; that is a second
 browser engine, not physical Safari/iPhone acceptance. Separate WebKit output
 preserves the Chromium visual artifacts.
 
-An attempted automated Chromium extension-based actual-tab-zoom probe did not
-reliably initialize its service worker under the test runner. It was removed;
-no CSS/device-scale substitute is reported as genuine browser zoom evidence.
+The initial service-worker zoom probe was replaced in the subsequent frontend
+follow-up by a temporary extension **page** controller. It verifies actual
+`tabs.setZoom(..., 2)`/`getZoom()`, halved CSS width and doubled DPR, then exercises
+keyboard search, comparison scrolling and detail return in both themes. See
+[frontend-brand-acceptance.md](frontend-brand-acceptance.md) for the method and
+the separate user smoke feedback, which explicitly did not use a screen reader.
 
-Keep #98 and #91 open for actual VoiceOver/NVDA speech, real browser zoom at 200%,
+Keep #98 and #91 open for actual VoiceOver/NVDA speech
 and physical iPhone Safari keyboard, safe-area/chrome and device performance
 checks. There is no physical device or screen reader available in this runtime.
 The implementation work from #92–#97 has already shipped; the epic's unchecked
