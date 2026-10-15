@@ -23,6 +23,7 @@ type AIResolved struct {
 	Verification AIVerification
 	Cached       bool
 	Usage        AIUsage
+	ModelName    string
 }
 
 // Reserve a complete extraction/verification pair atomically. Failed analyses
@@ -50,7 +51,7 @@ func (e *AIEngine) recordUsage(ctx context.Context, u AIUsage) error {
 	return err
 }
 func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, docs []AIDocument, at time.Time) (AIResolved, error) {
-	out := AIResolved{}
+	out := AIResolved{ModelName: e.ModelName}
 	if !aiDocumentsValid(c, docs) {
 		return out, ErrAI
 	}
@@ -97,12 +98,12 @@ func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, do
 	if usageErr := e.recordUsage(ctx, usage); usageErr != nil {
 		return out, usageErr
 	}
-	if err != nil {
-		return out, err
-	}
 	out.Usage.Prompt += usage.Prompt
 	out.Usage.Completion += usage.Completion
 	out.Usage.Total += usage.Total
+	if err != nil {
+		return out, err
+	}
 	if _, err = aiCompile(c, docs, out.Extraction, out.Verification, at); err != nil {
 		return out, err
 	}

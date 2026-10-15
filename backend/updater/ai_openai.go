@@ -36,19 +36,44 @@ type OpenAIModel struct {
 	Model       string
 	VerifyModel string
 	Client      *http.Client
+	provider    string // Internal fixed endpoint selector; never a configurable URL.
 }
 
 func (m *OpenAIModel) request(ctx context.Context, prompt string, input any, schema map[string]any, out any) (AIUsage, error) {
 	usage := AIUsage{}
+	provider, endpoint := "openai", "https://api.openai.com/v1/chat/completions"
+	if m.provider == "deepseek" {
+		provider, endpoint = "deepseek", "https://api.deepseek.com/chat/completions"
+	} else if m.provider != "" {
+		return usage, ErrAI
+	}
 	if strings.TrimSpace(m.Key) == "" || len(m.Model) < 1 || len(m.Model) > 100 {
 		return usage, ErrAI
 	}
 	body, _ := json.Marshal(input)
 	request := map[string]any{"model": m.Model, "messages": []map[string]string{{"role": "system", "content": prompt}, {"role": "user", "content": string(body)}}, "max_completion_tokens": 4096, "store": false, "response_format": map[string]any{"type": "json_schema", "json_schema": map[string]any{"name": "course_facts", "strict": true, "schema": schema}}}
+	if provider == "deepseek" {
+		// DeepSeek JSON mode does not enforce OpenAI's strict response schema.
+		// Supply the same schema as instructions and retain local validation.
+		encodedSchema, _ := json.Marshal(schema)
+		example := `{"course_url":"","complete":true,"claims":[]}`
+		if _, verifying := input.(map[string]any)["proposed_claims"]; verifying {
+			example = `{"complete":true,"verified_claim_ids":[]}`
+		}
+		request["messages"] = []map[string]string{
+			{"role": "system", "content": prompt + "\nReturn JSON only. Output JSON schema: " + string(encodedSchema) + "\nShape example (use supplied identities): " + example},
+			{"role": "user", "content": string(body)},
+		}
+		request["response_format"] = map[string]any{"type": "json_object"}
+		request["max_tokens"] = 4096
+		request["thinking"] = map[string]string{"type": "disabled"}
+		delete(request, "max_completion_tokens")
+		delete(request, "store")
+	}
 	raw, _ := json.Marshal(request)
 	bounded, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	req, err := http.NewRequestWithContext(bounded, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(raw))
+	req, err := http.NewRequestWithContext(bounded, http.MethodPost, endpoint, bytes.NewReader(raw))
 	if err != nil {
 		return usage, ErrAI
 	}
@@ -60,17 +85,24 @@ func (m *OpenAIModel) request(ctx context.Context, prompt string, input any, sch
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		return usage, ErrAI
+		if ctx.Err() != nil {
+			return usage, ctx.Err()
+		}
+		return usage, &AIProviderError{Code: provider + "_unavailable"}
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		code := "openai_request_rejected"
+		code := provider + "_request_rejected"
 		if res.StatusCode == 401 || res.StatusCode == 403 {
-			code = "openai_authentication_failed"
+			code = provider + "_authentication_failed"
+		} else if res.StatusCode == 402 {
+			code = provider + "_insufficient_quota"
+		} else if res.StatusCode == 422 {
+			code = provider + "_protocol_rejected"
 		} else if res.StatusCode == 429 {
-			code = "openai_rate_limited"
+			code = provider + "_rate_limited"
 		} else if res.StatusCode >= 500 {
-			code = "openai_unavailable"
+			code = provider + "_unavailable"
 		}
 		// Classify only fixed provider error codes; never log error messages.
 		body, _ := io.ReadAll(io.LimitReader(res.Body, 8192))
@@ -82,13 +114,13 @@ func (m *OpenAIModel) request(ctx context.Context, prompt string, input any, sch
 		if json.Unmarshal(body, &failure) == nil {
 			switch failure.Error.Code {
 			case "insufficient_quota":
-				code = "openai_insufficient_quota"
+				code = provider + "_insufficient_quota"
 			case "model_not_found":
-				code = "openai_model_unavailable"
+				code = provider + "_model_unavailable"
 			case "invalid_api_key":
-				code = "openai_authentication_failed"
+				code = provider + "_authentication_failed"
 			case "unsupported_parameter":
-				code = "openai_protocol_rejected"
+				code = provider + "_protocol_rejected"
 			}
 		}
 		return usage, &AIProviderError{Code: code}

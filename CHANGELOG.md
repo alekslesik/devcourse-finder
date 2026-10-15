@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.25.0] - 2026-10-15
+
+- Add automatic DeepSeek fallback for OpenAI provider failures, restarting grounded extraction and independent verification without a manual provider selector.
+- Keep provider-specific caches and audit model identities while sharing persistent daily request reservations and token accounting across both providers.
+- Expose safe fallback, model, cache and usage logs; document backup-key configuration and offline acceptance checks without changing ordinary parsers.
+
 ## [0.24.11] - 2026-10-14
 
 - Enlarge course source and title link hit areas to 44px while keeping compact text and visible keyboard focus.
