@@ -267,8 +267,7 @@ func (s *AIService) Serve(ctx context.Context) error {
 		if err := s.DB.Pool.QueryRow(ctx, "SELECT max(started_at) FROM catalog_ai_runs").Scan(&last); err != nil {
 			return err
 		}
-		due := NextRun(time.Now().Add(-12 * time.Hour))
-		if last == nil || last.Before(due) {
+		if aiScheduledRunDue(time.Now(), last) {
 			run, cancel := context.WithTimeout(ctx, 30*time.Minute)
 			_, err := s.Run(run)
 			cancel()
@@ -276,7 +275,7 @@ func (s *AIService) Serve(ctx context.Context) error {
 				slog.Error("AI collection failed", "code", "ai_collection_failed")
 			}
 		}
-		next := NextRun(time.Now())
+		_, next := aiScheduleSlots(time.Now())
 		slog.Info("next AI collection scheduled", "at", next.Format(time.RFC3339), "timezone", "Europe/Moscow")
 		timer := time.NewTimer(time.Until(next))
 		select {

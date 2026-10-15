@@ -46,7 +46,13 @@ literal semantics; switch remains an independent background.
 
 ## Cost and resource limits
 
-- Moscow schedule: 09:00 and 21:00; restarts do not repeat the current slot.
+- AI schedule: **Monday and Thursday at 21:00 Europe/Moscow**. Native API/page
+  collectors retain their 09:00/21:00 daily schedule; publication continues normally.
+  AI startup outside a scheduled slot waits for the next slot, with no immediate
+  paid initial run or replay of missed days. A restart within 30 minutes of a slot
+  may recover that slot if no AI run has started since it began. Restarts do not
+  repeat a started slot. Manual `catalog-ai once` remains available on any day
+  and still respects source due times and the shared daily request budget.
 - At most 20 due courses per run (configurable 1–40), serial reads.
 - At most **40 reserved model requests per UTC day** by default (configurable
   1–200), shared persistently across manual runs/restarts. A complete two-request analysis is reserved atomically before extraction.

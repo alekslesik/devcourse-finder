@@ -17,7 +17,8 @@ One combined PR, one commit per task (#103–106), version 0.23.0.
    identities automatically. Per-field AI priority prevents a later native read
    erasing AI facts; operator facts retain priority. Failure retains facts/dates;
    missing successful facts clear only AI ownership. Atomic acknowledgement/rollback.
-4. Independent optional background worker, existing Moscow twice-daily slots,
+4. Independent optional background worker, Monday/Thursday at 21:00 Europe/Moscow
+   (schedule updated on 2026-10-15 to reduce paid requests),
    manual trigger, health/status, Compose integration and explicit secret setup.
    PostgreSQL/HTTP regressions and a bounded reproducible pilot comparison report.
 
