@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.25.5] - 2026-10-15
+
+- Soften language badge fills and outlines, and mute school brand accents in both themes.
+
 ## [0.25.4] - 2026-10-15
 
 - Give course language badges matching colored fills and contours, and use readable school brand accents in both themes.
