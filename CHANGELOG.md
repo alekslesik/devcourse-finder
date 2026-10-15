@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.25.4] - 2026-10-15
+
+- Give course language badges matching colored fills and contours, and use readable school brand accents in both themes.
+- Verify genuine Chromium tab zoom at 200% with keyboard search, three-offer comparison and catalog return; record remaining manual accessibility checks.
+
 ## [0.25.3] - 2026-10-15
 
 - Schedule paid AI enrichment only on Mondays and Thursdays at 21:00 Moscow time, with bounded same-slot restart recovery and no off-schedule startup runs.

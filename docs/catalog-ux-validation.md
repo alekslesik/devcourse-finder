@@ -149,7 +149,10 @@ Keep #98 open until real-device or assistive-technology evidence is recorded:
   transitions remain understandable without duplicate announcements.
 - [ ] Safari/iPhone: input zoom, software keyboard, touch behaviour, safe areas and
   comparison-bar interaction; physical-device glass/GPU performance.
-- [ ] Real browser zoom at 200%, including keyboard focus and comparison scrolling.
+- [x] Real Chromium tab zoom at 200%, including keyboard focus, three-offer
+  comparison scrolling and detail/catalog return in both themes. See
+  [the follow-up method](frontend-brand-acceptance.md); this is actual browser
+  zoom, not CSS/device-scale emulation.
 - [ ] Live catalog with long titles, stale prices and incomplete conditions.
 
 Fixtures and browser automation do not establish provider coverage or physical
