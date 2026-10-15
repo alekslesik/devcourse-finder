@@ -119,7 +119,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			err = e
 		}
 	}()
-	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND (c.source LIKE 'https://stepik.org/course/%' OR c.source LIKE 'https://practicum.yandex.ru/%') AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize)
+	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns())
 	if err != nil {
 		return result, err
 	}
@@ -307,7 +307,7 @@ func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 	if err = db.Pool.QueryRow(ctx, "SELECT count(*) FROM catalog_ai_observations WHERE processed_at IS NULL").Scan(&pending); err != nil {
 		return err
 	}
-	if err = json.NewEncoder(w).Encode(map[string]any{"ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy()}); err != nil {
+	if err = json.NewEncoder(w).Encode(map[string]any{"ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
 		return err
 	}
 	rows, err := db.Pool.Query(ctx, "SELECT course_id,code,attempted_at,verified_at,next_attempt_at,failures FROM catalog_ai_sources ORDER BY attempted_at DESC LIMIT 40")

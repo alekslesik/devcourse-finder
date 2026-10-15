@@ -40,19 +40,22 @@ func aiPublicText(raw string) string {
 
 // Fetch only existing verified course identities. Model-suggested URLs are never fetched.
 func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, course catalog.Course) (Candidate, []AIDocument, error) {
-	adapter := "stepik"
-	if strings.Contains(course.Source, "practicum.yandex.ru/") {
-		adapter = "yandex"
-	}
-	c, ok := candidateURL(adapter, course.Source, "")
+	c, ok := aiCandidateURL(course.Source)
 	if !ok || course.Status != "published" || course.Demo {
 		return c, nil, ErrAI
 	}
+	adapter := c.Adapter
 	raw, digest, err := fetch(ctx, client, candidateEndpoint(c))
 	if err != nil {
 		return c, nil, err
 	}
 	var docs []AIDocument
+	if adapter == "codebasics" {
+		return aiFetchCodeBasicsDocuments(ctx, db, client, course, c, raw, digest)
+	}
+	if adapter == "netology" {
+		return aiFetchNetologyDocuments(ctx, db, course, c, raw, digest)
+	}
 	if adapter == "stepik" {
 		var payload struct {
 			Courses []stepikCourse `json:"courses"`
@@ -74,7 +77,7 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 		if len(course.Offers) == 1 && course.Offers[0].URL == c.URL {
 			docs = append(docs, AIDocument{ID: "offer:" + course.Offers[0].ID, Source: candidateEndpoint(c), Scope: "offer", OfferID: course.Offers[0].ID, Text: text, Digest: digest})
 		}
-	} else {
+	} else if adapter == "yandex" {
 		if practicumPage(raw, c) != nil {
 			return c, nil, ErrAI
 		}
@@ -143,6 +146,8 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 			return c, nil, ErrAI
 		}
 		docs = append(docs, AIDocument{ID: "course", Source: c.URL, Scope: "course", Text: text, Digest: digest})
+	} else {
+		return c, nil, ErrAI
 	}
 	sort.Slice(docs, func(i, j int) bool { return docs[i].ID < docs[j].ID })
 	if !aiDocumentsValid(c, docs) {

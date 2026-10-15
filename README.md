@@ -510,4 +510,4 @@ regular schedule remain in effect.
 
 ### Optional OpenAI catalog collector
 
-The separately scheduled `catalog-ai` service runs on **Monday and Thursday at 21:00 Europe/Moscow** and enriches verified Stepik and Practicum courses with independently checked source quotations. It is disabled by default, uses a persistent request budget and leaves financial verification to existing workers. See [setup and operations](docs/ai-catalog-collector.md) and [the pilot specification](docs/ai-catalog-pilot-spec.md).
+The separately scheduled `catalog-ai` service runs on **Monday and Thursday at 21:00 Europe/Moscow** and enriches verified Stepik, Practicum and CodeBasics courses, plus Netology pages that satisfy its verified product/tariff contract with independently checked source quotations. It is disabled by default, uses a persistent request budget and leaves financial verification to existing workers. See [setup and operations](docs/ai-catalog-collector.md) and [the pilot specification](docs/ai-catalog-pilot-spec.md).

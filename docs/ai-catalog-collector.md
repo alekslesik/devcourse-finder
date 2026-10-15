@@ -1,6 +1,6 @@
 # AI course metadata collector
 
-Optional separate `catalog-ai` container for verified Stepik and Practicum courses.
+Optional separate `catalog-ai` container for verified Stepik, Practicum, CodeBasics and supported-contract Netology courses.
 The native workers discover URLs and validate identities, prices and enrollment;
 OpenAI (or automatic DeepSeek backup) extracts learning/profile facts from complete official documents. Newly
 published courses become eligible automatically. No frontend or deployment trigger
@@ -108,7 +108,7 @@ Course log lines include `model=deepseek:...`, `cached`, `tokens`,
 approved claims). A successful provider reply can still have zero verified claims.
 DeepSeek receives compact per-field JSON contracts and explicit enum translations;
 Russian source text need not literally contain internal English codes such as `none`.
-No fallback can repair an unavailable Stepik/Practicum source page.
+No fallback can repair an unavailable official source page.
 Native discovery, pricing and publication workers remain independent.
 
 ## Production activation
@@ -169,7 +169,19 @@ budget; they do not force endless paid re-analysis.
 
 ## Pilot scope and limitations
 
-Stepik uses its own public, active, non-censored Russian API course. Practicum
+Stepik uses its own public, active, non-censored Russian API course. Netology
+requires the existing stored program-family/offer binding, fresh native
+product/payment validation and matching course title/language. It sends only
+the primary bound plan as an offer document; other plan cards are removed from
+the course-level document. A binding digest is included in the cache identity
+and rechecked transactionally before publication. Missing/changed mappings or
+ambiguous card roots fail closed. Manually added offers get no inferred facts.
+Netology currently consumes rendered HTML text, not arbitrary embedded app state.
+Current registration-only Netology pages without those product/family and
+plan bindings are rejected before model calls. Live coverage is not yet confirmed;
+see the [source check and blocker](ai-provider-expansion.md#live-source-check--2026-10-15).
+Other providers are tracked in [epic #133](https://github.com/alekslesik/devcourse-finder/issues/133).
+Practicum
 requires the existing canonical/SKU identity proof and isolates verified base/Plus
 cards. JavaScript-only text absent from server HTML/API is not rendered in this
 pilot. Additional offers without a verified binding receive no inferred support.
@@ -218,3 +230,28 @@ and logged in `discarded_claims`; surviving claims still need independent review
 A valid cached analysis can have `verified_claims=0`, and `queued` alone does not
 prove enrichment. Check source availability separately before spending requests.
 See the [DeepSeek diagnostic report](ai-deepseek-diagnostics-2026-10-15.md).
+
+## Supported providers and staged expansion
+
+`catalog-ai status` includes `supported_providers`. This release enables only
+`codebasics`, `netology`, `stepik` and `yandex`; having a native parser does not automatically
+permit paid AI calls for the remaining schools. A shared registry controls
+canonical candidate recognition, due-course selection, document validation and
+publisher source domains. Unregistered providers and noncanonical/foreign URLs
+are rejected before paid extraction.
+
+The Netology pipeline is covered by recorded official plan fixtures with an
+explicit synthetic course-profile section and mocked model responses. PostgreSQL
+regressions cover independent extraction/review, scoped publication, no financial
+freshness changes, cache replay, changed-family rejection before model calls and
+changed-binding rejection after enqueue. This does not claim live model accuracy
+or complete coverage of Netology's current HTML. No paid provider requests were
+made to implement this stage. Budgets and Monday/Thursday scheduling are unchanged.
+
+CodeBasics requires its stored course/primary-offer mapping, fresh anonymous
+Inertia identity/curriculum validation and the independent official free-policy
+page. It sends explicit public landing fields and curriculum descriptions, not
+authentication state or lesson solutions. Its single course offer receives only
+landing-level condition text. Total curriculum hours are not calendar duration
+or weekly workload. A queued mapping change is rejected transactionally. The
+current Python source-only check passed; no live semantic model benchmark was run.

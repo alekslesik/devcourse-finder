@@ -35,7 +35,7 @@ func TestNetologyPagesCollectorQueuesAndPublisherPreservesFamily(t *testing.T) {
 		switch r.URL.String() {
 		case config.Discovery[0].URL:
 			b = []byte(`<a href="/programs/java-developer">Java</a><a href="/free-lessons/java">Intro</a>`)
-		case c.URL:
+		case candidateEndpoint(c):
 			b = data
 		default:
 			t.Fatal("unexpected endpoint", r.URL)

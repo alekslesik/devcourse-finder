@@ -26,12 +26,13 @@ var ErrAI = errors.New("AI observation could not be verified")
 // Documents contain only bounded public course text, never cookies or secrets.
 // Sources and scopes come from the fetcher, not from model-generated URLs.
 type AIDocument struct {
-	ID      string `json:"id"`
-	Source  string `json:"source"`
-	Scope   string `json:"scope"`
-	OfferID string `json:"offer_id"`
-	Text    string `json:"text"`
-	Digest  string `json:"digest"`
+	ID            string `json:"id"`
+	Source        string `json:"source"`
+	Scope         string `json:"scope"`
+	OfferID       string `json:"offer_id"`
+	Text          string `json:"text"`
+	Digest        string `json:"digest"`
+	BindingDigest string `json:"binding_digest,omitempty"`
 }
 type AIClaim struct {
 	Field      string   `json:"field"`
@@ -90,15 +91,23 @@ func aiNumberInQuote(n float64, q string) bool {
 }
 
 func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
-	if c.Adapter != "stepik" && c.Adapter != "yandex" || len(docs) == 0 || len(docs) > 9 {
+	identity, supported := aiCandidateURL(c.URL)
+	if !supported || identity.Adapter != c.Adapter || identity.ExternalID != c.ExternalID || len(docs) == 0 || len(docs) > 9 {
 		return false
 	}
 	seen := map[string]bool{}
 	total := 0
 	courseCount := 0
+	binding := ""
 	for _, d := range docs {
 		if d.ID == "" || seen[d.ID] || d.Text == "" || !evidenceDigest.MatchString(d.Digest) {
 			return false
+		}
+		if c.Adapter == "netology" || c.Adapter == "codebasics" {
+			if !evidenceDigest.MatchString(d.BindingDigest) || binding != "" && binding != d.BindingDigest {
+				return false
+			}
+			binding = d.BindingDigest
 		}
 		seen[d.ID] = true
 		total += len(d.Text)

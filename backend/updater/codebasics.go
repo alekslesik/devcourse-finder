@@ -42,8 +42,10 @@ func codeBasicsFreePolicy(data []byte) bool {
 }
 
 type basicsLesson struct {
-	Slug     string `json:"slug"`
-	Language struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Slug        string `json:"slug"`
+	Language    struct {
 		Slug string `json:"slug"`
 	} `json:"language"`
 }
@@ -61,19 +63,25 @@ type basicsPage struct {
 			} `json:"current_version"`
 		} `json:"course"`
 		Landing struct {
-			LanguageID  int    `json:"language_id"`
-			Slug        string `json:"slug"`
-			Main        bool   `json:"main"`
-			Listed      bool   `json:"listed"`
-			State       string `json:"state"`
-			Header      string `json:"header"`
-			Description string `json:"description"`
-			Duration    string `json:"duration"`
+			LanguageID          int    `json:"language_id"`
+			Slug                string `json:"slug"`
+			Main                bool   `json:"main"`
+			Listed              bool   `json:"listed"`
+			State               string `json:"state"`
+			Header              string `json:"header"`
+			Description         string `json:"description"`
+			Duration            string `json:"duration"`
+			UsedInHeader        string `json:"used_in_header"`
+			UsedInDescription   string `json:"used_in_description"`
+			OutcomesHeader      string `json:"outcomes_header"`
+			OutcomesDescription string `json:"outcomes_description"`
 		} `json:"courseLandingPage"`
 		First   basicsLesson `json:"firstLesson"`
 		Modules []struct {
-			ID     int    `json:"id"`
-			Locale string `json:"locale"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			ID          int    `json:"id"`
+			Locale      string `json:"locale"`
 		} `json:"courseModules"`
 		Lessons map[string][]basicsLesson `json:"lessonsByModuleId"`
 	} `json:"props"`

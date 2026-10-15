@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.26.0] - 2026-10-15
+
+- Add identity-bound CodeBasics AI enrichment using explicit public course fields and the independent free-policy check. Begin AI provider expansion with a shared source registry and a scoped Netology reader for the verified product/tariff contract; fix its fetch URL and preserve budgets, weekly scheduling and financial ownership. Current registration-only Netology pages remain blocked pending a verified source contract.
+
 ## [0.25.5] - 2026-10-15
 
 - Soften language badge fills and outlines, and mute school brand accents in both themes.
