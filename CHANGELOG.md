@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.29.1] - 2026-10-16
+
+- Show each course tariff in its own wider pricing card, preserving offer-specific actions and conditions.
+
 ## [0.29.0] - 2026-10-16
 
 - Redesign course details around the approved passport layout with a sticky tariff panel and responsive mobile actions.

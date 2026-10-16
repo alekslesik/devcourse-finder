@@ -47,3 +47,14 @@ unknown conditions, full budgets, themes and genuine Chromium 200% tab zoom.
 Browser screenshots and semantics checks are automated evidence. They do not prove
 physical iPhone Safari keyboard/chrome behaviour or actual VoiceOver/NVDA speech.
 Those manual acceptance items remain open in #98 and the parent #91.
+
+## Separate tariff cards (v0.29.1)
+
+The maintainer requested a slightly wider price column and one rectangle per tariff.
+The desktop column is now 380px (340px on intermediate widths). Every tariff
+has its own glass panel, price, enrollment facts, outbound link and eligible
+comparison action. Native radio controls select the tariff for the detailed
+conditions and mobile dock; offer URLs and server-rendered selection are retained.
+Multiple cards use natural document scrolling; a single card stays sticky on tall
+desktop viewports. Both themes, keyboard selection and 390/1440px vertical stacking
+are covered by the passport browser suite.

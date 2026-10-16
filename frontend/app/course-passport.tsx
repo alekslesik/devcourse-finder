@@ -62,24 +62,30 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
     <h1 id="course-title">{c.title}</h1><p className="courseLead">{c.summary}</p>
     {c.demo&&<p className="demoBanner">Демонстрационная программа: название и условия вымышлены.</p>}
    </section>
-   <aside className="courseSummary coursePurchase" id="course-tariffs" tabIndex={-1} aria-labelledby="course-purchase-title">
-    {item&&offer?<>
-     <h2 id="course-purchase-title">{offers.length>1?'Тариф и стоимость':offer.name}</h2>
-     {offers.length>1&&<div className="courseOfferChoice"><label htmlFor="course-offer">Тариф</label><select id="course-offer" value={offer.id} onChange={event=>selectOffer(event.target.value)}>{offers.map(i=><option key={i.offer.id} value={i.offer.id}>{i.offer.name}</option>)}</select></div>}
-     <div className="coursePriceBlock"><strong className="coursePurchasePrice" data-unconfirmed={item.effective_price===null}>{price(item)}</strong><span>{item.effective_price===null?'Полная стоимость уточняется':item.effective_price===0?'Бесплатный тариф':'за весь курс'}</span></div>
-     {item.effective_price===null&&<p className="coursePriceNote">{offer.price_kind==='from'?'Цена «от»: уточните полную стоимость у школы.':'Актуальная полная стоимость не подтверждена. Уточните её у школы.'}</p>}
+   <aside className="courseTariffs" data-single={offers.length<=1} id="course-tariffs" tabIndex={-1} aria-label="Тарифы курса">
+    <fieldset className="courseTariffList"><legend className="srOnly">Тарифы курса</legend>
+    {offers.map(entry=>{
+     const tariff=entry.offer,selected=tariff.id===offer?.id,comparable=['open','continuous'].includes(tariff.enrollment);
+     return <section key={tariff.id} className="courseSummary coursePurchase" data-offer={tariff.id} data-selected={selected} aria-labelledby={'tariff-'+tariff.id}>
+     <h2 id={'tariff-'+tariff.id}>{offers.length>1?<label className="courseTariffChoice"><input type="radio" name="course-offer" value={tariff.id} checked={selected} onChange={()=>selectOffer(tariff.id)} aria-controls="course-conditions"/><span>{tariff.name}</span></label>:tariff.name}</h2>
+     <div className="coursePriceBlock"><strong className="coursePurchasePrice" data-unconfirmed={entry.effective_price===null}>{price(entry)}</strong><span>{entry.effective_price===null?'Полная стоимость уточняется':entry.effective_price===0?'Бесплатный тариф':'за весь курс'}</span></div>
+     {entry.effective_price===null&&<p className="coursePriceNote">{tariff.price_kind==='from'?'Цена «от»: уточните полную стоимость у школы.':'Актуальная полная стоимость не подтверждена. Уточните её у школы.'}</p>}
      <ul className="coursePurchaseFacts">
-      <li><CourseIcon kind="clock"/><span>{courseDuration||'Длительность уточняется'}</span></li>
-      <li><CourseIcon kind="calendar"/><span>{schedule[offer.schedule]||schedule.unknown}</span></li>
-      <li><CourseIcon kind="people"/><span>{offer.enrollment==='open'?'Набор открыт':offer.enrollment==='continuous'?'Постоянный набор':offer.enrollment==='closed'?'Набор закрыт':'Набор уточняется'}</span></li>
+      <li><CourseIcon kind="clock"/><span>{duration(tariff)||'Длительность уточняется'}</span></li>
+      <li><CourseIcon kind="calendar"/><span>{schedule[tariff.schedule]||schedule.unknown}</span></li>
+      <li><CourseIcon kind="people"/><span>{tariff.enrollment==='open'?'Набор открыт':tariff.enrollment==='continuous'?'Постоянный набор':tariff.enrollment==='closed'?'Набор закрыт':'Набор уточняется'}</span></li>
      </ul>
-     <a ref={primaryAction} className="primary linkButton coursePrimaryAction" href={'/out/'+encodeURIComponent(offer.id)} target="_blank" rel="noopener noreferrer">{actionLabel} <ExternalMark/></a>
-     {canCompare&&<div className="coursePurchaseCompare"><CatalogActions key={offer.id} id={offer.id}/></div>}
-     <small className="coursePriceChecked">Цена проверена: {checked(offer.price_checked_at)}</small>
-    </>:<>
+     <a ref={selected?primaryAction:undefined} className="primary linkButton coursePrimaryAction" href={'/out/'+encodeURIComponent(tariff.id)} target="_blank" rel="noopener noreferrer">{comparable?'На сайт курса':'Проверить набор'} <ExternalMark/></a>
+     {comparable&&<div className="coursePurchaseCompare"><CatalogActions key={tariff.id} id={tariff.id}/></div>}
+     <small className="coursePriceChecked">Цена проверена: {checked(tariff.price_checked_at)}</small>
+     {offers.length>1&&<small className="courseTariffStatus">{selected?'Подробные условия этого тарифа показаны ниже':'Выберите тариф, чтобы посмотреть подробные условия'}</small>}
+     </section>;
+    })}
+    {!offers.length&&<section className="courseSummary coursePurchase" aria-labelledby="course-purchase-title">
      <h2 id="course-purchase-title">Тарифы уточняются</h2><p>Актуальные предложения смотрите на сайте школы.</p>
      <a className="primary linkButton" href={c.source} target="_blank" rel="noopener noreferrer">Программа на сайте школы <ExternalMark/></a>
-    </>}
+    </section>}
+    </fieldset>
    </aside>
    <div className="courseContent">
     <nav className="courseSections" aria-label="Разделы курса">{[['course-overview','Обзор'],['course-conditions','Условия'],['course-sources','Источник']].map(([id,label])=><a key={id} href={'#'+id} aria-current={section===id?'location':undefined} onClick={()=>setSection(id)}>{label}</a>)}</nav>
@@ -87,6 +93,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
      <h2 id="course-audience-title"><CourseIcon kind="person"/>Для кого подходит</h2>
      <dl className="courseFacts"><Fact label="Кому подходит" unknown={!audience.length}>{experience}</Fact><Fact label="Требования к опыту" unknown={!prerequisite}>{requirement}</Fact></dl>
      <h2><CourseIcon kind="code"/>Формат и поддержка</h2>
+     {offers.length>1&&<p className="courseConditionsTariff">Условия тарифа: <strong>{offer?.name}</strong></p>}
      <dl className="courseFacts">
       <Fact label="Длительность" unknown={!courseDuration}>{courseDuration||'Уточните у школы'}</Fact>
       <Fact label="Нагрузка" unknown={!courseWorkload}>{courseWorkload||'Уточните у школы'}</Fact>
@@ -111,6 +118,6 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
    </div>
   </div>
   <p className="srOnly" role="status">{notice}</p>
-  {showDock&&item&&offer&&<div className="courseSummary courseDock" role="region" aria-label="Быстрые действия по тарифу"><div><strong>{price(item)}</strong><small>{item.effective_price===null?'Уточните у школы':item.effective_price===0?'Бесплатный тариф':'за весь курс'}</small></div><a className="primary linkButton" href={'/out/'+encodeURIComponent(offer.id)} target="_blank" rel="noopener noreferrer">{actionLabel} <ExternalMark/></a></div>}
+  {showDock&&item&&offer&&<div className="courseSummary courseDock" role="region" aria-label="Быстрые действия по тарифу"><div><strong>{price(item)}</strong><small>{offers.length>1?offer.name:item.effective_price===null?'Уточните у школы':item.effective_price===0?'Бесплатный тариф':'за весь курс'}</small></div><a className="primary linkButton" href={'/out/'+encodeURIComponent(offer.id)} target="_blank" rel="noopener noreferrer">{actionLabel} <ExternalMark/></a></div>}
  </>;
 }
