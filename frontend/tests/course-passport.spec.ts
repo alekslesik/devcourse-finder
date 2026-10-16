@@ -43,13 +43,17 @@ test('selected tariff keeps its price, conditions, outbound target and compariso
  test.skip(process.env.E2E_REAL_API==='1','Synthetic multi-offer fixture is local to the frontend API fixture.');
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.goto('/courses/passport-multi');
- const purchase=page.locator('.coursePurchase'),choice=page.getByLabel('Тариф',{exact:true});
+ const purchase=page.locator('.coursePurchase[data-selected=true]');
+ const choose=(id:string)=>page.locator('input[name=course-offer][value="'+id+'"]');
+ await expect(page.locator('.coursePurchase')).toHaveCount(4);
+ await expect(page.locator('select')).toHaveCount(0);
+ for(const id of ['passport-standard','passport-free','passport-from','passport-closed'])await expect(page.locator('.coursePurchase[data-offer="'+id+'"] .coursePrimaryAction')).toHaveAttribute('href','/out/'+id);
  const fact=(label:string)=>page.locator('.courseFact').filter({has:page.locator('dt',{hasText:label})}).locator('dd');
  await expect(fact('Кому подходит')).toHaveText('Без опыта · Программирую на другом языке');
  await expect(fact('Требования к опыту')).toHaveText('Знание основ на языке курса');
  await expect(purchase.locator('.coursePurchasePrice')).toContainText('70');
  await expect(fact('Проверка кода')).toHaveText('Уточните у школы');
- await choice.selectOption('passport-free');
+ await choose('passport-free').check();
  await expect(purchase.locator('.coursePurchasePrice')).toHaveText('Бесплатно');
  await expect(fact('Проверка кода')).toHaveText('Нет');
  await expect(purchase.getByRole('link',{name:'На сайт курса'})).toHaveAttribute('href','/out/passport-free');
@@ -58,19 +62,19 @@ test('selected tariff keeps its price, conditions, outbound target and compariso
  await purchase.getByRole('button',{name:'Добавить в сравнение'}).click();
  await expect(page).toHaveURL(/offers=passport-free/);
  await expect(page.getByRole('table')).toContainText('Бесплатно');
- await page.goBack();await expect(choice).toHaveValue('passport-free');
- await choice.selectOption('passport-from');
+ await page.goBack();await expect(choose('passport-free')).toBeChecked();
+ await choose('passport-from').check();
  await expect(purchase.locator('.coursePurchasePrice')).toHaveText('Цена не подтверждена');
  await expect(purchase).toContainText('Цена «от»');
  await expect(fact('Проверка кода')).toHaveText('Уточните у школы');
  await expect(purchase.getByRole('button',{name:'Добавить в сравнение'})).toHaveCount(0);
  await expect(purchase.getByRole('link',{name:'Проверить набор'})).toHaveAttribute('href','/out/passport-from');
- await choice.selectOption('passport-closed');
+ await choose('passport-closed').check();
  await expect(purchase).toContainText('Набор закрыт');
  await expect(fact('Проверка кода')).toHaveText('Есть');
  await expect(purchase.getByRole('button',{name:'Добавить в сравнение'})).toHaveCount(0);
  await expect(purchase.getByRole('link',{name:'Проверить набор'})).toHaveAttribute('href','/out/passport-closed');
- await page.reload();await expect(choice).toHaveValue('passport-closed');
+ await page.reload();await expect(choose('passport-closed')).toBeChecked();
 });
 
 test('shared tariff selection is server rendered and invalid IDs fall back safely',async({browser})=>{
@@ -79,11 +83,11 @@ test('shared tariff selection is server rendered and invalid IDs fall back safel
  try{
   const page=await context.newPage();
   await page.goto('http://127.0.0.1:3091/courses/passport-multi?offer=passport-free');
-  await expect(page.getByLabel('Тариф',{exact:true})).toHaveValue('passport-free');
-  await expect(page.locator('.coursePurchasePrice')).toHaveText('Бесплатно');
-  await expect(page.locator('.coursePurchase').getByRole('link',{name:'На сайт курса'})).toHaveAttribute('href','/out/passport-free');
+  await expect(page.locator('input[name=course-offer][value=passport-free]')).toBeChecked();
+  await expect(page.locator('.coursePurchase[data-selected=true] .coursePurchasePrice')).toHaveText('Бесплатно');
+  await expect(page.locator('.coursePurchase[data-selected=true]').getByRole('link',{name:'На сайт курса'})).toHaveAttribute('href','/out/passport-free');
   await page.goto('http://127.0.0.1:3091/courses/passport-multi?offer=missing');
-  await expect(page.getByLabel('Тариф',{exact:true})).toHaveValue('passport-standard');
+  await expect(page.locator('input[name=course-offer][value=passport-standard]')).toBeChecked();
  }finally{await context.close()}
 });
 
@@ -108,11 +112,34 @@ test('catalog details preserve the matched non-first tariff on a short screen',a
  const card=page.locator('.card');await expect(card).toHaveCount(1);
  for(const link of [card.locator('.titleButton'),card.getByRole('link',{name:'Подробнее'})])await expect(link).toHaveAttribute('href','/courses/passport-multi?offer=passport-free');
  await card.getByRole('link',{name:'Подробнее'}).click();
- await expect(page.getByLabel('Тариф',{exact:true})).toHaveValue('passport-free');
- await expect(page.locator('.coursePurchasePrice')).toHaveText('Бесплатно');
- const purchase=page.locator('.coursePurchase');
+ await expect(page.locator('input[name=course-offer][value=passport-free]')).toBeChecked();
+ await expect(page.locator('.coursePurchase[data-selected=true] .coursePurchasePrice')).toHaveText('Бесплатно');
+ const purchase=page.locator('.coursePurchase[data-selected=true]');
  expect(await purchase.evaluate(node=>({maxHeight:getComputedStyle(node).maxHeight,overflow:getComputedStyle(node).overflowY}))).toEqual({maxHeight:'none',overflow:'visible'});
  await purchase.getByRole('link',{name:'На сайт курса'}).scrollIntoViewIfNeeded();
  await expect(purchase.getByRole('link',{name:'На сайт курса'})).toBeInViewport();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+for(const width of [390,1440])for(const theme of ['light','dark'] as const){
+ test(`all tariff cards form an accessible vertical stack: ${width}px ${theme}`,async({page},info)=>{
+ test.skip(process.env.E2E_REAL_API==='1','Synthetic multi-offer fixture is local to the frontend API fixture.');
+ await page.setViewportSize({width,height:1000});await page.emulateMedia({colorScheme:theme,reducedMotion:'reduce'});
+ await page.goto('/courses/passport-multi');
+ const cards=page.locator('.coursePurchase');await expect(cards).toHaveCount(4);
+ const boxes=await cards.evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,bottom:r.bottom}}));
+ for(let i=1;i<boxes.length;i++){expect(boxes[i].y-boxes[i-1].bottom).toBeGreaterThanOrEqual(23);expect(boxes[i].x).toBe(boxes[0].x)}
+ if(width===1440){
+  expect(boxes[0].width).toBe(380);
+  const intro=(await page.locator('.courseIntro').boundingBox())!,content=(await page.locator('.courseContent').boundingBox())!;
+  expect(content.y-intro.y-intro.height).toBeGreaterThanOrEqual(31);
+  expect(content.y-intro.y-intro.height).toBeLessThanOrEqual(33);
+ }
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.getByRole('radio',{name:'Полная программа',exact:true}).focus();await page.keyboard.press('ArrowDown');
+ await expect(page.getByRole('radio',{name:'Вводный тариф'})).toBeChecked();
+ await expect(page.locator('.courseConditionsTariff')).toContainText('Вводный тариф');
+ const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(axe.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))).toEqual([]);
+ await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:info.outputPath(`tariffs-${width}-${theme}.png`),fullPage:true});
+ });
+}
