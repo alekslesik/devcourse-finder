@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.29.0] - 2026-10-16
+
+- Redesign course details around the approved passport layout with a sticky tariff panel and responsive mobile actions.
+- Keep selected tariff prices, conditions, comparison and outbound links together, including shareable tariff selection and explicit unknown states.
+
 ## [0.28.0] - 2026-10-16
 
 - Add a dispatch-only GitHub Actions button for bounded, resumable AI catalog enrichment on the deployed VDS release. Report batch results, source failures, budget stops and queue status; preserve permanent settings and clean up owned one-off containers on interruption.
