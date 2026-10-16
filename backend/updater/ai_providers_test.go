@@ -6,7 +6,7 @@ import (
 )
 
 func TestAIRegistryRejectsUnsupportedAndNoncanonicalCandidates(t *testing.T) {
-	for _, url := range []string{"https://stepik.org/course/42/promo?x=1", "https://stepik.org/course/42/promo/", "https://stepik.org.evil.example/course/42/promo", "https://user@stepik.org/course/42/promo", "http://stepik.org/course/42/promo", "https://skillbox.ru/course/profession-python"} {
+	for _, url := range []string{"https://stepik.org/course/42/promo?x=1", "https://stepik.org/course/42/promo/", "https://stepik.org.evil.example/course/42/promo", "https://user@stepik.org/course/42/promo", "http://stepik.org/course/42/promo", "https://unsupported.example/course/python"} {
 		if _, ok := aiCandidateURL(url); ok {
 			t.Fatal("unsupported/noncanonical source enabled", url)
 		}
