@@ -93,3 +93,12 @@ queued source-remap rejection, financial freshness and operator-offer protection
 The extraction/review responses in these tests are mocks. No paid API calls were
 made. Repeat the optional anonymous source-only check with
 `AI_CODEBASICS_SOURCE_CHECK=1 go test ./backend/updater -run '^TestAICodeBasicsLiveSource$' -v`.
+
+### Netology follow-up — 2026-10-16
+
+The saved current program ID is now required as well as its family ID. Both
+participate in the cache binding and are rechecked inside publication. Recorded
+and PostgreSQL regressions reject a different program in the same family and
+the registration-only multi-program template. The anonymous Go source check
+still failed with `invalid_netology_payload`; #135 remains blocked, with zero
+model requests spent. This does not justify guessing a numeric identity.
