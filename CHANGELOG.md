@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.28.0] - 2026-10-16
+
+- Add a dispatch-only GitHub Actions button for bounded, resumable AI catalog enrichment on the deployed VDS release. Report batch results, source failures, budget stops and queue status; preserve permanent settings and clean up owned one-off containers on interruption.
+
 ## [0.27.0] - 2026-10-16
 
 - Expand identity-bound AI readers to nine additional schools, isolate course and tariff evidence, preserve shared budgets and weekly scheduling, and expose provider coverage. Strengthen Netology current-program protection; report remaining rejected live sources without claiming full coverage.

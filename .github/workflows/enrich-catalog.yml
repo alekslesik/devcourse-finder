@@ -1,0 +1,65 @@
+name: Enrich catalog AI
+run-name: AI catalog ${{ inputs.mode }} (daily cap ${{ inputs.daily_request_limit }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Enrich due published courses using paid AI, or inspect status only
+        type: choice
+        options: [enrich, status]
+        default: enrich
+      daily_request_limit:
+        description: Temporary shared UTC-day request cap; normally two requests per course
+        type: choice
+        options: ['40', '100', '200']
+        default: '200'
+      max_batches:
+        description: Maximum batches of 40 candidates (1-25); stop earlier at budget/no due courses
+        type: string
+        default: '10'
+
+permissions:
+  contents: read
+
+# Queue with deployments; the host lock also excludes manual native collection.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SSH password helper
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+      - name: Enrich the currently deployed catalog
+        env:
+          SSHPASS: ${{ secrets.VDS_PASS }}
+          VDS_HOST: ${{ vars.VDS_HOST || '83.220.174.166' }}
+          VDS_USER: ${{ vars.VDS_USER || 'root' }}
+          MODE: ${{ inputs.mode }}
+          DAILY_LIMIT: ${{ inputs.daily_request_limit }}
+          MAX_BATCHES: ${{ inputs.max_batches }}
+        run: |
+          set -euo pipefail
+          test -n "$SSHPASS" || { echo 'Missing VDS_PASS Actions secret.' >&2; exit 1; }
+          [[ "$VDS_HOST" =~ ^[a-zA-Z0-9.-]+$ && "$VDS_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$MODE" == enrich || "$MODE" == status ]]
+          [[ "$DAILY_LIMIT" == 40 || "$DAILY_LIMIT" == 100 || "$DAILY_LIMIT" == 200 ]]
+          [[ "$MAX_BATCHES" =~ ^([1-9]|1[0-9]|2[0-5])$ ]]
+          host_keys="$RUNNER_TEMP/vds_known_hosts"
+          cp .github/vds_known_hosts "$host_keys"
+          chmod 600 "$host_keys"
+          options=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$host_keys" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o PreferredAuthentications=password,keyboard-interactive -o NumberOfPasswordPrompts=1)
+          command="timeout --signal=TERM --kill-after=30s 90m python3 - /srv/devcourse-finder '$MODE' '$DAILY_LIMIT' '$MAX_BATCHES'"
+          sshpass -e ssh -T "${options[@]}" "$VDS_USER@$VDS_HOST" "$command" < scripts/enrich-catalog.py 2>&1 | tee "$RUNNER_TEMP/ai-enrichment.log"
+      - name: Summarize enrichment
+        if: always()
+        run: |
+          touch "$RUNNER_TEMP/ai-enrichment.log"
+          python3 scripts/enrich-catalog.py --summary "$RUNNER_TEMP/ai-enrichment.log" "$GITHUB_STEP_SUMMARY"
