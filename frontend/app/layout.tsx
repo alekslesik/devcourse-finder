@@ -1,6 +1,7 @@
 import type { Metadata,Viewport } from 'next';
 import './globals.css';
 import './liquid-glass.css';
+import './course-passport.css';
 import {socialMetadata,siteOrigin,siteTitle,siteDescription} from '../lib/social-metadata';
 import {SiteHeader,SiteFooter} from './site-shell';
 import {themeScript} from '../lib/theme';

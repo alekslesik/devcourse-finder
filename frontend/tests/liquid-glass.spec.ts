@@ -39,7 +39,7 @@ for(const theme of ['light','dark'] as const)test(`forced-color palettes preserv
  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
  await boundaries(['header','.languageScene','.workspace aside','.card']);
  await page.getByLabel('Сравнить тариф').first().check();await boundaries(['.compareBar']);
- await page.goto('/courses/demo-go-1');await boundaries(['.courseSummary','.detailOffers>section']);
+ await page.goto('/courses/demo-go-1');await boundaries(['.coursePurchase']);
  await page.goto('/courses?compare=demo-go-1-standard,demo-go-2-standard');
  await expect(page.getByRole('dialog').getByRole('table')).toBeVisible();await boundaries(['.modal']);
  await page.route(url=>url.pathname==='/api/v1/courses',route=>route.fulfill({json:{items:[],total:0,page:1,page_size:12}}));

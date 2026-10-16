@@ -94,7 +94,7 @@ jobs:
       - name: Verify touch, keyboard, navigation and dialog behaviour in WebKit
         env:
           E2E_BROWSER: webkit
-        run: npm run test:e2e -- catalog-ux.spec.ts dialog.spec.ts device-acceptance.spec.ts --output=test-results/webkit
+        run: npm run test:e2e -- catalog-ux.spec.ts dialog.spec.ts device-acceptance.spec.ts course-passport.spec.ts --output=test-results/webkit
       - name: Save frontend visual checks and failure traces
         if: always()
         uses: actions/upload-artifact@v4

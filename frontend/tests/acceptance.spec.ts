@@ -67,7 +67,7 @@ test('AC-09: search URL restores filters, sort and page in an independent browse
   await expect(shared.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
   await expect(shared.getByLabel('Сортировка',{exact:true})).toHaveValue('price_asc');
   await expect(shared.locator('.card')).toHaveCount(body.items.length);
-  expect(await shared.locator('.card .titleButton').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')))).toEqual(body.items.map((item:{course:{slug:string}})=>'/courses/'+item.course.slug));
+  expect(await shared.locator('.card .titleButton').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')))).toEqual(body.items.map((item:{course:{slug:string};offer:{id:string}})=>'/courses/'+encodeURIComponent(item.course.slug)+'?'+new URLSearchParams({offer:item.offer.id})));
  }finally{await fresh.close()}
 });
 
