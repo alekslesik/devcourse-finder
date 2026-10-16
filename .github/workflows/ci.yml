@@ -28,6 +28,8 @@ jobs:
 
       - name: Test manual catalog collection helper
         run: python3 -m unittest discover -s scripts -p 'test_collect_catalog.py'
+      - name: Test manual AI enrichment helper
+        run: python3 -m unittest discover -s scripts -p 'test_enrich_catalog.py'
       - name: Test public HTTPS acceptance checks
         run: python3 -m unittest discover -s scripts -p 'test_public_https.py'
 

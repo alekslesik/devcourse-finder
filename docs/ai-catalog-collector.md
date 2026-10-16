@@ -270,3 +270,46 @@ authentication state or lesson solutions. Its single course offer receives only
 landing-level condition text. Total curriculum hours are not calendar duration
 or weekly workload. A queued mapping change is rejected transactionally. The
 current Python source-only check passed; no live semantic model benchmark was run.
+
+## Manual full-catalog enrichment from GitHub Actions
+
+Open **Actions → Enrich catalog AI → Run workflow**, select `main`, and use:
+
+- `mode=enrich`: process due published courses in batches of 40, using the
+  currently deployed image and the model keys already stored on the VDS.
+- `daily_request_limit=200`: temporary shared UTC-day cap, including requests
+  already reserved by other AI runs today. Choices are 40, 100 and 200. This is
+  a request cap, not a dollar/token cap; extraction and independent review normally
+  reserve two requests per course, and provider fallback can reserve extra pairs.
+- `max_batches=10`: upper bound for this button press, from 1 through 25. The
+  run stops earlier at budget exhaustion, no due candidates, provider failure,
+  or the UTC budget boundary. A new batch is not started in the last 31 minutes
+  before reset, allowing the existing 30-minute worker timeout to finish first.
+- `mode=status`: inspect operational coverage and budget without model calls.
+
+A single click is not a promise that all cards become complete. For example,
+174 fresh courses may require more than the allowed 200 daily requests. Repeat
+after the reset at **03:00 Europe/Moscow** to continue; persisted attempt ordering
+prioritizes previously unattempted courses. Due times, failed-source cooldowns,
+identity protections and the content/model/policy cache remain active. No SQL
+reset, free-source inference or forced publication bypass is performed.
+
+The workflow shares the deployment concurrency group and the host deployment
+lock, preventing a release switch while processing. It creates an owned, bounded
+one-off Compose container per batch with the deployed catalog image, `--no-deps`
+and `--pull never`. Interrupt/timeout cleanup removes only that owned container.
+The scheduled AI worker and native collectors keep running, and the native
+publisher applies independently verified queued observations. Both AI and
+publisher services must be running before a paid run starts. No build, migration,
+restart, `.env` edit or permanent budget/schedule change is performed.
+
+The Actions summary distinguishes attempted/queued/cached/failed courses, token
+usage, source result codes, the stop reason and the remaining queue. `queued`
+means awaiting publication, not necessarily that a card gained fields. Inspect
+the fixed `source_*` errors and [current source limitations](ai-provider-expansion.md)
+instead of treating a green bounded run as whole-catalog completion. Raw
+provider errors, `.env` contents and model keys are not included in the report.
+
+The workflow is dispatch-only. Publishing/merging a release does not trigger
+paid enrichment. Operational validation uses `mode=status`; development/CI use
+mocked Docker/model outputs and do not spend provider tokens.
