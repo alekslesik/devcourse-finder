@@ -32,6 +32,9 @@ func aiBoundFixtureBinding(r catalog.Course, o Observation) aiSavedBinding {
 // semantics without relying on mutable live pages or charging either provider.
 func aiBoundFixtureText(raw []byte, c Candidate) []byte {
 	heading := profileContracts[c.Adapter].Audience[0]
+	if c.Adapter == "rsschool" {
+		raw = []byte(strings.ReplaceAll(string(raw), ">For everyone<", ">Existing audience<"))
+	}
 	section := `<section><h2>` + heading + `</h2><p>` + aiBoundTestQuote + ` Здесь вы научитесь разработке приложений и изучите основные конструкции языка.</p></section>`
 	if !strings.Contains(string(raw), "</body>") {
 		raw = []byte(string(raw) + "<body></body>")
