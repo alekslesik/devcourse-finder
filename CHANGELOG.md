@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.27.0] - 2026-10-16
+
+- Expand identity-bound AI readers to nine additional schools, isolate course and tariff evidence, preserve shared budgets and weekly scheduling, and expose provider coverage. Strengthen Netology current-program protection; report remaining rejected live sources without claiming full coverage.
+
 ## [0.26.0] - 2026-10-15
 
 - Add identity-bound CodeBasics AI enrichment using explicit public course fields and the independent free-policy check. Begin AI provider expansion with a shared source registry and a scoped Netology reader for the verified product/tariff contract; fix its fetch URL and preserve budgets, weekly scheduling and financial ownership. Current registration-only Netology pages remain blocked pending a verified source contract.

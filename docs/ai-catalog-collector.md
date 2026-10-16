@@ -233,12 +233,27 @@ See the [DeepSeek diagnostic report](ai-deepseek-diagnostics-2026-10-15.md).
 
 ## Supported providers and staged expansion
 
-`catalog-ai status` includes `supported_providers`. This release enables only
-`codebasics`, `netology`, `stepik` and `yandex`; having a native parser does not automatically
-permit paid AI calls for the remaining schools. A shared registry controls
-canonical candidate recognition, due-course selection, document validation and
-publisher source domains. Unregistered providers and noncanonical/foreign URLs
-are rejected before paid extraction.
+`catalog-ai status` includes `supported_providers` and per-provider
+`provider_coverage`. Readers now exist for all 13 native platforms: Stepik,
+Practicum, CodeBasics, Netology, Skillbox, Skillfactory, PurpleSchool, HTML Academy,
+Skypro, OTUS, Hexlet, JavaRush and RS School. Only independently verified source
+contracts are eligible for paid requests; registration does not promise current
+source availability, complete data or measured model accuracy. See the exact
+[acceptance report and live-source blockers](ai-provider-expansion.md).
+
+The nine new readers use the stored course/primary offer and native product/tier
+mapping. They isolate public course sections and confirmed tariff features and
+recheck that mapping in the publication transaction. Changed bindings invalidate
+cache keys. Foreign/canonical-mismatched URLs, missing mappings, ambiguous scopes
+and failed native contracts cause no model requests. Additional manual offers
+receive no inferred conditions. No prices, billing or enrollment are published
+through this path; failure keeps old facts and evidence dates.
+
+Coverage counters distinguish eligible/mapped/attempted/ever-verified courses
+and current source failures. They do not count filled facts or establish accuracy.
+A prior verification can remain counted while the current source fails. Fixed
+`source_*` details distinguish a native contract rejection from an API/model error.
+Source-only diagnostic instructions and measured sizes are in the report.
 
 The Netology pipeline is covered by recorded official plan fixtures with an
 explicit synthetic course-profile section and mocked model responses. PostgreSQL
