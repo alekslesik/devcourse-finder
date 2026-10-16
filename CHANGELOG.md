@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.29.2] - 2026-10-16
+
+- Keep the mobile tariff action dock visible after fast scrolling past the selected tariff.
+
 ## [0.29.1] - 2026-10-16
 
 - Show each course tariff in its own wider pricing card, preserving offer-specific actions and conditions.

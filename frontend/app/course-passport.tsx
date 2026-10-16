@@ -33,9 +33,13 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
  const prerequisite=c.profile?.prerequisites;
  const requirement=prerequisite?({none:'Предварительный опыт не нужен',basics:'Знание основ',projects:'Опыт создания проектов',working:'Опыт работы разработчиком'}[prerequisite.level]+(prerequisite.level==='none'?'':prerequisite.scope==='course_language'?' на языке курса':' в программировании')):'Требования к опыту не подтверждены';
  useEffect(()=>{
-  if(!('IntersectionObserver' in window)||!primaryAction.current)return;
-  const observer=new IntersectionObserver(([entry])=>setShowDock(!entry.isIntersecting&&entry.boundingClientRect.bottom<0));
-  observer.observe(primaryAction.current);return ()=>observer.disconnect();
+  let frame=0;
+  function update(){frame=0;setShowDock(!!primaryAction.current&&primaryAction.current.getBoundingClientRect().bottom<0)}
+  const queue=()=>{if(!frame)frame=requestAnimationFrame(update)};
+  const observer='IntersectionObserver' in window?new IntersectionObserver(queue):null;
+  if(primaryAction.current)observer?.observe(primaryAction.current);
+  window.addEventListener('scroll',queue,{passive:true});window.addEventListener('resize',queue);update();
+  return ()=>{observer?.disconnect();cancelAnimationFrame(frame);window.removeEventListener('scroll',queue);window.removeEventListener('resize',queue)};
  },[offer?.id]);
  useEffect(()=>{
   const nodes=['course-overview','course-conditions','course-sources'].map(id=>document.getElementById(id)).filter((node):node is HTMLElement=>!!node);

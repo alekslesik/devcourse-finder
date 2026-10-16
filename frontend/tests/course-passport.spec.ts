@@ -139,6 +139,25 @@ for(const width of [390,1440])for(const theme of ['light','dark'] as const){
  await page.getByRole('radio',{name:'Полная программа',exact:true}).focus();await page.keyboard.press('ArrowDown');
  await expect(page.getByRole('radio',{name:'Вводный тариф'})).toBeChecked();
  await expect(page.locator('.courseConditionsTariff')).toContainText('Вводный тариф');
+ if(width===390){
+  // Jump from below the viewport directly above it: IO ratios remain zero.
+  await page.getByRole('radio',{name:'Закрытый тариф'}).check();
+  await page.locator('.coursePurchase[data-offer=passport-closed]').evaluate(node=>scrollTo(0,scrollY+node.getBoundingClientRect().top-innerHeight+100));
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect((await page.locator('.coursePurchase[data-selected=true] .coursePrimaryAction').boundingBox())!.y).toBeGreaterThan(1000);
+  await expect(page.locator('.courseDock')).toHaveCount(0);
+  await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight));
+  const dock=page.locator('.courseDock');await expect(dock).toBeInViewport();
+  await expect(dock.getByRole('link',{name:'Проверить набор'})).toHaveAttribute('href','/out/passport-closed');
+  // A layout-driven boundary crossing must update without another scroll event.
+  const action=page.locator('.coursePurchase[data-selected=true] .coursePrimaryAction');
+  await action.evaluate(node=>{node.style.transform='translateY('+(20-node.getBoundingClientRect().top)+'px)'});
+  await expect(dock).toHaveCount(0);
+  await action.evaluate(node=>{node.style.transform=''});await expect(dock).toBeInViewport();
+
+  await page.evaluate(()=>scrollTo(0,0));await expect(dock).toHaveCount(0);
+ }
+
  const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(axe.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))).toEqual([]);
  await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:info.outputPath(`tariffs-${width}-${theme}.png`),fullPage:true});
  });
