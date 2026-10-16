@@ -3,6 +3,7 @@ package updater
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
@@ -83,7 +84,7 @@ func TestAINetologyPipelineCacheIdentityFailuresAndManualTariffs(t *testing.T) {
 	publisher := Service{DB: db, Config: productionConfig(t), Worker: "publisher"}
 	// A changed mapping between collection and publication must reject the
 	// queued event even when the public course fields/URL did not change.
-	if _, err = db.Pool.Exec(ctx, "UPDATE catalog_identities SET netology_family_id=netology_family_id+1 WHERE course_id=$1", record.ID); err != nil {
+	if _, err = db.Pool.Exec(ctx, "UPDATE catalog_identities SET netology_program_id=netology_program_id+1 WHERE course_id=$1", record.ID); err != nil {
 		t.Fatal(err)
 	}
 	rejected, err := publisher.Publish(ctx)
@@ -98,7 +99,7 @@ func TestAINetologyPipelineCacheIdentityFailuresAndManualTariffs(t *testing.T) {
 	if err = db.Pool.QueryRow(ctx, "SELECT code FROM catalog_ai_observations ORDER BY id DESC LIMIT 1").Scan(&code); err != nil || code != "protected_ai_identity" {
 		t.Fatal(code, err)
 	}
-	if _, err = db.Pool.Exec(ctx, "UPDATE catalog_identities SET netology_family_id=$2 WHERE course_id=$1", record.ID, o.NetologyFamilyID); err != nil {
+	if _, err = db.Pool.Exec(ctx, "UPDATE catalog_identities SET netology_program_id=$2 WHERE course_id=$1", record.ID, o.NetologyProgramID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = db.Pool.Exec(ctx, "UPDATE catalog_ai_sources SET next_attempt_at=now() WHERE course_id=$1", record.ID); err != nil {
@@ -145,7 +146,8 @@ func TestAINetologyPipelineCacheIdentityFailuresAndManualTariffs(t *testing.T) {
 		t.Fatal("changed family spent requests", failed, err)
 	}
 	var status bytes.Buffer
-	if err = AIStatus(ctx, db, &status); err != nil || !strings.Contains(status.String(), `"supported_providers":["codebasics","netology","stepik","yandex"]`) {
+	providers, _ := json.Marshal(aiProviderIDs())
+	if err = AIStatus(ctx, db, &status); err != nil || !strings.Contains(status.String(), `"supported_providers":`+string(providers)) {
 		t.Fatal(status.String(), err)
 	}
 	loaded, _ = db.Load(ctx)

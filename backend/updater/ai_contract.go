@@ -103,7 +103,7 @@ func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
 		if d.ID == "" || seen[d.ID] || d.Text == "" || !evidenceDigest.MatchString(d.Digest) {
 			return false
 		}
-		if c.Adapter == "netology" || c.Adapter == "codebasics" {
+		if c.Adapter == "netology" || c.Adapter == "codebasics" || aiBoundReaders[c.Adapter] != nil {
 			if !evidenceDigest.MatchString(d.BindingDigest) || binding != "" && binding != d.BindingDigest {
 				return false
 			}

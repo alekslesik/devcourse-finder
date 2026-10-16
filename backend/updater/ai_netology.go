@@ -14,8 +14,9 @@ import (
 )
 
 type aiNetologyBinding struct {
-	OfferID  string
-	FamilyID int64
+	OfferID   string
+	FamilyID  int64
+	ProgramID int64
 }
 
 func aiFetchNetologyDocuments(ctx context.Context, db *store.DB, course catalog.Course, c Candidate, raw []byte, digest string) (Candidate, []AIDocument, error) {
@@ -23,7 +24,7 @@ func aiFetchNetologyDocuments(ctx context.Context, db *store.DB, course catalog.
 		return c, nil, ErrAI
 	}
 	var binding aiNetologyBinding
-	err := db.Pool.QueryRow(ctx, `SELECT offer_id,netology_family_id FROM catalog_identities WHERE adapter='netology' AND external_id=$1 AND canonical_url=$2 AND course_id=$3 AND netology_family_id>0`, c.ExternalID, c.URL, course.ID).Scan(&binding.OfferID, &binding.FamilyID)
+	err := db.Pool.QueryRow(ctx, `SELECT offer_id,netology_family_id,netology_program_id FROM catalog_identities WHERE adapter='netology' AND external_id=$1 AND canonical_url=$2 AND course_id=$3 AND netology_family_id>0 AND netology_program_id>0`, c.ExternalID, c.URL, course.ID).Scan(&binding.OfferID, &binding.FamilyID, &binding.ProgramID)
 	if err != nil {
 		return c, nil, ErrAI
 	}
@@ -35,7 +36,7 @@ func aiFetchNetologyDocuments(ctx context.Context, db *store.DB, course catalog.
 // enrollment observations are enqueued here; only scoped public text is output.
 func aiNetologyDocuments(raw []byte, c Candidate, current catalog.Course, binding aiNetologyBinding, digest string, at time.Time) ([]AIDocument, error) {
 	verified, observation, err := collectNetology(raw, c, at)
-	if err != nil || binding.FamilyID <= 0 || observation.NetologyFamilyID != binding.FamilyID || current.Source != c.URL || verified.Language != current.Language || normalizeTitle(verified.Title) != normalizeTitle(current.Title) {
+	if err != nil || binding.FamilyID <= 0 || observation.NetologyFamilyID != binding.FamilyID || binding.ProgramID <= 0 || observation.NetologyProgramID != binding.ProgramID || current.Source != c.URL || verified.Language != current.Language || normalizeTitle(verified.Title) != normalizeTitle(current.Title) {
 		return nil, ErrAI
 	}
 	var boundOffer *catalog.Offer
@@ -140,10 +141,13 @@ func aiNetologyCardRoot(title *html.Node) *html.Node {
 }
 
 func aiNetologyBindingDigest(courseID string, binding aiNetologyBinding) string {
-	return fingerprint([]byte(fmt.Sprintf("%s\x00%s\x00%d", courseID, binding.OfferID, binding.FamilyID)))
+	return fingerprint([]byte(fmt.Sprintf("%s\x00%s\x00%d\x00%d", courseID, binding.OfferID, binding.FamilyID, binding.ProgramID)))
 }
 
 func aiEventSourceIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool, error) {
+	if aiBoundReaders[e.Candidate.Adapter] != nil {
+		return aiBoundEventIdentityValid(ctx, tx, e)
+	}
 	if e.Candidate.Adapter == "codebasics" {
 		return aiCodeBasicsEventIdentityValid(ctx, tx, e)
 	}
@@ -151,7 +155,7 @@ func aiEventSourceIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool
 		return true, nil
 	}
 	var binding aiNetologyBinding
-	err := tx.QueryRow(ctx, `SELECT offer_id,netology_family_id FROM catalog_identities WHERE adapter='netology' AND external_id=$1 AND canonical_url=$2 AND course_id=$3 AND netology_family_id>0`, e.Candidate.ExternalID, e.Candidate.URL, e.CourseID).Scan(&binding.OfferID, &binding.FamilyID)
+	err := tx.QueryRow(ctx, `SELECT offer_id,netology_family_id,netology_program_id FROM catalog_identities WHERE adapter='netology' AND external_id=$1 AND canonical_url=$2 AND course_id=$3 AND netology_family_id>0 AND netology_program_id>0`, e.Candidate.ExternalID, e.Candidate.URL, e.CourseID).Scan(&binding.OfferID, &binding.FamilyID, &binding.ProgramID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
 	}

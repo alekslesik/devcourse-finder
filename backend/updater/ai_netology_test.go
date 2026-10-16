@@ -20,7 +20,7 @@ func aiNetologyFixture(t *testing.T) ([]byte, Candidate, catalog.Course, aiNetol
 	if err != nil {
 		t.Fatal(err)
 	}
-	return raw, c, record, aiNetologyBinding{OfferID: record.Offers[0].ID, FamilyID: o.NetologyFamilyID}
+	return raw, c, record, aiNetologyBinding{OfferID: record.Offers[0].ID, FamilyID: o.NetologyFamilyID, ProgramID: o.NetologyProgramID}
 }
 
 func TestAINetologyKeepsOnlyBoundTariffAndWholeCourseText(t *testing.T) {
@@ -46,10 +46,12 @@ func TestAINetologyKeepsOnlyBoundTariffAndWholeCourseText(t *testing.T) {
 }
 
 func TestAINetologyRejectsChangedIdentityAndUnboundOffers(t *testing.T) {
-	for _, kind := range []string{"family", "language", "title", "offer_id", "offer_url", "offer_name", "canonical", "page_identity", "oversize", "ambiguous_plan"} {
+	for _, kind := range []string{"program", "family", "language", "title", "offer_id", "offer_url", "offer_name", "canonical", "page_identity", "oversize", "ambiguous_plan"} {
 		t.Run(kind, func(t *testing.T) {
 			raw, c, current, binding := aiNetologyFixture(t)
 			switch kind {
+			case "program":
+				binding.ProgramID++
 			case "family":
 				binding.FamilyID++
 			case "language":
@@ -140,7 +142,7 @@ func TestAINetologyLiveSource(t *testing.T) {
 	if err != nil {
 		t.Fatal("native source contract", rejectionCode(err, "source_contract_rejected"))
 	}
-	docs, err := aiNetologyDocuments(raw, c, current, aiNetologyBinding{OfferID: current.Offers[0].ID, FamilyID: o.NetologyFamilyID}, digest, at)
+	docs, err := aiNetologyDocuments(raw, c, current, aiNetologyBinding{OfferID: current.Offers[0].ID, FamilyID: o.NetologyFamilyID, ProgramID: o.NetologyProgramID}, digest, at)
 	if err != nil {
 		t.Fatal("AI document contract rejected")
 	}
@@ -157,5 +159,26 @@ func TestAINetologyCurrentRegistrationOnlyTemplateStaysUnverified(t *testing.T) 
 	}
 	if candidateEndpoint(c) != "https://netology.ru/programs/go/" || c.URL != "https://netology.ru/programs/go" {
 		t.Fatal("fetch/canonical URL contract changed", c)
+	}
+}
+
+// The current live registration-only archive has neither a verified product nor
+// family. Never promote it to a purchasable tier based on URL/title alone.
+func TestAINetologyRejectsRegistrationOnlyTemplate(t *testing.T) {
+	raw, c, current, binding := aiNetologyFixture(t)
+	raw = netologyMutate(t, raw, func(d map[string]any) {
+		delete(d, "page")
+		delete(d, "isFallback")
+		props := d["props"].(map[string]any)["pageProps"].(map[string]any)
+		delete(props, "isActive")
+		state := props["initialState"].(map[string]any)
+		delete(state, "program")
+		landing := state["landingContent"].(map[string]any)
+		delete(landing, "programFamilyUrl")
+		delete(landing, "templateType")
+		landing["content"] = map[string]any{"programRegistration_1": map[string]any{"isVisible": true, "isBreedingPrograms": true, "customBreedingPrograms": []any{map[string]any{"slug": "go"}, map[string]any{"slug": "golpro"}}}}
+	})
+	if _, e := aiNetologyDocuments(raw, c, current, binding, fingerprint(raw), netologyNow()); e == nil {
+		t.Fatal("registration-only archive accepted")
 	}
 }

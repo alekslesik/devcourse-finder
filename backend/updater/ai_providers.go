@@ -1,6 +1,9 @@
 package updater
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // Only providers with implemented document/identity contracts belong here.
 // Native parser support alone never opts a provider into paid AI enrichment.
@@ -14,6 +17,9 @@ var aiProviders = map[string]string{
 func aiCandidateURL(raw string) (Candidate, bool) {
 	for adapter := range aiProviders {
 		if c, ok := candidateURL(adapter, raw, ""); ok && c.URL == raw {
+			if adapter == "htmlacademy" && !strings.HasPrefix(c.ExternalID, "intensive-") {
+				continue
+			}
 			return c, true
 		}
 	}
