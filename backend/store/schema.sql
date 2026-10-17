@@ -193,3 +193,9 @@ CREATE TABLE IF NOT EXISTS catalog_ai_runs (
  queued integer NOT NULL DEFAULT 0,cached integer NOT NULL DEFAULT 0,
  failed integer NOT NULL DEFAULT 0,tokens bigint NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS catalog_ai_provider_health (
+ provider text PRIMARY KEY CHECK(provider='stepik'), available boolean NOT NULL,
+ code text NOT NULL CHECK(code IN ('available','source_unavailable')),
+ checked_at timestamptz NOT NULL, next_probe_at timestamptz NOT NULL
+);

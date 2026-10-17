@@ -119,7 +119,19 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			err = e
 		}
 	}()
-	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns())
+	client := s.Client
+	if client == nil {
+		client = NewClient()
+		defer client.CloseIdleConnections()
+	}
+	stepikAvailable, err := aiStepikAvailable(ctx, s.DB, client)
+	if err != nil {
+		return result, err
+	}
+	if !stepikAvailable {
+		slog.Warn("AI source paused", "provider", "stepik", "code", "source_unavailable")
+	}
+	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND ($3 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns(), stepikAvailable)
 	if err != nil {
 		return result, err
 	}
@@ -144,11 +156,6 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	byID := map[string]catalog.Course{}
 	for _, c := range courses {
 		byID[c.ID] = c
-	}
-	client := s.Client
-	if client == nil {
-		client = NewClient()
-		defer client.CloseIdleConnections()
 	}
 	model := s.Model
 	if model == nil {
@@ -316,7 +323,11 @@ func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	if err = json.NewEncoder(w).Encode(map[string]any{"provider_coverage": coverage, "ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
+	health, err := aiProviderHealth(ctx, db)
+	if err != nil {
+		return err
+	}
+	if err = json.NewEncoder(w).Encode(map[string]any{"provider_health": health, "provider_coverage": coverage, "ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
 		return err
 	}
 	rows, err := db.Pool.Query(ctx, "SELECT course_id,code,attempted_at,verified_at,next_attempt_at,failures FROM catalog_ai_sources ORDER BY attempted_at DESC LIMIT 40")
