@@ -37,12 +37,12 @@ func aiCodeBasicsBindingDigest(c Candidate, courseID, offerID string) string {
 
 func aiCodeBasicsDocuments(raw, policy []byte, c Candidate, current catalog.Course, offerID, digest string, at time.Time) ([]AIDocument, error) {
 	verified, _, err := collectCodeBasics(raw, policy, c, at)
-	if err != nil || current.Source != c.URL || current.Language != verified.Language || normalizeTitle(current.Title) != normalizeTitle(verified.Title) {
+	if err != nil || !aiSourceMatches(current.Source, c) || current.Language != verified.Language || normalizeTitle(current.Title) != normalizeTitle(verified.Title) {
 		return nil, ErrAI
 	}
 	found := false
 	for _, o := range current.Offers {
-		if o.ID == offerID && o.URL == c.URL && normalizeTitle(o.Name) == normalizeTitle(verified.Offers[0].Name) {
+		if o.ID == offerID && aiSourceMatches(o.URL, c) && (normalizeTitle(o.Name) == normalizeTitle(verified.Offers[0].Name) || o.ID == current.ID+"-course" && o.Name == "Бесплатная полная программа" && o.Free && o.Price != nil && *o.Price == 0) {
 			found = true
 		}
 	}

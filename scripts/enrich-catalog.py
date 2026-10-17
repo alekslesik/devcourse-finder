@@ -88,7 +88,7 @@ def enrich(base, mode, budget, max_batches):
         raise EnrichmentError('Production .env is missing or is a symlink.')
     summary = dict(mode=mode, stop_reason='error', daily_request_limit=budget,
                    batches=0, attempted=0, queued=0, cached=0, failed=0, tokens=0,
-                   course_codes={})
+                   course_codes={}, useful_queued=0, empty_queued=0, verified_claims=0, discarded_claims=0)
     oneoff = 'devcourse-ai-manual-' + uuid.uuid4().hex[:16]
     codes = collections.Counter()
     # Same host lock as deploy/collection, before resolving the release symlink.
@@ -135,6 +135,14 @@ def enrich(base, mode, budget, max_batches):
                 summary['batches'] += 1
                 for key in ('attempted', 'queued', 'cached', 'failed', 'tokens'):
                     summary[key] += result[key]
+                for key in ('useful_queued', 'empty_queued', 'verified_claims', 'discarded_claims'):
+                    value = result.get(key)
+                    if value is None:
+                        summary[key] = None  # Older deployed releases do not expose these counters.
+                    elif type(value) is not int or value < 0:
+                        raise EnrichmentError('Invalid enrichment counters.')
+                    elif summary[key] is not None:
+                        summary[key] += value
                 course_codes = [v.get('code', '') for v in values if v.get('msg') == 'AI course checked']
                 codes.update(course_codes)
                 if 'daily_budget_exhausted' in course_codes:
@@ -185,12 +193,19 @@ def write_summary(log, destination):
         output.write(f"- Temporary shared daily cap: {r['daily_request_limit']} requests\n")
         output.write('\n| Batches | Attempted | Queued | Cached | Failed | Tokens this run |\n|---|---|---|---|---|---|\n')
         output.write('| ' + ' | '.join(str(r[k]) for k in ('batches', 'attempted', 'queued', 'cached', 'failed', 'tokens')) + ' |\n')
+        output.write(f"\nQueued with verified facts: {r.get('useful_queued') if r.get('useful_queued') is not None else 'unknown'}; "
+                     f"queued without verified facts: {r.get('empty_queued') if r.get('empty_queued') is not None else 'unknown'}; "
+                     f"verified claims: {r.get('verified_claims') if r.get('verified_claims') is not None else 'unknown'}; "
+                     f"discarded claims: {r.get('discarded_claims') if r.get('discarded_claims') is not None else 'unknown'}.\n")
         output.write('\n| Course result | Count |\n|---|---|\n')
         for code, count in sorted(r['course_codes'].items()):
             output.write(f'| `{code}` | {count} |\n')
         after = r.get('after', r.get('before', {}))
         output.write(f"\nRequests reserved today: {after.get('requests_reserved_today', 'unknown')}; "
                      f"pending AI observations: {after.get('pending', 'unknown')}.\n")
+        for health in after.get('provider_health', []):
+            output.write(f"\nSource `{health['provider']}`: `{health['code']}`; next probe after `{health['next_probe_at']}`.\n")
+        output.write('\nFull catalog source states: `' + json.dumps(after.get('source_codes', {}), sort_keys=True) + '`.\n')
         output.write('\nQueued means independently checked and awaiting publication, not necessarily a changed card. '
                      'Only due published courses are selected; source cooldowns and cache remain active. '
                      'A successful workflow can stop at its budget/batch cap with courses remaining. '

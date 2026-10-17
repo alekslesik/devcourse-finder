@@ -16,7 +16,7 @@ var aiProviders = map[string]string{
 
 func aiCandidateURL(raw string) (Candidate, bool) {
 	for adapter := range aiProviders {
-		if c, ok := candidateURL(adapter, raw, ""); ok && c.URL == raw {
+		if c, ok := candidateURL(adapter, raw, ""); ok && aiSourceMatches(raw, c) {
 			if adapter == "htmlacademy" && !strings.HasPrefix(c.ExternalID, "intensive-") {
 				continue
 			}
@@ -51,4 +51,10 @@ func aiProviderIDs() []string {
 	}
 	sort.Strings(ids)
 	return ids
+}
+
+// Historical curated Practicum/OTUS records used a single trailing slash. This
+// permits only that cosmetic spelling, never queries, fragments or other hosts.
+func aiSourceMatches(raw string, c Candidate) bool {
+	return raw == c.URL || (c.Adapter == "yandex" || c.Adapter == "otus") && raw == c.URL+"/"
 }

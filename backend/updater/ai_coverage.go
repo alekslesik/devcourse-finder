@@ -18,7 +18,7 @@ type aiProviderCoverage struct {
 // Coverage is operational state, not a claim of semantic completeness/accuracy.
 // Validate canonical eligibility in Go just as the paid reader does.
 func aiCoverage(ctx context.Context, db *store.DB) ([]aiProviderCoverage, error) {
-	rows, e := db.Pool.Query(ctx, `SELECT c.id,c.source,EXISTS(SELECT 1 FROM catalog_identities i WHERE i.canonical_url=c.source AND i.course_id=c.id),s.attempted_at IS NOT NULL,s.verified_at IS NOT NULL,coalesce(s.code,'') FROM courses c LEFT JOIN catalog_ai_sources s ON s.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($1)`, aiSourcePatterns())
+	rows, e := db.Pool.Query(ctx, `SELECT c.id,c.source,EXISTS(SELECT 1 FROM catalog_identities i WHERE (i.canonical_url=c.source OR (i.adapter IN ('yandex','otus') AND i.canonical_url||'/'=c.source)) AND i.course_id=c.id),s.attempted_at IS NOT NULL,s.verified_at IS NOT NULL,coalesce(s.code,'') FROM courses c LEFT JOIN catalog_ai_sources s ON s.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($1)`, aiSourcePatterns())
 	if e != nil {
 		return nil, e
 	}

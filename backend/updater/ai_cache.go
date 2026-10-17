@@ -24,6 +24,8 @@ type AIResolved struct {
 	Cached       bool
 	Usage        AIUsage
 	ModelName    string
+	Stage        string
+	Reason       string
 }
 
 // Reserve a complete extraction/verification pair atomically. Failed analyses
@@ -50,14 +52,24 @@ func (e *AIEngine) recordUsage(ctx context.Context, u AIUsage) error {
 	_, err := e.DB.Pool.Exec(ctx, `UPDATE catalog_ai_daily_budget SET total_tokens=total_tokens+$1 WHERE day=(now() AT TIME ZONE 'UTC')::date`, u.Total)
 	return err
 }
-func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, docs []AIDocument, at time.Time) (AIResolved, error) {
-	out := AIResolved{ModelName: e.ModelName}
+func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, docs []AIDocument, at time.Time) (out AIResolved, err error) {
+	out = AIResolved{ModelName: e.ModelName, Stage: "documents"}
+	defer func() {
+		if err == nil {
+			out.Stage = "complete"
+		} else if errors.Is(err, ErrAI) {
+			out.Reason = "response_rejected"
+		} else {
+			out.Reason = "operation_failed"
+		}
+	}()
 	if !aiDocumentsValid(c, docs) {
 		return out, ErrAI
 	}
 	digest, policy := aiBundleDigest(docs), aiEffectivePolicy()
 	var x, v []byte
-	err := e.DB.Pool.QueryRow(ctx, "SELECT extraction,verification FROM catalog_ai_cache WHERE course_id=$1 AND bundle_digest=$2 AND model=$3 AND policy=$4", courseID, digest, e.ModelName, policy).Scan(&x, &v)
+	out.Stage = "cache_read"
+	err = e.DB.Pool.QueryRow(ctx, "SELECT extraction,verification FROM catalog_ai_cache WHERE course_id=$1 AND bundle_digest=$2 AND model=$3 AND policy=$4", courseID, digest, e.ModelName, policy).Scan(&x, &v)
 	if err == nil {
 		if aiStrictJSON(x, &out.Extraction) != nil || aiStrictJSON(v, &out.Verification) != nil {
 			return out, ErrAI
@@ -75,9 +87,11 @@ func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, do
 	if e.Model == nil {
 		return out, ErrAI
 	}
+	out.Stage = "budget"
 	if err = e.reserve(ctx); err != nil {
 		return out, err
 	}
+	out.Stage = "extraction"
 	out.Extraction, out.Usage, err = e.Model.Extract(ctx, c, docs)
 	if usageErr := e.recordUsage(ctx, out.Usage); usageErr != nil {
 		return out, usageErr
@@ -85,19 +99,23 @@ func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, do
 	if err != nil {
 		return out, err
 	}
+	out.Stage = "grounding"
 	out.Extraction, err = aiIsolateClaims(c, docs, out.Extraction, at)
 	if err != nil {
 		return out, err
 	}
+	out.Stage = "carry_forward"
 	out.Extraction, err = e.carryForward(ctx, courseID, c, docs, out.Extraction, at)
 	if err != nil {
 		return out, err
 	}
+	out.Stage = "pre_verification"
 	// Check factual shape, exact quotes and scopes before spending a verification request.
 	if _, err = aiCompile(c, docs, out.Extraction, AIVerification{Complete: true}, at); err != nil {
 		return out, err
 	}
 	var usage AIUsage
+	out.Stage = "verification"
 	out.Verification, usage, err = e.Model.Verify(ctx, c, docs, out.Extraction)
 	if usageErr := e.recordUsage(ctx, usage); usageErr != nil {
 		return out, usageErr
@@ -108,9 +126,11 @@ func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, do
 	if err != nil {
 		return out, err
 	}
+	out.Stage = "validation"
 	if _, err = aiCompile(c, docs, out.Extraction, out.Verification, at); err != nil {
 		return out, err
 	}
+	out.Stage = "cache_write"
 	x, _ = json.Marshal(out.Extraction)
 	v, _ = json.Marshal(out.Verification)
 	_, err = e.DB.Pool.Exec(ctx, `INSERT INTO catalog_ai_cache(course_id,bundle_digest,model,policy,extraction,verification) VALUES($1,$2,$3,$4,$5::jsonb,$6::jsonb) ON CONFLICT DO NOTHING`, courseID, digest, e.ModelName, policy, x, v)

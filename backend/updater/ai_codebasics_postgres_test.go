@@ -25,6 +25,8 @@ func TestAICodeBasicsPipelineCacheBillingPrivacyAndQueuedBinding(t *testing.T) {
 	db := postgresFixture(t)
 	ctx := context.Background()
 	raw, policy, c, record := aiBasicsFixture(t)
+	record.Title = "Курс Python"
+	record.Offers[0].Name = "Бесплатная полная программа"
 	record.Profile = nil
 	record.Audience = []string{"unknown"}
 	record.Goals = []string{"unknown"}
