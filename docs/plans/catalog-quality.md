@@ -106,3 +106,48 @@ bug. A prerequisite alone does not confirm suitability for everyone above that
 level. The audit deliberately does not assign those 79 unknown courses to beginner
 or intermediate profiles. Source recovery and safe enrichment must supply that
 evidence first. Overlapping audience tags mean these rows cannot be added together.
+
+75 of the 79 unknown Python audience records belong to Stepik; the remaining
+four are Skillbox (2), OTUS (1) and PurpleSchool (1). The archived compact report
+is [catalog-filter-audit-2026-10-17.json](../reports/catalog-filter-audit-2026-10-17.json).
+The executable report includes all unknown course IDs; the archive omits repeated
+ID lists.
+
+## Acceptance and remaining operations
+
+- Isolated PostgreSQL 17: all backend tests passed with `go test -race ./backend/...`.
+  This includes provider cooldown/recovery, other-provider progress, legacy free
+  offer/cache/publication, queued binding remap protection, budget persistence,
+  invalid response stages and empty-result reporting. No production DB edits.
+- `go vet ./backend/...` passed. Python operational/release helpers: 30 tests,
+  29 passed and one explicitly optional Docker integration skipped.
+- The audit command's HTTP tests cover catalogs spanning multiple pages, unknown
+  counts, duplicated pages and content changes during the audit.
+- No paid model requests were made for implementation/acceptance. A successful
+  unit test does not claim that a blocked source or all historic cards are enriched.
+- Anonymous checks from this environment on 2026-10-17 returned HTTP 403 for the
+  Stepik API probe. It does not establish the response from the production VDS.
+  Existing Stepik cards remain available and native collectors keep their own
+  safeguards; source recovery is external to this patch.
+- #135 (Netology identity contract) and #146/#133 (remaining source/semantic
+  acceptance) retain their existing blockers. This epic does not close them
+  merely because a reader is registered or an observation is queued.
+- #98/#91 require the outstanding physical-device/manual screen-reader checks;
+  backend diagnostics are not evidence of that acceptance.
+- #124 tracks the independent HTTPS/certificate work. Release/deploy workflow
+  checks and their concrete results are linked in the PR/issue acceptance record.
+
+After deployment, use **Actions → Enrich catalog AI → Run workflow → status**
+for a free status check. An explicit `enrich` run processes due courses under the
+selected temporary cap; it is paid work and not part of this development audit.
+It will report paused Stepik separately, useful/empty queued observations, fixed
+rejection stages and full source-state counts. Queue publication is asynchronous;
+run status again after the publisher to see `ai_verified` versus `ai_no_change`.
+Permanent budgets and the Monday/Thursday 21:00 Moscow schedule are unchanged.
+
+HTTPS retry on 2026-10-17 again reached the certificate authority and failed on
+its shared registered-domain limit for `fvds.ru` (50 certificates/168 hours).
+The authority returned retry-after **2026-10-17 15:21:43 UTC (18:21:43 Moscow)**.
+[Workflow evidence](https://github.com/alekslesik/devcourse-finder/actions/runs/39032861135).
+Trusted HTTPS, renewal and independent HTTPS acceptance are still unverified;
+#124 remains open. No looped issuance retries or alternative trust bypass added.

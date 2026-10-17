@@ -3,6 +3,13 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.30.0] - 2026-10-17
+
+- Isolate Stepik outages before AI batch selection with persisted cooldown and automatic recovery.
+- Support bound legacy Practicum and OTUS URLs and curated CodeBasics free offers without changing prices or publication safeguards.
+- Expose AI rejection stages, useful and empty observation counts, and catalog-wide source status in operational reports.
+- Add a complete public catalog filter audit with strict and unknown-inclusive API comparisons and snapshot consistency checks.
+
 ## [0.29.2] - 2026-10-16
 
 - Keep the mobile tariff action dock visible after fast scrolling past the selected tariff.
