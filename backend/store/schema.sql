@@ -199,3 +199,10 @@ CREATE TABLE IF NOT EXISTS catalog_ai_provider_health (
  code text NOT NULL CHECK(code IN ('available','source_unavailable')),
  checked_at timestamptz NOT NULL, next_probe_at timestamptz NOT NULL
 );
+
+ALTER TABLE catalog_ai_sources ADD COLUMN IF NOT EXISTS diagnostic_stage text NOT NULL DEFAULT '';
+ALTER TABLE catalog_ai_sources ADD COLUMN IF NOT EXISTS diagnostic_reason text NOT NULL DEFAULT '';
+ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS useful_queued integer NOT NULL DEFAULT 0;
+ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS empty_queued integer NOT NULL DEFAULT 0;
+ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS verified_claims integer NOT NULL DEFAULT 0;
+ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS discarded_claims integer NOT NULL DEFAULT 0;

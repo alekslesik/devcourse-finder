@@ -49,3 +49,20 @@ publication/build state and current free-policy validation still apply. A
 manual extra offer does not inherit learning conditions. Anonymous checks on
 2026-10-17 confirmed the Python and Go page headers still match curated titles;
 there is no reason to relax title matching.
+
+## AI diagnostics
+
+Each course log and recent status record includes a fixed `stage` and `reason`.
+Stages distinguish extraction, grounding, verification, final validation, enqueue
+and publication. Raw prompts, model responses, secrets and underlying errors are
+not logged. Existing generic error codes remain compatible.
+
+Batch JSON and the Actions summary add `useful_queued`, `empty_queued`,
+`verified_claims` and `discarded_claims`. Useful means at least one independently
+verified fact; it does not promise a changed field (operator-owned facts can still
+win). Empty observations retain existing safe disappearance/publication semantics;
+we do not interpret an empty response as a model failure or retry it immediately.
+Status adds full `source_codes` counts instead of extrapolating its last 40 lines.
+The three historical `invalid_ai_response` events cannot be diagnosed retrospectively:
+their raw responses were deliberately not retained. Recorded tests cover extraction,
+grounding and invalid verification-index failures without paid replay.

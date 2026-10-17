@@ -323,7 +323,7 @@ func (s *Service) publishAI(ctx context.Context) (int, error) {
 			if _, err := tx.Exec(ctx, "UPDATE catalog_ai_observations SET processed_at=now(),code=$2 WHERE id=$1 AND processed_at IS NULL", id, code); err != nil {
 				return nil, err
 			}
-			if _, err := tx.Exec(ctx, `UPDATE catalog_ai_sources SET code=$2,verified_at=CASE WHEN $2 IN ('ai_verified','ai_no_change') THEN $3 ELSE verified_at END WHERE course_id=$1 AND attempted_at<=$3`, courseID, code, at); err != nil {
+			if _, err := tx.Exec(ctx, `UPDATE catalog_ai_sources SET code=$2,diagnostic_stage='publication',diagnostic_reason=$2,verified_at=CASE WHEN $2 IN ('ai_verified','ai_no_change') THEN $3 ELSE verified_at END WHERE course_id=$1 AND attempted_at<=$3`, courseID, code, at); err != nil {
 				return nil, err
 			}
 			return courses, nil

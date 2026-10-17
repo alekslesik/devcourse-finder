@@ -74,13 +74,17 @@ type AIService struct {
 	Client *http.Client
 }
 type AIRunResult struct {
-	ID        int64  `json:"run_id"`
-	Attempted int    `json:"attempted"`
-	Queued    int    `json:"queued"`
-	Cached    int    `json:"cached"`
-	Failed    int    `json:"failed"`
-	Tokens    int    `json:"tokens"`
-	Status    string `json:"status"`
+	ID              int64  `json:"run_id"`
+	Attempted       int    `json:"attempted"`
+	Queued          int    `json:"queued"`
+	Cached          int    `json:"cached"`
+	Failed          int    `json:"failed"`
+	Tokens          int    `json:"tokens"`
+	Status          string `json:"status"`
+	Useful          int    `json:"useful_queued"`
+	Empty           int    `json:"empty_queued"`
+	VerifiedClaims  int    `json:"verified_claims"`
+	DiscardedClaims int    `json:"discarded_claims"`
 }
 
 func (s *AIService) fail(ctx context.Context, id, code string) error {
@@ -114,7 +118,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	defer func() {
 		finish, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_, e := s.DB.Pool.Exec(finish, "UPDATE catalog_ai_runs SET finished_at=now(),status=$2,attempted=$3,queued=$4,cached=$5,failed=$6,tokens=$7 WHERE id=$1", result.ID, result.Status, result.Attempted, result.Queued, result.Cached, result.Failed, result.Tokens)
+		_, e := s.DB.Pool.Exec(finish, "UPDATE catalog_ai_runs SET finished_at=now(),status=$2,attempted=$3,queued=$4,cached=$5,failed=$6,tokens=$7,useful_queued=$8,empty_queued=$9,verified_claims=$10,discarded_claims=$11 WHERE id=$1", result.ID, result.Status, result.Attempted, result.Queued, result.Cached, result.Failed, result.Tokens, result.Useful, result.Empty, result.VerifiedClaims, result.DiscardedClaims)
 		if err == nil {
 			err = e
 		}
@@ -194,9 +198,15 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 		local, cancel := context.WithTimeout(ctx, 300*time.Second)
 		candidate, docs, readErr := aiFetchDocuments(local, s.DB, client, c)
 		code := "source_unavailable"
+		stage, reason := "source", "unavailable"
+		if errors.Is(readErr, ErrAI) {
+			code = "source_contract_rejected"
+			reason = "contract_rejected"
+		}
 		if readErr != nil {
 			if detail := rejectionCode(readErr, ""); detail != "" {
 				code = "source_" + detail
+				reason = detail
 			}
 		}
 		modelUsed, cached, tokens := "", false, 0
@@ -206,6 +216,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			resolved, readErr = resolver.Resolve(local, id, candidate, docs, at)
 			modelUsed, cached, tokens = resolved.ModelName, resolved.Cached, resolved.Usage.Total
 			discarded = resolved.Extraction.DiscardedClaims
+			stage, reason = resolved.Stage, resolved.Reason
 			if readErr == nil {
 				verified = len(resolved.Verification.Verified)
 			}
@@ -213,10 +224,19 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			result.Tokens += resolved.Usage.Total
 			if readErr == nil {
 				event := AIEvent{Version: 1, CourseID: id, IdentityDigest: aiIdentityDigest(c), Candidate: candidate, ObservedAt: at, Model: resolved.ModelName, Policy: aiEffectivePolicy(), Documents: docs, Extraction: resolved.Extraction, Verification: resolved.Verification}
+				stage, reason = "enqueue", "queue_failed"
 				readErr = publisher.enqueueAI(local, event)
 				code = "ai_queue_failed"
 				if readErr == nil {
 					result.Queued++
+					if verified > 0 {
+						result.Useful++
+						reason = "verified_facts"
+					} else {
+						result.Empty++
+						reason = "no_verified_facts"
+					}
+					stage = "queued"
 					if resolved.Cached {
 						result.Cached++
 					}
@@ -225,6 +245,8 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			}
 		}
 		cancel()
+		result.VerifiedClaims += verified
+		result.DiscardedClaims += discarded
 		if readErr != nil {
 			result.Failed++
 			var providerError *AIProviderError
@@ -238,7 +260,10 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 				return result, err
 			}
 		}
-		slog.Info("AI course checked", "course_id", id, "code", code, "model", modelUsed, "cached", cached, "tokens", tokens, "discarded_claims", discarded, "verified_claims", verified)
+		if _, err = s.DB.Pool.Exec(ctx, "UPDATE catalog_ai_sources SET diagnostic_stage=$2,diagnostic_reason=$3 WHERE course_id=$1 AND attempted_at=$4 AND code=$5", id, stage, reason, at, code); err != nil {
+			return result, err
+		}
+		slog.Info("AI course checked", "stage", stage, "reason", reason, "course_id", id, "code", code, "model", modelUsed, "cached", cached, "tokens", tokens, "discarded_claims", discarded, "verified_claims", verified)
 		if aiProviderUnavailable(readErr) {
 			break
 		}
@@ -323,27 +348,31 @@ func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	codes, err := aiSourceCodes(ctx, db)
+	if err != nil {
+		return err
+	}
 	health, err := aiProviderHealth(ctx, db)
 	if err != nil {
 		return err
 	}
-	if err = json.NewEncoder(w).Encode(map[string]any{"provider_health": health, "provider_coverage": coverage, "ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
+	if err = json.NewEncoder(w).Encode(map[string]any{"source_codes": codes, "provider_health": health, "provider_coverage": coverage, "ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
 		return err
 	}
-	rows, err := db.Pool.Query(ctx, "SELECT course_id,code,attempted_at,verified_at,next_attempt_at,failures FROM catalog_ai_sources ORDER BY attempted_at DESC LIMIT 40")
+	rows, err := db.Pool.Query(ctx, "SELECT course_id,code,attempted_at,verified_at,next_attempt_at,failures,diagnostic_stage,diagnostic_reason FROM catalog_ai_sources ORDER BY attempted_at DESC LIMIT 40")
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var id, code string
+		var id, code, stage, reason string
 		var at, next time.Time
 		var verified *time.Time
 		var failures int
-		if err = rows.Scan(&id, &code, &at, &verified, &next, &failures); err != nil {
+		if err = rows.Scan(&id, &code, &at, &verified, &next, &failures, &stage, &reason); err != nil {
 			return err
 		}
-		if err = json.NewEncoder(w).Encode(map[string]any{"course_id": id, "code": code, "attempted_at": at, "verified_at": verified, "next_attempt_at": next, "failures": failures}); err != nil {
+		if err = json.NewEncoder(w).Encode(map[string]any{"course_id": id, "code": code, "stage": stage, "reason": reason, "attempted_at": at, "verified_at": verified, "next_attempt_at": next, "failures": failures}); err != nil {
 			return err
 		}
 	}
