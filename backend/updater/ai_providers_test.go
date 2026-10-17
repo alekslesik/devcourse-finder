@@ -42,3 +42,17 @@ func TestAIRegistrySourcesRemainValidAndBudgetScheduleUnchanged(t *testing.T) {
 		t.Fatal("registry changed weekly budget scheduling")
 	}
 }
+
+func TestAILegacySourceSpellingsAreNarrow(t *testing.T) {
+	for _, raw := range []string{"https://practicum.yandex.ru/backend-developer/", "https://otus.ru/lessons/golang-basic/"} {
+		c, ok := aiCandidateURL(raw)
+		if !ok || c.URL == raw {
+			t.Fatal(raw)
+		}
+		for _, suffix := range []string{"/", "?ref=x", "#intro"} {
+			if _, ok := aiCandidateURL(raw + suffix); ok {
+				t.Fatal("unsafe spelling", raw+suffix)
+			}
+		}
+	}
+}

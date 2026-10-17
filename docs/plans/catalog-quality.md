@@ -32,3 +32,20 @@ new scheduler: Monday/Thursday Moscow scheduling remains in force. The manual
 Actions enrichment workflow can also perform that next run without SQL resets.
 No model request is made for the probe, and a pause does not mutate course facts
 or course retry dates. Per-course readers still validate identity after recovery.
+
+## Legacy identities
+
+Practicum and OTUS accept exactly one historical trailing slash; queries,
+fragments, alternative hosts and changed paths remain rejected. Coverage uses the
+same equivalence. Stored URLs and identity digests are not rewritten. Practicum
+requires the saved external/course ID, and queued observations revalidate the
+primary/tariff binding before publication.
+
+CodeBasics has a second proven mismatch: curated free offers are named
+`Бесплатная полная программа`, whereas normalization generates `Полная программа`.
+Accept the historical name only for the bound `<course-id>-course` offer with
+an explicit zero price and free flag. Native page identity, title, language,
+publication/build state and current free-policy validation still apply. A
+manual extra offer does not inherit learning conditions. Anonymous checks on
+2026-10-17 confirmed the Python and Go page headers still match curated titles;
+there is no reason to relax title matching.

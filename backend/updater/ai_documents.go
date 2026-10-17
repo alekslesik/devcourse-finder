@@ -3,8 +3,6 @@ package updater
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"github.com/jackc/pgx/v5"
 	"net/http"
 	"sort"
 	"strconv"
@@ -90,9 +88,9 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 		bindings := map[string]practicumTariffBinding{}
 		var primaryOffer string
 		var encoded []byte
-		err = db.Pool.QueryRow(ctx, "SELECT offer_id,practicum_tariffs FROM catalog_identities WHERE adapter='yandex' AND canonical_url=$1", c.URL).Scan(&primaryOffer, &encoded)
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-			return c, nil, err
+		err = db.Pool.QueryRow(ctx, "SELECT offer_id,practicum_tariffs FROM catalog_identities WHERE adapter='yandex' AND canonical_url=$1 AND external_id=$2 AND course_id=$3", c.URL, c.ExternalID, course.ID).Scan(&primaryOffer, &encoded)
+		if err != nil {
+			return c, nil, ErrAI
 		}
 		if err == nil {
 			if len(encoded) > 0 && string(encoded) != "null" && json.Unmarshal(encoded, &bindings) != nil {
@@ -108,7 +106,7 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 			}
 			offerExists := false
 			for _, o := range course.Offers {
-				if o.ID == binding.OfferID && o.URL == c.URL {
+				if o.ID == binding.OfferID && aiSourceMatches(o.URL, c) {
 					offerExists = true
 				}
 			}
@@ -130,6 +128,7 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 			}
 			docs = append(docs, AIDocument{ID: "offer:" + binding.OfferID, Source: c.URL, Scope: "offer", OfferID: binding.OfferID, Text: aiNormalize(text), Digest: digest})
 		}
+		bindingDigest := aiPracticumBindingDigest(course.ID, primaryOffer, encoded)
 		// Remove every purchasable flow card from the course-level document.
 		var remove []*html.Node
 		visitNodes(doc, func(n *html.Node) {
@@ -148,7 +147,10 @@ func aiFetchDocuments(ctx context.Context, db *store.DB, client *http.Client, co
 		if len(text) < 200 {
 			return c, nil, ErrAI
 		}
-		docs = append(docs, AIDocument{ID: "course", Source: c.URL, Scope: "course", Text: text, Digest: digest})
+		docs = append(docs, AIDocument{ID: "course", Source: c.URL, Scope: "course", Text: text, Digest: digest, BindingDigest: bindingDigest})
+		for i := range docs {
+			docs[i].BindingDigest = bindingDigest
+		}
 	} else {
 		return c, nil, ErrAI
 	}

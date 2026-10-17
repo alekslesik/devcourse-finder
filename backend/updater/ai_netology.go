@@ -36,13 +36,13 @@ func aiFetchNetologyDocuments(ctx context.Context, db *store.DB, course catalog.
 // enrollment observations are enqueued here; only scoped public text is output.
 func aiNetologyDocuments(raw []byte, c Candidate, current catalog.Course, binding aiNetologyBinding, digest string, at time.Time) ([]AIDocument, error) {
 	verified, observation, err := collectNetology(raw, c, at)
-	if err != nil || binding.FamilyID <= 0 || observation.NetologyFamilyID != binding.FamilyID || binding.ProgramID <= 0 || observation.NetologyProgramID != binding.ProgramID || current.Source != c.URL || verified.Language != current.Language || normalizeTitle(verified.Title) != normalizeTitle(current.Title) {
+	if err != nil || binding.FamilyID <= 0 || observation.NetologyFamilyID != binding.FamilyID || binding.ProgramID <= 0 || observation.NetologyProgramID != binding.ProgramID || !aiSourceMatches(current.Source, c) || verified.Language != current.Language || normalizeTitle(verified.Title) != normalizeTitle(current.Title) {
 		return nil, ErrAI
 	}
 	var boundOffer *catalog.Offer
 	for i := range current.Offers {
 		o := &current.Offers[i]
-		if o.ID == binding.OfferID && o.URL == c.URL && normalizeTitle(o.Name) == normalizeTitle(verified.Offers[0].Name) {
+		if o.ID == binding.OfferID && aiSourceMatches(o.URL, c) && normalizeTitle(o.Name) == normalizeTitle(verified.Offers[0].Name) {
 			boundOffer = o
 		}
 	}
@@ -145,6 +145,9 @@ func aiNetologyBindingDigest(courseID string, binding aiNetologyBinding) string 
 }
 
 func aiEventSourceIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool, error) {
+	if e.Candidate.Adapter == "yandex" {
+		return aiPracticumEventIdentityValid(ctx, tx, e)
+	}
 	if aiBoundReaders[e.Candidate.Adapter] != nil {
 		return aiBoundEventIdentityValid(ctx, tx, e)
 	}

@@ -71,7 +71,7 @@ func aiBoundEventIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool,
 	return true, nil
 }
 func aiBindingMatches(c Candidate, current, remote catalog.Course, o Observation, b aiSavedBinding) bool {
-	if current.ID != remote.ID || current.Source != c.URL || current.Language != remote.Language || normalizeTitle(current.Title) != normalizeTitle(remote.Title) || len(remote.Offers) == 0 {
+	if current.ID != remote.ID || !aiSourceMatches(current.Source, c) || current.Language != remote.Language || normalizeTitle(current.Title) != normalizeTitle(remote.Title) || len(remote.Offers) == 0 {
 		return false
 	}
 	if b.OfferID != remote.Offers[0].ID {
@@ -105,7 +105,7 @@ func aiBindingMatches(c Candidate, current, remote catalog.Course, o Observation
 	for _, v := range remote.Offers {
 		found := false
 		for _, x := range current.Offers {
-			if x.ID == v.ID && x.URL == c.URL && normalizeTitle(x.Name) == normalizeTitle(v.Name) {
+			if x.ID == v.ID && aiSourceMatches(x.URL, c) && normalizeTitle(x.Name) == normalizeTitle(v.Name) {
 				found = true
 			}
 		}

@@ -225,7 +225,7 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 		if current.ID != e.CourseID {
 			continue
 		}
-		if current.Status != "published" || current.Demo || current.Source != e.Candidate.URL || aiIdentityDigest(current) != e.IdentityDigest {
+		if current.Status != "published" || current.Demo || !aiSourceMatches(current.Source, e.Candidate) || aiIdentityDigest(current) != e.IdentityDigest {
 			*code = "protected_ai_identity"
 			return nil, nil
 		}
@@ -235,7 +235,7 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 			if d.Scope == "offer" {
 				found := false
 				for _, o := range c.Offers {
-					if o.ID == d.OfferID && o.URL == c.Source {
+					if o.ID == d.OfferID && aiSourceMatches(o.URL, e.Candidate) {
 						found = true
 					}
 				}
