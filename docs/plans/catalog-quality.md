@@ -66,3 +66,43 @@ Status adds full `source_codes` counts instead of extrapolating its last 40 line
 The three historical `invalid_ai_response` events cannot be diagnosed retrospectively:
 their raw responses were deliberately not retained. Recorded tests cover extraction,
 grounding and invalid verification-index failures without paid replay.
+
+## Repeatable public filter audit
+
+Run from the repository with Go 1.24+ (no credentials or model key required):
+
+```sh
+go run ./backend/cmd/catalog-audit --url https://your-domain.example > filter-audit.json
+```
+
+The audit fetches **every page** of the public catalog, evaluates the backend
+rules over that snapshot, and compares 40 language/experience/goal combinations
+against both strict and unknown-inclusive public API searches. Rows split eligible
+courses into confirmed, unknown and incompatible; unknown IDs identify records
+needing evidence. It fetches all pages again and rejects a changed snapshot,
+duplicate IDs, incomplete pages or mismatched counts. `data_as_of` is the API's
+request evaluation time, not an immutable catalog revision, so timestamp equality
+across pages would be an incorrect consistency check. Exit 0 requires all counts
+and the before/after content digest to match. The report describes the visible
+catalog; it does not audit unpublished or otherwise ineligible records.
+
+### Initial evidence, 2026-10-17 15:29–15:30 Moscow
+
+174 courses, including 114 Stepik records; stable content digest
+`3768e7da727babf189e09319b3318a9df27e174557d09218b786678ff0fd37d5`.
+All 40 combinations and both API modes matched backend rules. Python had 89
+eligible programs:
+
+| Experience | Confirmed | Unknown | Incompatible |
+| --- | ---: | ---: | ---: |
+| Starting from zero | 8 | 79 | 2 |
+| Know the basics | 0 | 79 | 10 |
+| Build projects | 0 | 79 | 10 |
+| Working developer | 2 | 79 | 8 |
+| Switching languages | 7 | 79 | 3 |
+
+The main observed loss is missing suitability evidence, not a count/pagination
+bug. A prerequisite alone does not confirm suitability for everyone above that
+level. The audit deliberately does not assign those 79 unknown courses to beginner
+or intermediate profiles. Source recovery and safe enrichment must supply that
+evidence first. Overlapping audience tags mean these rows cannot be added together.
