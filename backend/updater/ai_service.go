@@ -27,6 +27,7 @@ type AIConfig struct {
 	DeepSeekVerifyModel string
 	BatchSize           int
 	DailyLimit          int
+	CourseIDs           []string
 }
 
 func LoadAIConfig() (AIConfig, error) {
@@ -64,6 +65,13 @@ func LoadAIConfig() (AIConfig, error) {
 			*item.target = n
 		}
 	}
+	if raw := os.Getenv("CATALOG_AI_COURSE_IDS"); raw != "" {
+		var err error
+		c.CourseIDs, err = ParseAICourseIDs(raw)
+		if err != nil {
+			return c, err
+		}
+	}
 	return c, nil
 }
 
@@ -94,6 +102,29 @@ func (s *AIService) fail(ctx context.Context, id, code string) error {
 func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	if s.Config.BatchSize < 1 || s.Config.BatchSize > 40 || s.Config.DailyLimit < 1 || s.Config.DailyLimit > 200 {
 		return result, ErrAI
+	}
+	probeStepik := len(s.Config.CourseIDs) == 0
+	if len(s.Config.CourseIDs) > 0 {
+		if _, err := ParseAICourseIDs(strings.Join(s.Config.CourseIDs, ",")); err != nil {
+			return result, err
+		}
+		courses, err := s.DB.Load(ctx)
+		if err != nil {
+			return result, err
+		}
+		eligible := map[string]bool{}
+		stepik := map[string]bool{}
+		for _, c := range courses {
+			_, supported := aiCandidateURL(c.Source)
+			eligible[c.ID] = supported && c.Status == "published" && !c.Demo
+			stepik[c.ID] = strings.HasPrefix(c.Source, "https://stepik.org/course/")
+		}
+		for _, id := range s.Config.CourseIDs {
+			if !eligible[id] {
+				return result, ErrAI
+			}
+			probeStepik = probeStepik || stepik[id]
+		}
 	}
 	lock, err := s.DB.Pool.Begin(ctx)
 	if err != nil {
@@ -128,14 +159,17 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 		client = NewClient()
 		defer client.CloseIdleConnections()
 	}
-	stepikAvailable, err := aiStepikAvailable(ctx, s.DB, client)
-	if err != nil {
-		return result, err
+	stepikAvailable := true
+	if probeStepik {
+		stepikAvailable, err = aiStepikAvailable(ctx, s.DB, client)
+		if err != nil {
+			return result, err
+		}
 	}
 	if !stepikAvailable {
 		slog.Warn("AI source paused", "provider", "stepik", "code", "source_unavailable")
 	}
-	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND ($3 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns(), stepikAvailable)
+	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND ($3 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (coalesce(cardinality($4::text[]),0)=0 OR c.id=ANY($4::text[])) AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns(), stepikAvailable, s.Config.CourseIDs)
 	if err != nil {
 		return result, err
 	}
