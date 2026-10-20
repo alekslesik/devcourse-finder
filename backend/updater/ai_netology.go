@@ -36,6 +36,9 @@ func aiFetchNetologyDocuments(ctx context.Context, db *store.DB, course catalog.
 // enrollment observations are enqueued here; only scoped public text is output.
 func aiNetologyDocuments(raw []byte, c Candidate, current catalog.Course, binding aiNetologyBinding, digest string, at time.Time) ([]AIDocument, error) {
 	verified, observation, err := collectNetology(raw, c, at)
+	if err != nil && rejectionCode(err, "") == "invalid_netology_payload" {
+		return aiNetologyPublicDocuments(raw, c, current, binding, digest)
+	}
 	if err != nil || binding.FamilyID <= 0 || observation.NetologyFamilyID != binding.FamilyID || binding.ProgramID <= 0 || observation.NetologyProgramID != binding.ProgramID || !aiSourceMatches(current.Source, c) || verified.Language != current.Language || normalizeTitle(verified.Title) != normalizeTitle(current.Title) {
 		return nil, ErrAI
 	}
@@ -166,6 +169,9 @@ func aiEventSourceIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool
 		return false, err
 	}
 	digest := aiNetologyBindingDigest(e.CourseID, binding)
+	if len(e.Documents) == 1 && e.Documents[0].ID == "course-public" && e.Documents[0].Partial && e.Documents[0].Scope == "course" && e.Documents[0].OfferID == "" {
+		digest = aiNetologyPublicBindingDigest(e.CourseID, binding)
+	}
 	for _, doc := range e.Documents {
 		if doc.BindingDigest != digest {
 			return false, nil

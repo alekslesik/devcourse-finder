@@ -168,3 +168,27 @@ readers still verify its native product/tier contract. `ever_verified_courses`
 may include prior successes whose current attempt fails; none of these counters
 measures fact completeness or model accuracy. Source rejection details use fixed
 `source_*` codes without logging provider bodies, credentials or raw errors.
+
+### Netology public curriculum — 2026-10-20 (#135)
+
+The current registration/curriculum template has no numeric checkout identity.
+A separate **partial course-only** reader now checks canonical URL, Russian H1,
+language, query slug, first registration slug and uniquely rendered typed module
+blocks against the existing catalog binding. Contradictory legacy product state
+is rejected. Only public descriptions and module/lesson descriptions are sent;
+registration variants, lead forms and payment conditions are excluded. This does
+not refresh or assert a current numeric checkout product, price or tariff.
+
+An anonymous live Go check prepared 12,262 bytes of course text on October 20.
+Repeat it with `AI_NETOLOGY_PUBLIC_SOURCE_CHECK=1 go test ./backend/updater -run
+'^TestAINetologyPublicLiveSource$' -v`. It uses a saved-binding fixture, not a
+production database or a paid model. The projected fixture records provenance
+alongside its HTML. Its DOM shells/description are synthetic; curriculum fields
+are projected from the public response.
+
+PostgreSQL tests exercise a mocked extraction/review, remap rejection, cached
+recovery and publication without changing any offer or financial freshness.
+Partial course input preserves previously verified facts omitted by the selected
+sections. Fully observed documents retain their existing disappearance behavior.
+Numeric product and tariff live acceptance in #135 remains outstanding; course
+profile readiness must not be reported as tariff verification.

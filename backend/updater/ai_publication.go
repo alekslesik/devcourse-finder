@@ -245,7 +245,13 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 				}
 			}
 		}
-		applyAIProfile(&c, facts.Profile, e.Extraction.DiscardedClaims > 0)
+		partialProfile := e.Extraction.DiscardedClaims > 0
+		for _, d := range e.Documents {
+			if d.Scope == "course" && d.Partial {
+				partialProfile = true
+			}
+		}
+		applyAIProfile(&c, facts.Profile, partialProfile)
 		for i := range c.Offers {
 			if incoming, observed := facts.Learning[c.Offers[i].ID]; observed {
 				applyAILearning(&c.Offers[i], incoming, e.Extraction.DiscardedClaims > 0)

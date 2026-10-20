@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.30.1] - 2026-10-20
+
+- Read the current Netology public curriculum as partial course metadata while preserving tariff and financial identity guards.
+
 ## [0.30.0] - 2026-10-17
 
 - Isolate Stepik outages before AI batch selection with persisted cooldown and automatic recovery.
