@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.31.0] - 2026-10-20
+
+- Verify partial free Hexlet course profiles using exact official start links without importing paid-program promotions.
+- Add bounded source-readiness checks and explicit published-course selection for manual AI acceptance without bypassing shared budgets, cache or cooldowns.
+
 ## [0.30.1] - 2026-10-20
 
 - Read the current Netology public curriculum as partial course metadata while preserving tariff and financial identity guards.

@@ -226,3 +226,51 @@ No paid model calls or production catalog writes were made. #133 remains open
 for Netology's specific current tariff, Hexlet free/individual tariff scope and
 a limited end-to-end paid validation; this PR does not erase
 those outstanding acceptance criteria.
+
+### Bounded source checks and free Hexlet profiles — 2026-10-20
+
+The free Java and JavaScript landings now have separate course-only identity
+contracts: exact canonical URL, one matching H1, language, and official start
+links. JavaScript explicitly uses the captured `js-basics-free/goto` alias;
+this is not a general redirect/alias rule. Conflicting start links, payment
+variants and contradictory structured product data are rejected. Captured
+projections and response digests are retained next to the fixtures. Only the
+description and selected course sections are sent to the model. Paid profession
+promotions and their duration/career benefits are not free-course evidence.
+
+The anonymous live checks prepared Java 151, frontend 210, free Java 291 and free
+JavaScript 286 bytes of partial course text. Netology prepared 12,262 bytes of
+curriculum text. Skillfactory prepared 275 bytes on a successful retry after an
+initial source-read timeout. These are source-readiness measurements, not verified model
+claims, refreshed tariffs or complete-source coverage.
+
+`catalog-ai sources netology-go,hexlet-java-free` reads at most eight explicitly
+selected published courses using current database bindings and the production
+readers. It reports document counts, scope, partial status and text sizes, with
+zero model calls and no database writes. `partial_course_only_tariff_unverified`
+means exactly that: a usable course profile does not independently verify a
+checkout product or tariff. Invalid selections are rejected before remote reads.
+
+The **Enrich catalog AI** workflow supports `mode=sources` with `course_ids` for
+this read-only check. For limited real acceptance, select `mode=enrich`, a short
+explicit `course_ids` list and the normal shared daily request cap. The helper
+forces one batch for selected runs. Existing cooldowns, cache, UTC budget and
+OpenAI → DeepSeek fallback remain active. No force-due updates or financial
+publication are introduced. Target selection is rejected in the scheduled
+`serve` command, so it cannot silently narrow the permanent worker. Omitting
+`course_ids` retains the existing due-course backfill behavior.
+
+Regression coverage includes free/paid promotion isolation, conflicting start
+identities, remapping after enqueue, cached publication without offer/financial
+changes, exclusion of unselected courses, cooldown and shared-budget retention,
+and source-check database immutability. PostgreSQL model tests use mocks.
+Local validation: the complete `go test -race ./backend/...` suite against an
+isolated PostgreSQL 17 database, `go vet ./backend/...`, 15 manual-helper tests,
+four release-helper tests and the release metadata check passed.
+
+Still required to close #135/#133: independent current numeric product and
+specific tariff identity for Netology; verified individual tariff conditions
+where unavailable; and recorded limited live extraction/review/publication
+acceptance. The current Netology registration-only source does not supply the
+numeric identity, and code must not manufacture it. Neither issue is closed by
+the source checks or the new free-course profile support.
