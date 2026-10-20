@@ -96,8 +96,8 @@ func run() error {
 				defer done()
 				return updater.AISourceCheck(bounded, db, nil, args[2], os.Stdout)
 			}
-			if len(args) != 2 {
-				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health", nil)
+			if len(args) != 2 && !(len(args) == 3 && args[1] == "verify") {
+				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health or catalog-ai verify COURSE_ID", nil)
 			}
 			stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 			defer cancel()
@@ -112,7 +112,7 @@ func run() error {
 			if args[1] == "status" {
 				return updater.AIStatus(stop, db, os.Stdout)
 			}
-			if args[1] != "serve" && args[1] != "once" {
+			if args[1] != "serve" && args[1] != "once" && args[1] != "verify" {
 				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health", nil)
 			}
 			config, err := updater.LoadAIConfig()
@@ -120,6 +120,21 @@ func run() error {
 				return commandFailure("ai_config", "invalid_ai_configuration", "Set OPENAI_API_KEY and validate the AI collector configuration", err)
 			}
 			service := updater.AIService{DB: db, Config: config}
+			if args[1] == "verify" {
+				if len(args) != 3 {
+					return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai verify COURSE_ID", nil)
+				}
+				bounded, done := context.WithTimeout(stop, 10*time.Minute)
+				defer done()
+				report, verifyErr := service.VerifyCourse(bounded, args[2])
+				if err := json.NewEncoder(os.Stdout).Encode(report); err != nil {
+					return err
+				}
+				if verifyErr != nil {
+					return commandFailure("ai_verification", "ai_verification_failed", "Single-course AI verification did not pass; inspect its report", verifyErr)
+				}
+				return nil
+			}
 			if args[1] == "serve" {
 				if len(config.CourseIDs) > 0 {
 					return commandFailure("ai_config", "invalid_ai_configuration", "Explicit course selection is only supported by catalog-ai once", nil)

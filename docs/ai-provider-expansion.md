@@ -301,3 +301,47 @@ PostgreSQL cache/remap/publication checks cover this mode. Partial offer input
 preserves previously verified workload/support absent from the limited text.
 Real extraction/review/publication acceptance is recorded separately after the
 release is deployed; source preparation alone does not close #135.
+
+### Bound Hexlet tiers and addressable real-model acceptance (#133)
+
+Hexlet Java/frontend now bind each existing named tariff through the complete
+public CTA → popup hook → record ID → official payment variant chain. Only a
+unique innermost named card with that chain contributes text. Scoped source
+labels include calendar study duration, explicit weekly workload and personal
+mentor consultations. Billing periods, prices, inherited-tier promises, school
+claims and operator-added offers are excluded. Partial offer documents preserve
+older verified facts outside their observed fields. A renamed/mismatched hook,
+foreign program/payment variant, duplicate card or mapping change cannot attest
+that tariff. Source fixtures include provenance and negative binding controls.
+
+Free Java/JavaScript pages require their own explicit learning link in addition
+to canonical/title/language checks and the existing single free offer. The
+JavaScript page explicitly uses the narrow `js-basics-free/goto` alias; this does
+not allow arbitrary redirect aliases or publish/refresh free pricing. No lead,
+authentication or payment POST is submitted or sent to the model.
+
+`catalog-ai verify COURSE_ID` verifies **one existing published course**, including
+an explicit recheck when its due date is later. It uses the existing daily cap,
+cache, OpenAI → DeepSeek fallback, quote grounding and independent verifier.
+It holds the ordinary publication locks while comparing non-AI fields before
+and after and publishes only the exact observation created by that invocation.
+It neither drains other pending observations nor reads unrelated providers;
+a non-Stepik target does not probe Stepik. Empty/rejected/failed evidence is a
+failed acceptance, not an enriched course. The JSON report records model, token
+usage, document scopes, verified claims, publication result and protected-field
+digests. Unknown or unsupported targets fail before model requests.
+
+Use **Verify AI enrichment** in GitHub Actions on `main`, after deploying this
+release. Supply 1–4 course IDs, comma-separated. The default sample is
+`netology-go,skillfactory-python-developer,hexlet-java,hexlet-java-free`.
+This is a paid, bounded acceptance check; it stops at the first failed course,
+uses only already-deployed images/keys, respects the host deployment lock and
+never raises the daily budget or changes the weekly schedule. A separate report
+for each course is retained in the workflow summary. Do not rerun blindly after
+a model/budget/source failure. A cached report proves current source validation
+and publication but must not be described as a new paid call.
+
+The source-only checks on October 20 prepared all four Hexlet pages, with three
+independent offer documents on each paid program. Actual paid model accuracy,
+new facts and final issue closure are recorded from the post-deployment reports;
+unit/PostgreSQL mocks alone do not establish that acceptance.

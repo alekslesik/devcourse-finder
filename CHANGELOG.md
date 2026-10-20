@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.31.1] - 2026-10-21
+
+- Bind current Netology and Hexlet study conditions to selected tariffs and add bounded real-model verification with exact-observation publication and protected financial-field checks.
+
 ## [0.31.0] - 2026-10-20
 
 - Verify partial free Hexlet course profiles using exact official start links without importing paid-program promotions.

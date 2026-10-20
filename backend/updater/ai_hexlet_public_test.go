@@ -176,7 +176,16 @@ func TestAIHexletPublicLiveSources(t *testing.T) {
 			if err != nil {
 				t.Fatal("public metadata rejected")
 			}
-			t.Logf("scope=course partial=true bytes=%d; tariff conditions NOT verified", len(docs[0].Text))
+			if strings.Contains(slug, "free") {
+				if len(docs) != 1 {
+					t.Fatal("free offer scope inferred")
+				}
+			} else if len(docs) != 4 {
+				t.Fatal("missing scoped tariff documents", len(docs))
+			}
+			for _, d := range docs {
+				t.Logf("scope=%s offer=%s bytes=%d", d.Scope, d.OfferID, len(d.Text))
+			}
 		})
 	}
 }

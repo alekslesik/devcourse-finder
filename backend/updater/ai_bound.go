@@ -56,14 +56,23 @@ func aiBoundDigest(c Candidate, courseID string, b aiSavedBinding) string {
 }
 func aiBoundEventIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool, error) {
 	b, err := aiLoadBinding(ctx, tx, e.Candidate, e.CourseID)
-	if e.Candidate.Adapter == "hexlet" && aiPartialPublicDocuments(e.Documents) {
+	if e.Candidate.Adapter == "hexlet" && aiHexletPublicBundle(e.Documents, e.CourseID) {
 		var binding *aiSavedBinding
 		if err == nil {
 			binding = &b
 		} else if !errors.Is(err, pgx.ErrNoRows) {
 			return false, err
 		}
-		return e.Documents[0].BindingDigest == aiHexletPublicDigest(e.Candidate, e.CourseID, e.IdentityDigest, binding), nil
+		digest := aiHexletPublicDigest(e.Candidate, e.CourseID, e.IdentityDigest, binding)
+		if len(e.Documents) > 1 {
+			digest = aiHexletPublicTariffDigest(e.Candidate, e.CourseID, e.IdentityDigest, binding)
+		}
+		for _, d := range e.Documents {
+			if d.BindingDigest != digest {
+				return false, nil
+			}
+		}
+		return true, nil
 	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
