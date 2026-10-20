@@ -108,3 +108,29 @@ public endpoint rather than leaving it skipped after an issuance error. #124
 remains open until issuance, renewal dry run and independent acceptance pass.
 An owned domain could avoid the shared parent-domain quota, but no owned domain
 has been supplied; changing production origin is not inferred from this task.
+
+## 2026-10-20 combined PR: explicit completion boundaries (#91)
+
+One commit per currently open issue is retained in this follow-up. References to
+an issue are not automatic closing directives. Completion must follow evidence:
+
+| Issue | Delivered in this follow-up | Still required before closure |
+| --- | --- | --- |
+| #135 | Partial Netology public curriculum, source-only check, cache/publication/remap regressions | Current numeric product and a specific tariff's independent live identity |
+| #133 | Partial Skillfactory and paid Hexlet course readers, scoped text, source-only and PostgreSQL checks | #135, Hexlet free/individual tariff source scope, limited live extraction/review/publication acceptance |
+| #124 | HTTPS repair attempt and independent verification even after issuance failure | Trusted certificate, renewal dry run, public origin/redirect acceptance after shared quota allows issuance |
+| #98 | Reproducible manual scenarios and result template | Maintainer's actual screen-reader and physical iPhone/Safari results |
+| #91 | Updated epic evidence and dependency matrix | #98's manual acceptance; no universal desktop distance reduction claim |
+
+The maintainer explicitly chose to leave #98/#91 open until manual verification
+on October 20. The [manual checklist](ux-manual-acceptance.md) records all those
+rows as pending. Existing automatic checks remain useful evidence, not a
+substitute for device speech, software keyboard or Safari chrome behavior.
+
+No paid AI model calls, bulk enrichment or source publication were performed by
+the source-only checks. New reader readiness is not proof that published cards
+already changed or that all profile/filter fields are now confirmed. Price,
+enrollment, verified tariff identities, schedule and daily budget remain subject
+to their existing protections. Stepik's bounded availability/cooldown behavior
+remains in effect; this work does not unpause all Stepik courses or skip them
+forever.

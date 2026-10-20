@@ -6,6 +6,9 @@ Merged pull requests receive the matching Git tag and GitHub Release.
 ## [0.30.1] - 2026-10-20
 
 - Read the current Netology public curriculum as partial course metadata while preserving tariff and financial identity guards.
+- Read partial Skillfactory and paid Hexlet profiles under independent public identity contracts, without renewing financial data or inferring tariff conditions.
+- Verify public HTTPS even after certificate configuration fails and report both outcomes.
+- Document pending physical-device and screen-reader acceptance with explicit issue closure boundaries.
 
 ## [0.30.0] - 2026-10-17
 
