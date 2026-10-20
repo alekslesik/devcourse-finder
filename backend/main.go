@@ -91,6 +91,11 @@ func run() error {
 	if len(args) > 0 {
 		switch args[0] {
 		case "catalog-ai":
+			if len(args) == 3 && args[1] == "sources" {
+				bounded, done := context.WithTimeout(ctx, 15*time.Minute)
+				defer done()
+				return updater.AISourceCheck(bounded, db, nil, args[2], os.Stdout)
+			}
 			if len(args) != 2 {
 				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health", nil)
 			}
