@@ -277,3 +277,27 @@ the source checks or the new free-course profile support.
 
 Source-check failures retain every per-course result in the Actions summary,
 including successful sources in a mixed request, while still failing the workflow.
+
+### Selected Netology public program duration (#135)
+
+The public registration template now has a separately scoped duration document
+when its unique selected-program card is explicitly named exactly like the
+saved offer, inside the one verified registration block. Only its study-length
+label enters AI input. Payment periods, prices, lead forms, generic contact hours
+and sibling variants are excluded. Missing/duplicate/mismatched labels leave the
+course-only document available and omit the ambiguous offer document.
+
+The public program is identified by canonical/query/registration slug and the
+rendered selected-program name. Historical numeric family/product mappings are
+still bound into the digest and rechecked transactionally; they are not claimed
+as newly issued checkout IDs. The current public page exposes no such numeric
+ID. No financial parser or observation is replaced by this contract.
+
+Anonymous Go preparation on October 20: 12,262 bytes of partial course curriculum
+plus the 34-byte source label `10 месяцев обучения` for the single mapped offer.
+The fixture keeps the real rendered card and its provenance; its installment
+and price text serve as exclusion controls. Positive/negative scope tests and
+PostgreSQL cache/remap/publication checks cover this mode. Partial offer input
+preserves previously verified workload/support absent from the limited text.
+Real extraction/review/publication acceptance is recorded separately after the
+release is deployed; source preparation alone does not close #135.

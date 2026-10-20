@@ -172,6 +172,9 @@ func aiEventSourceIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool
 	if len(e.Documents) == 1 && e.Documents[0].ID == "course-public" && e.Documents[0].Partial && e.Documents[0].Scope == "course" && e.Documents[0].OfferID == "" {
 		digest = aiNetologyPublicBindingDigest(e.CourseID, binding)
 	}
+	if len(e.Documents) == 2 && aiNetologyPublicBundle(e.Documents, binding) {
+		digest = aiNetologyPublicTariffDigest(e.CourseID, binding)
+	}
 	for _, doc := range e.Documents {
 		if doc.BindingDigest != digest {
 			return false, nil
