@@ -121,6 +121,9 @@ func run() error {
 			}
 			service := updater.AIService{DB: db, Config: config}
 			if args[1] == "serve" {
+				if len(config.CourseIDs) > 0 {
+					return commandFailure("ai_config", "invalid_ai_configuration", "Explicit course selection is only supported by catalog-ai once", nil)
+				}
 				if err = service.Serve(stop); err != nil {
 					return commandFailure("ai_collection", "ai_collection_failed", "AI collection failed", err)
 				}

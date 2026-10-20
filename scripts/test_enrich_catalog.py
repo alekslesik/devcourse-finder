@@ -50,7 +50,10 @@ if 'ps' in a:
  print('' if a[-1]==os.environ.get('TEST_STOPPED') else 'running-id')
 elif 'exec' in a:
  assert not sys.stdin.read(), 'consumed SSH stdin'
- print(json.dumps({'ai_collector':True,'pending':1,'requests_reserved_today':4,'tokens_today':100,'provider_coverage':[]}))
+ if 'sources' in a:
+  print(json.dumps({'source_check':True,'model_requests':0,'writes':0,'results':[]}))
+ else:
+  print(json.dumps({'ai_collector':True,'pending':1,'requests_reserved_today':4,'tokens_today':100,'provider_coverage':[]}))
 elif 'run' in a:
  assert not sys.stdin.read(), 'consumed SSH stdin'
  if os.environ.get('TEST_SLEEP'):
@@ -70,13 +73,38 @@ else:raise SystemExit('Unexpected Docker operation')
                             dict(attempted=2, queued=1, failed=1, codes=['source_unavailable','queued']),
                             dict(attempted=0, queued=0, codes=[])]))
 
-    def invoke(self, mode='enrich', budget='200', batches='10', **env):
+    def invoke(self, mode='enrich', budget='200', batches='10', course_ids='', **env):
         # SSH sends source on stdin, just as in the real workflow.
-        p = subprocess.run([sys.executable, '-', str(self.base), mode, budget, batches],
+        p = subprocess.run([sys.executable, '-', str(self.base), mode, budget, batches, course_ids],
                            input=TEST_CLOCK_PREFIX + SCRIPT.read_text(), capture_output=True, text=True, timeout=10,
                            env=dict(self.env, **env))
         self.assertNotIn('never-print-me', p.stdout + p.stderr)
         return p
+
+    def test_selected_acceptance_runs_only_one_batch_and_passes_exact_ids(self):
+        p = self.invoke(course_ids='netology-go,hexlet-java')
+        self.assertEqual(p.returncode, 0, p.stderr)
+        runs = [v for v in self.recorded() if 'run' in v]
+        self.assertEqual(len(runs), 1)
+        self.assertIn('CATALOG_AI_COURSE_IDS=netology-go,hexlet-java', runs[0])
+        self.assertEqual(self.report(p)['selected_course_ids'], ['netology-go', 'hexlet-java'])
+
+    def test_invalid_selection_never_starts_docker(self):
+        for value in ['*', 'netology-go,', 'a,a', 'a,b,c,d,e,f,g,h,i', 'a, b', 'a;echo secret']:
+            with self.subTest(value=value):
+                p = self.invoke(course_ids=value)
+                self.assertNotEqual(p.returncode, 0)
+                self.assertEqual(self.recorded(), [])
+        self.assertNotEqual(self.invoke(mode='sources').returncode, 0)
+
+    def test_source_check_uses_running_reader_without_model_or_oneoff(self):
+        p = self.invoke(mode='sources', course_ids='netology-go')
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(self.report(p)['stop_reason'], 'source_check_only')
+        self.assertEqual(self.report(p)['source_check']['model_requests'], 0)
+        calls = self.recorded()
+        self.assertFalse(any('run' in a or a[0] == 'rm' for a in calls))
+        self.assertTrue(any(a[-2:] == ['sources', 'netology-go'] for a in calls))
 
     def recorded(self):
         return [json.loads(v) for v in self.calls.read_text().splitlines()] if self.calls.exists() else []

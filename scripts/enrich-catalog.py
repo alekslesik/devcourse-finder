@@ -5,6 +5,7 @@ import collections
 import fcntl
 import json
 import os
+import re
 from pathlib import Path
 import signal
 import subprocess
@@ -79,7 +80,14 @@ def provider_failure(code):
                               'rate_limited', 'model_unavailable', 'protocol_rejected'))
 
 
-def enrich(base, mode, budget, max_batches):
+def enrich(base, mode, budget, max_batches, course_ids=''):
+    ids = course_ids.split(',') if course_ids else []
+    if (len(ids) > 8 or len(set(ids)) != len(ids) or
+            any(not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,99}', value) for value in ids) or
+            mode == 'sources' and not ids or mode == 'status' and ids):
+        raise EnrichmentError('Select 1-8 unique published course IDs for source checks or targeted enrichment.')
+    if ids and mode == 'enrich':
+        max_batches = 1  # A bounded acceptance never turns into a backfill loop.
     base = Path(base)
     if not base.is_absolute() or not base.is_dir():
         raise EnrichmentError('Deployment directory is missing.')
@@ -89,6 +97,7 @@ def enrich(base, mode, budget, max_batches):
     summary = dict(mode=mode, stop_reason='error', daily_request_limit=budget,
                    batches=0, attempted=0, queued=0, cached=0, failed=0, tokens=0,
                    course_codes={}, useful_queued=0, empty_queued=0, verified_claims=0, discarded_claims=0)
+    summary['selected_course_ids'] = ids
     oneoff = 'devcourse-ai-manual-' + uuid.uuid4().hex[:16]
     codes = collections.Counter()
     # Same host lock as deploy/collection, before resolving the release symlink.
@@ -119,6 +128,15 @@ def enrich(base, mode, budget, max_batches):
                 summary['after'] = summary['before']
                 summary['stop_reason'] = 'status_only'
                 return 0
+            if mode == 'sources':
+                values = run(compose + ['exec', '--interactive=false', '-T', 'catalog-ai',
+                                       'devcourse-finder', 'catalog-ai', 'sources', course_ids])
+                reports = [v for v in values if v.get('source_check') is True]
+                if len(reports) != 1:
+                    raise EnrichmentError('Missing source check report.')
+                summary['source_check'] = reports[0]
+                summary['stop_reason'] = 'source_check_only'
+                return 0
             # Leave room for the worker's 30-minute timeout before UTC budget rollover.
             from datetime import datetime, timedelta, timezone
             budget_day = datetime.now(timezone.utc).date()
@@ -127,10 +145,11 @@ def enrich(base, mode, budget, max_batches):
                 if (datetime.now(timezone.utc) + timedelta(minutes=31)).date() != budget_day:
                     summary['stop_reason'] = 'budget_day_boundary'
                     break
+                selection = ['-e', 'CATALOG_AI_COURSE_IDS=' + course_ids] if ids else []
                 values = run(compose + ['run', '--rm', '--no-deps', '--pull', 'never', '-T',
                              '--name', oneoff, '-e', 'CATALOG_AI_BATCH_SIZE=40',
                              '-e', 'CATALOG_AI_DAILY_REQUEST_LIMIT=' + str(budget),
-                             'catalog-ai', 'catalog-ai', 'once'])
+                             *selection, 'catalog-ai', 'catalog-ai', 'once'])
                 result = batch_result(values)
                 summary['batches'] += 1
                 for key in ('attempted', 'queued', 'cached', 'failed', 'tokens'):
@@ -166,7 +185,7 @@ def enrich(base, mode, budget, max_batches):
         finally:
             # A lost SSH connection/timeout must kill only this owned one-off
             # container, not the scheduled worker or its heartbeat.
-            if mode != 'status':
+            if mode == 'enrich':
                 for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
                     signal.signal(sig, signal.SIG_IGN)
                 try:
@@ -189,6 +208,13 @@ def write_summary(log, destination):
             output.write('No complete remote report. Check the SSH/enrichment step logs.\n')
             return
         r = reports[0]
+        if r.get('selected_course_ids'):
+            output.write('\nSelected courses: `' + ', '.join(r['selected_course_ids']) + '`.\n')
+        if r.get('source_check'):
+            output.write('\nSource check only: no model requests or database writes. Partial course text does not verify a tariff.\n\n')
+            output.write('| Course | Result | Course documents | Offer documents | Bytes |\n|---|---|---|---|---|\n')
+            for row in r['source_check']['results']:
+                output.write('| ' + ' | '.join(str(row[k]) for k in ('course_id', 'code', 'course_documents', 'offer_documents', 'text_bytes')) + ' |\n')
         output.write(f"- Release: `{r['version']}`\n- Stop reason: `{r['stop_reason']}`\n")
         output.write(f"- Temporary shared daily cap: {r['daily_request_limit']} requests\n")
         output.write('\n| Batches | Attempted | Queued | Cached | Failed | Tokens this run |\n|---|---|---|---|---|---|\n')
@@ -217,9 +243,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--summary', nargs=2, metavar=('LOG', 'OUTPUT'))
     parser.add_argument('base', nargs='?', default='/srv/devcourse-finder')
-    parser.add_argument('mode', nargs='?', choices=('enrich', 'status'), default='status')
+    parser.add_argument('mode', nargs='?', choices=('enrich', 'status', 'sources'), default='status')
     parser.add_argument('budget', nargs='?', type=int, choices=(40, 100, 200), default=200)
     parser.add_argument('batches', nargs='?', type=int, choices=range(1, 26), default=10)
+    parser.add_argument('course_ids', nargs='?', default='')
     args = parser.parse_args()
     if args.summary:
         write_summary(*args.summary)
@@ -229,7 +256,7 @@ def main():
     for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         signal.signal(sig, cancel)
     try:
-        return enrich(args.base, args.mode, args.budget, args.batches)
+        return enrich(args.base, args.mode, args.budget, args.batches, args.course_ids)
     except (EnrichmentError, OSError, subprocess.SubprocessError) as error:
         # Fixed messages only: never dump captured Compose configuration or .env.
         print(str(error) if isinstance(error, EnrichmentError) else 'Enrichment operation failed; inspect service status.', file=sys.stderr)
