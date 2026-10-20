@@ -192,3 +192,37 @@ Partial course input preserves previously verified facts omitted by the selected
 sections. Fully observed documents retain their existing disappearance behavior.
 Numeric product and tariff live acceptance in #135 remains outstanding; course
 profile readiness must not be reported as tariff verification.
+
+### Skillfactory / Hexlet public profiles — 2026-10-20 (#133)
+
+Current public templates are now handled separately from native price refreshes.
+Skillfactory's partial course document requires its canonical URL, matching
+published/H1/API title (only controlled course/profession prefixes and the old
+"from scratch" suffix differ), language, API product tag, saved product/tier IDs
+and all three official purchase-popup hooks. An expired promotion cannot make a
+metadata description unreadable, nor can this path renew a price or enrollment.
+The existing native financial contract remains unchanged.
+
+Hexlet's Java/frontend landings currently expose FAQ JSON-LD, not Course/Product.
+A partial profile can use the matching canonical/H1/language and the three
+explicit course-specific payment variants. Links are read, never followed to
+purchase. No numeric/tariff identity is invented. A separate digest binds the
+published course identity and the presence/value of any native mapping; changing
+or adding a mapping before publication rejects the event. Invalid/contradictory
+structured product data cannot use this fallback. Free landings without these
+independent program links remain rejected, rather than guessing their identity.
+
+Anonymous current-source checks prepared Skillfactory 275 bytes, Hexlet Java
+151 bytes and Hexlet frontend 210 bytes. These small samples are scoped public
+text, not complete-page coverage or proof of useful AI claims. Repeat with
+`AI_SKILLFACTORY_PUBLIC_SOURCE_CHECK=1` / `AI_HEXLET_PUBLIC_SOURCE_CHECK=1` and
+`go test ./backend/updater -run 'TestAI(Skillfactory|Hexlet)PublicLive' -v`.
+The earlier native audit remains a separate diagnostic and can still reject a
+source; these modes must not be reported as native financial verification.
+
+Positive/negative fixtures and PostgreSQL tests cover mocked extraction/review,
+cache reuse, mapping changes, publication and unchanged offers/financial dates.
+No paid model calls or production catalog writes were made. #133 remains open
+for Netology's specific current tariff, Hexlet free/individual tariff scope and
+a limited end-to-end paid validation; this PR does not erase
+those outstanding acceptance criteria.
