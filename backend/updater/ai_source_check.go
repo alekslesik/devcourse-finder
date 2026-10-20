@@ -92,7 +92,7 @@ func AISourceCheck(ctx context.Context, db *store.DB, client *http.Client, rawID
 		}
 		results = append(results, r)
 	}
-	if err := json.NewEncoder(w).Encode(map[string]any{"source_check": true, "model_requests": 0, "writes": 0, "results": results}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]any{"source_check": true, "ok": !failed, "model_requests": 0, "writes": 0, "results": results}); err != nil {
 		return err
 	}
 	if failed {

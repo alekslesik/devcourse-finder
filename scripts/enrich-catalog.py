@@ -33,7 +33,7 @@ def objects(lines):
             yield value
 
 
-def run(command):
+def run(command, allow_failure=False):
     values = []
     process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT, text=True)
@@ -41,7 +41,8 @@ def run(command):
         for line in process.stdout:
             print(line, end='', flush=True)
             values.extend(objects([line]))
-        if process.wait() != 0:
+        status = process.wait()
+        if status != 0 and not allow_failure:
             raise EnrichmentError('Deployed command failed; see step logs.')
     finally:
         if process.poll() is None:
@@ -52,7 +53,7 @@ def run(command):
                 process.kill()
                 process.wait()
         process.stdout.close()
-    return values
+    return (values, status) if allow_failure else values
 
 
 def header(values):
@@ -129,14 +130,15 @@ def enrich(base, mode, budget, max_batches, course_ids=''):
                 summary['stop_reason'] = 'status_only'
                 return 0
             if mode == 'sources':
-                values = run(compose + ['exec', '--interactive=false', '-T', 'catalog-ai',
-                                       'devcourse-finder', 'catalog-ai', 'sources', course_ids])
+                values, status = run(compose + ['exec', '--interactive=false', '-T', 'catalog-ai',
+                                       'devcourse-finder', 'catalog-ai', 'sources', course_ids], allow_failure=True)
                 reports = [v for v in values if v.get('source_check') is True]
-                if len(reports) != 1:
+                if len(reports) != 1 or type(reports[0].get('ok')) is not bool:
                     raise EnrichmentError('Missing source check report.')
                 summary['source_check'] = reports[0]
-                summary['stop_reason'] = 'source_check_only'
-                return 0
+                succeeded = reports[0]['ok'] and status == 0
+                summary['stop_reason'] = 'source_check_only' if succeeded else 'source_check_failed'
+                return 0 if succeeded else 1
             # Leave room for the worker's 30-minute timeout before UTC budget rollover.
             from datetime import datetime, timedelta, timezone
             budget_day = datetime.now(timezone.utc).date()

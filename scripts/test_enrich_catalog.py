@@ -51,7 +51,12 @@ if 'ps' in a:
 elif 'exec' in a:
  assert not sys.stdin.read(), 'consumed SSH stdin'
  if 'sources' in a:
-  print(json.dumps({'source_check':True,'model_requests':0,'writes':0,'results':[]}))
+  failed=bool(os.environ.get('TEST_SOURCE_FAILED'))
+  print(json.dumps({'source_check':True,'ok':not failed,'model_requests':0,'writes':0,'results':[
+   {'course_id':'netology-go','code':'partial_course_only_tariff_unverified','course_documents':1,'offer_documents':0,'text_bytes':100},
+   {'course_id':'hexlet-java','code':'source_unavailable_or_contract_rejected','course_documents':0,'offer_documents':0,'text_bytes':0}
+  ] if failed else []}))
+  if failed:raise SystemExit(1)
  else:
   print(json.dumps({'ai_collector':True,'pending':1,'requests_reserved_today':4,'tokens_today':100,'provider_coverage':[]}))
 elif 'run' in a:
@@ -105,6 +110,20 @@ else:raise SystemExit('Unexpected Docker operation')
         calls = self.recorded()
         self.assertFalse(any('run' in a or a[0] == 'rm' for a in calls))
         self.assertTrue(any(a[-2:] == ['sources', 'netology-go'] for a in calls))
+
+    def test_failed_source_check_preserves_success_and_failure_results_in_summary(self):
+        p = self.invoke(mode='sources', course_ids='netology-go,hexlet-java', TEST_SOURCE_FAILED='1')
+        self.assertNotEqual(p.returncode, 0)
+        report = self.report(p)
+        self.assertEqual(report['stop_reason'], 'source_check_failed')
+        self.assertEqual(len(report['source_check']['results']), 2)
+        log, summary = self.root / 'source.log', self.root / 'summary.md'
+        log.write_text(p.stdout)
+        generated = subprocess.run([sys.executable, str(SCRIPT), '--summary', str(log), str(summary)], capture_output=True, text=True)
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        self.assertIn('netology-go', summary.read_text())
+        self.assertIn('hexlet-java', summary.read_text())
+        self.assertIn('source_unavailable_or_contract_rejected', summary.read_text())
 
     def recorded(self):
         return [json.loads(v) for v in self.calls.read_text().splitlines()] if self.calls.exists() else []

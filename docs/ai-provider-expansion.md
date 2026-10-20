@@ -265,7 +265,7 @@ identities, remapping after enqueue, cached publication without offer/financial
 changes, exclusion of unselected courses, cooldown and shared-budget retention,
 and source-check database immutability. PostgreSQL model tests use mocks.
 Local validation: the complete `go test -race ./backend/...` suite against an
-isolated PostgreSQL 17 database, `go vet ./backend/...`, 15 manual-helper tests,
+isolated PostgreSQL 17 database, `go vet ./backend/...`, 16 manual-helper tests,
 four release-helper tests and the release metadata check passed.
 
 Still required to close #135/#133: independent current numeric product and
@@ -274,3 +274,6 @@ where unavailable; and recorded limited live extraction/review/publication
 acceptance. The current Netology registration-only source does not supply the
 numeric identity, and code must not manufacture it. Neither issue is closed by
 the source checks or the new free-course profile support.
+
+Source-check failures retain every per-course result in the Actions summary,
+including successful sources in a mixed request, while still failing the workflow.
