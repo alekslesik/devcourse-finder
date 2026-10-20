@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y sshpass
       - name: Configure managed proxy and test certificate renewal
+        id: configure
         env:
           SSHPASS: ${{ secrets.VDS_PASS }}
           VDS_HOST: ${{ vars.VDS_HOST || '83.220.174.166' }}
@@ -31,4 +32,20 @@ jobs:
           options=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$host_keys" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o PreferredAuthentications=password,keyboard-interactive -o NumberOfPasswordPrompts=1)
           sshpass -e ssh -T "${options[@]}" "$VDS_USER@$VDS_HOST" 'bash -s' < scripts/setup-https.sh
       - name: Verify public HTTPS and redirect from an independent network
+        id: public_https
+        if: ${{ always() && !cancelled() }}
+        timeout-minutes: 4
         run: python3 scripts/check-public-https.py
+
+      - name: Record independent acceptance outcomes
+        if: ${{ always() }}
+        env:
+          CONFIGURE_OUTCOME: ${{ steps.configure.outcome }}
+          PUBLIC_OUTCOME: ${{ steps.public_https.outcome }}
+        run: |
+          {
+            echo '## Production HTTPS acceptance'
+            printf 'Certificate configuration and renewal: **%s**\n\n' "$CONFIGURE_OUTCOME"
+            printf 'Independent trusted HTTPS and redirects: **%s**\n\n' "$PUBLIC_OUTCOME"
+            echo 'Issue #124 remains open unless both checks succeed. A CA rate-limit failure is not a successful installation; use the retry time reported by Certbot and do not repeatedly request certificates before it.'
+          } >> "$GITHUB_STEP_SUMMARY"

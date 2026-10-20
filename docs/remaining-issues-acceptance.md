@@ -91,3 +91,20 @@ Chromium suite, the selected WebKit suite, full Go tests with PostgreSQL and
 metadata check against the current main before opening/merging the finished PR.
 CI artifacts and the deployment/HTTPS/collection workflow results are the durable
 execution record; do not replace missing device evidence with test counts.
+
+## 2026-10-20 follow-up: #124
+
+The explicit HTTPS maintenance run [39387919478](https://github.com/alekslesik/devcourse-finder/actions/runs/39387919478)
+reached Certbot on the VDS, then failed against the shared `fvds.ru` registered
+-domain certificate quota (50 certificates in 168 hours). The CA reported
+`retry after 2026-10-20 10:35:40 UTC` (13:35:40 Moscow). This is an earliest retry,
+not a reservation or guarantee that the shared quota will be available.
+Do not repeatedly dispatch before that time, change certificate accounts to
+bypass the quota, disable trust validation or claim HTTPS succeeded.
+
+The workflow now runs independent public verification even if configuration
+fails and records both outcomes in its summary. This preserves evidence of the
+public endpoint rather than leaving it skipped after an issuance error. #124
+remains open until issuance, renewal dry run and independent acceptance pass.
+An owned domain could avoid the shared parent-domain quota, but no owned domain
+has been supplied; changing production origin is not inferred from this task.
