@@ -26,6 +26,8 @@ var ErrAI = errors.New("AI observation could not be verified")
 // Documents contain only bounded public course text, never cookies or secrets.
 // Sources and scopes come from the fetcher, not from model-generated URLs.
 type AIDocument struct {
+	// Partial public sections may add supported facts, never attest disappearance.
+	Partial       bool   `json:"partial,omitempty"`
 	ID            string `json:"id"`
 	Source        string `json:"source"`
 	Scope         string `json:"scope"`
@@ -100,6 +102,9 @@ func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
 	courseCount := 0
 	binding := ""
 	for _, d := range docs {
+		if d.Partial && d.Scope != "course" {
+			return false
+		}
 		if d.ID == "" || seen[d.ID] || d.Text == "" || !evidenceDigest.MatchString(d.Digest) {
 			return false
 		}

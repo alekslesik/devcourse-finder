@@ -168,3 +168,61 @@ readers still verify its native product/tier contract. `ever_verified_courses`
 may include prior successes whose current attempt fails; none of these counters
 measures fact completeness or model accuracy. Source rejection details use fixed
 `source_*` codes without logging provider bodies, credentials or raw errors.
+
+### Netology public curriculum — 2026-10-20 (#135)
+
+The current registration/curriculum template has no numeric checkout identity.
+A separate **partial course-only** reader now checks canonical URL, Russian H1,
+language, query slug, first registration slug and uniquely rendered typed module
+blocks against the existing catalog binding. Contradictory legacy product state
+is rejected. Only public descriptions and module/lesson descriptions are sent;
+registration variants, lead forms and payment conditions are excluded. This does
+not refresh or assert a current numeric checkout product, price or tariff.
+
+An anonymous live Go check prepared 12,262 bytes of course text on October 20.
+Repeat it with `AI_NETOLOGY_PUBLIC_SOURCE_CHECK=1 go test ./backend/updater -run
+'^TestAINetologyPublicLiveSource$' -v`. It uses a saved-binding fixture, not a
+production database or a paid model. The projected fixture records provenance
+alongside its HTML. Its DOM shells/description are synthetic; curriculum fields
+are projected from the public response.
+
+PostgreSQL tests exercise a mocked extraction/review, remap rejection, cached
+recovery and publication without changing any offer or financial freshness.
+Partial course input preserves previously verified facts omitted by the selected
+sections. Fully observed documents retain their existing disappearance behavior.
+Numeric product and tariff live acceptance in #135 remains outstanding; course
+profile readiness must not be reported as tariff verification.
+
+### Skillfactory / Hexlet public profiles — 2026-10-20 (#133)
+
+Current public templates are now handled separately from native price refreshes.
+Skillfactory's partial course document requires its canonical URL, matching
+published/H1/API title (only controlled course/profession prefixes and the old
+"from scratch" suffix differ), language, API product tag, saved product/tier IDs
+and all three official purchase-popup hooks. An expired promotion cannot make a
+metadata description unreadable, nor can this path renew a price or enrollment.
+The existing native financial contract remains unchanged.
+
+Hexlet's Java/frontend landings currently expose FAQ JSON-LD, not Course/Product.
+A partial profile can use the matching canonical/H1/language and the three
+explicit course-specific payment variants. Links are read, never followed to
+purchase. No numeric/tariff identity is invented. A separate digest binds the
+published course identity and the presence/value of any native mapping; changing
+or adding a mapping before publication rejects the event. Invalid/contradictory
+structured product data cannot use this fallback. Free landings without these
+independent program links remain rejected, rather than guessing their identity.
+
+Anonymous current-source checks prepared Skillfactory 275 bytes, Hexlet Java
+151 bytes and Hexlet frontend 210 bytes. These small samples are scoped public
+text, not complete-page coverage or proof of useful AI claims. Repeat with
+`AI_SKILLFACTORY_PUBLIC_SOURCE_CHECK=1` / `AI_HEXLET_PUBLIC_SOURCE_CHECK=1` and
+`go test ./backend/updater -run 'TestAI(Skillfactory|Hexlet)PublicLive' -v`.
+The earlier native audit remains a separate diagnostic and can still reject a
+source; these modes must not be reported as native financial verification.
+
+Positive/negative fixtures and PostgreSQL tests cover mocked extraction/review,
+cache reuse, mapping changes, publication and unchanged offers/financial dates.
+No paid model calls or production catalog writes were made. #133 remains open
+for Netology's specific current tariff, Hexlet free/individual tariff scope and
+a limited end-to-end paid validation; this PR does not erase
+those outstanding acceptance criteria.

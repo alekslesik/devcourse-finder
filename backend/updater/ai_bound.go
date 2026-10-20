@@ -56,6 +56,16 @@ func aiBoundDigest(c Candidate, courseID string, b aiSavedBinding) string {
 }
 func aiBoundEventIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool, error) {
 	b, err := aiLoadBinding(ctx, tx, e.Candidate, e.CourseID)
+	if e.Candidate.Adapter == "hexlet" && aiPartialPublicDocuments(e.Documents) {
+		var binding *aiSavedBinding
+		if err == nil {
+			binding = &b
+		} else if !errors.Is(err, pgx.ErrNoRows) {
+			return false, err
+		}
+		return e.Documents[0].BindingDigest == aiHexletPublicDigest(e.Candidate, e.CourseID, e.IdentityDigest, binding), nil
+	}
+
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
 	}
@@ -63,6 +73,9 @@ func aiBoundEventIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool,
 		return false, err
 	}
 	digest := aiBoundDigest(e.Candidate, e.CourseID, b)
+	if e.Candidate.Adapter == "skillfactory" && len(e.Documents) == 1 && e.Documents[0].ID == "course-public" && e.Documents[0].Partial && e.Documents[0].Scope == "course" && e.Documents[0].OfferID == "" {
+		digest = aiSkillfactoryPublicDigest(e.Candidate, e.CourseID, b)
+	}
 	for _, d := range e.Documents {
 		if d.BindingDigest != digest {
 			return false, nil
@@ -140,14 +153,33 @@ func aiFetchBoundDocuments(ctx context.Context, db *store.DB, client *http.Clien
 		return c, nil, ErrAI
 	}
 	b, e := aiLoadBinding(ctx, db.Pool, c, current.ID)
+	if c.Adapter == "hexlet" {
+		var binding *aiSavedBinding
+		if e == nil {
+			binding = &b
+		} else if !errors.Is(e, pgx.ErrNoRows) {
+			return c, nil, e
+		}
+		if docs, err := aiHexletPublic(raw, c, current, binding, digest); err == nil {
+			return c, docs, nil
+		}
+	}
+
 	if e != nil {
 		return c, nil, e
 	}
 	remote, o, digest, e := aiVerifyBoundSource(ctx, client, raw, digest, c)
 	if e != nil {
+		if c.Adapter == "skillfactory" {
+			docs, err := aiFetchSkillfactoryPublic(ctx, client, raw, c, current, b, digest)
+			return c, docs, err
+		}
 		return c, nil, e
 	}
 	docs, e := aiBuildBoundDocuments(raw, c, current, remote, o, b, digest)
+	if e != nil && c.Adapter == "skillfactory" {
+		docs, e = aiFetchSkillfactoryPublic(ctx, client, raw, c, current, b, digest)
+	}
 	return c, docs, e
 }
 func aiBuildBoundDocuments(raw []byte, c Candidate, current, remote catalog.Course, o Observation, b aiSavedBinding, digest string) ([]AIDocument, error) {
