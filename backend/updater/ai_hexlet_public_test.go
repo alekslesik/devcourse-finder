@@ -26,7 +26,7 @@ func hexletPublicFixture(t *testing.T, slug string) ([]byte, Candidate, catalog.
 		t.Fatal(err)
 	}
 	for _, r := range ds.Courses {
-		if r.ID == "hexlet-"+slug {
+		if r.Source == "https://ru.hexlet.io/programs/"+slug {
 			c, ok := aiCandidateURL(r.Source)
 			if !ok {
 				t.Fatal("candidate")
@@ -36,6 +36,31 @@ func hexletPublicFixture(t *testing.T, slug string) ([]byte, Candidate, catalog.
 	}
 	t.Fatal("course missing")
 	return nil, Candidate{}, catalog.Course{}
+}
+
+func TestAIHexletFreePublicIdentityAndPaidPromotionIsolation(t *testing.T) {
+	for _, slug := range []string{"java-basics-free", "javascript-basics-free"} {
+		t.Run(slug, func(t *testing.T) {
+			raw, c, r := hexletPublicFixture(t, slug)
+			// The real pages advertise a paid profession alongside the free course.
+			raw = []byte(strings.Replace(string(raw), "</body>", `<section><a href="https://ru.hexlet.io/programs/java">Платная профессия: 10 месяцев, карьерная поддержка</a></section></body>`, 1))
+			docs, err := aiHexletPublic(raw, c, r, nil, fingerprint(raw))
+			if err != nil || !aiPartialPublicDocuments(docs) || strings.Contains(docs[0].Text, "карьерная поддержка") {
+				t.Fatal("free profile or promotion isolation failed", err)
+			}
+			for _, bad := range []string{
+				strings.ReplaceAll(string(raw), "/goto", "/other"),
+				strings.ReplaceAll(string(raw), "/goto", "/goto?program=other"),
+				strings.Replace(string(raw), "</body>", `<a href="https://ru.hexlet.io/programs/other/goto">Начать</a></body>`, 1),
+				strings.Replace(string(raw), "</body>", `<h1>Основы другого языка</h1></body>`, 1),
+				strings.Replace(string(raw), "</body>", `<script type="application/ld+json">{"@type":"Offer"}</script></body>`, 1),
+			} {
+				if _, err := aiHexletPublic([]byte(bad), c, r, nil, fingerprint([]byte(bad))); err == nil {
+					t.Fatal("ambiguous free source accepted")
+				}
+			}
+		})
+	}
 }
 func TestAIHexletPublicCurrentPaidTemplatesAndForeignIdentity(t *testing.T) {
 	for _, slug := range []string{"java", "frontend"} {
@@ -58,8 +83,13 @@ func TestAIHexletPublicCurrentPaidTemplatesAndForeignIdentity(t *testing.T) {
 	}
 }
 func TestAIHexletPublicQueueIdentityCacheAndOffers(t *testing.T) {
+	for _, slug := range []string{"java", "java-basics-free", "javascript-basics-free"} {
+		t.Run(slug, func(t *testing.T) { checkHexletPublicQueue(t, slug) })
+	}
+}
+func checkHexletPublicQueue(t *testing.T, slug string) {
 	db := postgresFixture(t)
-	raw, c, r := hexletPublicFixture(t, "java")
+	raw, c, r := hexletPublicFixture(t, slug)
 	raw = []byte(strings.Replace(string(raw), `<meta name="description" content="`, `<meta name="description" content="Программа предназначена для начинающих без опыта программирования. `, 1))
 	r.Profile = nil
 	r.Audience = []string{"unknown"}
@@ -131,7 +161,7 @@ func TestAIHexletPublicLiveSources(t *testing.T) {
 	if os.Getenv("AI_HEXLET_PUBLIC_SOURCE_CHECK") != "1" {
 		t.Skip("anonymous opt-in source-only check")
 	}
-	for _, slug := range []string{"java", "frontend"} {
+	for _, slug := range []string{"java", "frontend", "java-basics-free", "javascript-basics-free"} {
 		t.Run(slug, func(t *testing.T) {
 			_, c, r := hexletPublicFixture(t, slug)
 			client := NewClient()

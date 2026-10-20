@@ -22,6 +22,11 @@ func aiHexletPublic(raw []byte, c Candidate, current catalog.Course, b *aiSavedB
 	heads := 0
 	invalid := false
 	variants := map[string]bool{}
+	// These two separately captured free landings use a course-specific start
+	// link instead of payment variants. The JavaScript landing explicitly uses
+	// the older js-basics-free start slug; it is not a general alias rule.
+	startSlug := map[string]string{"java-basics-free": "java-basics-free", "javascript-basics-free": "js-basics-free"}[c.ExternalID]
+	startLinks, foreignStart := 0, false
 	visitNodes(doc, func(n *html.Node) {
 		if n.Data == "h1" {
 			heads++
@@ -69,6 +74,13 @@ func aiHexletPublic(raw []byte, c Candidate, current catalog.Course, b *aiSavedB
 			if e != nil || u.Scheme != "https" || u.Host != "ru.hexlet.io" || u.User != nil || u.Fragment != "" {
 				return
 			}
+			if startSlug != "" && strings.HasPrefix(u.Path, "/programs/") && strings.HasSuffix(u.Path, "/goto") {
+				if u.Path == "/programs/"+startSlug+"/goto" && u.RawQuery == "" {
+					startLinks++
+				} else {
+					foreignStart = true
+				}
+			}
 			q, e := url.ParseQuery(u.RawQuery)
 			if e != nil {
 				return
@@ -111,7 +123,11 @@ func aiHexletPublic(raw []byte, c Candidate, current catalog.Course, b *aiSavedB
 		s = strings.Trim(s, "\"")
 		return strings.TrimSuffix(s, " с нуля")
 	}
-	if invalid || heads != 1 || titleKey(title) != titleKey(current.Title) || courseLanguage(title, description) != current.Language || len(variants) != 3 || description == "" {
+	identityLinks := len(variants) == 3
+	if startSlug != "" {
+		identityLinks = startLinks > 0 && !foreignStart && len(variants) == 0
+	}
+	if invalid || heads != 1 || titleKey(title) != titleKey(current.Title) || courseLanguage(title, description) != current.Language || !identityLinks || description == "" {
 		return nil, ErrAI
 	}
 	text := aiNormalize(aiPublicText(description) + "\n" + aiCourseSections(raw, c))
