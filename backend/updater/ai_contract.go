@@ -102,7 +102,7 @@ func aiDocumentsValid(c Candidate, docs []AIDocument) bool {
 	courseCount := 0
 	binding := ""
 	for _, d := range docs {
-		if d.Partial && d.Scope != "course" {
+		if d.Partial && d.Scope != "course" && d.Scope != "offer" {
 			return false
 		}
 		if d.ID == "" || seen[d.ID] || d.Text == "" || !evidenceDigest.MatchString(d.Digest) {

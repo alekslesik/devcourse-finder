@@ -76,12 +76,14 @@ func LoadAIConfig() (AIConfig, error) {
 }
 
 type AIService struct {
-	DB     *store.DB
-	Config AIConfig
-	Model  AIModel
-	Client *http.Client
+	TargetCourseID string // Internal explicit verification target; never set by scheduled configuration.
+	DB             *store.DB
+	Config         AIConfig
+	Model          AIModel
+	Client         *http.Client
 }
 type AIRunResult struct {
+	ObservationID   int64  `json:"observation_id,omitempty"`
 	ID              int64  `json:"run_id"`
 	Attempted       int    `json:"attempted"`
 	Queued          int    `json:"queued"`
@@ -100,6 +102,10 @@ func (s *AIService) fail(ctx context.Context, id, code string) error {
 	return err
 }
 func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
+	if s.TargetCourseID != "" {
+		s.Config.CourseIDs = []string{s.TargetCourseID}
+		s.Config.BatchSize = 1
+	}
 	if s.Config.BatchSize < 1 || s.Config.BatchSize > 40 || s.Config.DailyLimit < 1 || s.Config.DailyLimit > 200 {
 		return result, ErrAI
 	}
@@ -169,7 +175,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	if !stepikAvailable {
 		slog.Warn("AI source paused", "provider", "stepik", "code", "source_unavailable")
 	}
-	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND ($3 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (coalesce(cardinality($4::text[]),0)=0 OR c.id=ANY($4::text[])) AND (a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns(), stepikAvailable, s.Config.CourseIDs)
+	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND ($3 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (coalesce(cardinality($4::text[]),0)=0 OR c.id=ANY($4::text[])) AND ($5<>'' OR a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns(), stepikAvailable, s.Config.CourseIDs, s.TargetCourseID)
 	if err != nil {
 		return result, err
 	}
@@ -261,6 +267,9 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 				stage, reason = "enqueue", "queue_failed"
 				readErr = publisher.enqueueAI(local, event)
 				code = "ai_queue_failed"
+				if readErr == nil && s.TargetCourseID != "" {
+					readErr = s.DB.Pool.QueryRow(local, `SELECT id FROM catalog_ai_observations WHERE course_id=$1 AND observed_at=$2`, id, at).Scan(&result.ObservationID)
+				}
 				if readErr == nil {
 					result.Queued++
 					if verified > 0 {

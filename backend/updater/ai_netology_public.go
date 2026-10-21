@@ -158,6 +158,12 @@ func aiNetologyPublicDocuments(raw []byte, c Candidate, current catalog.Course, 
 		return nil, ErrAI
 	}
 	docs := []AIDocument{{ID: "course-public", Scope: "course", Partial: true, Source: c.URL, Text: text, Digest: digest, BindingDigest: aiNetologyPublicBindingDigest(current.ID, b)}}
+	if offer := aiNetologyPublicDuration(raw, c, current, b, digest); offer != nil {
+		docs = append(docs, *offer)
+		for i := range docs {
+			docs[i].BindingDigest = aiNetologyPublicTariffDigest(current.ID, b)
+		}
+	}
 	if !aiDocumentsValid(c, docs) {
 		return nil, ErrAI
 	}

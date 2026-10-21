@@ -1,0 +1,61 @@
+name: Verify AI enrichment
+run-name: Verify AI enrichment (${{ inputs.course_ids }})
+on:
+  workflow_dispatch:
+    inputs:
+      course_ids:
+        description: 1-4 published course IDs, comma-separated; paid, uses the existing shared daily cap
+        required: true
+        type: string
+        default: netology-go,skillfactory-python-developer,hexlet-java,hexlet-java-free
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y sshpass
+      - name: Verify only the selected deployed courses
+        env:
+          SSHPASS: ${{ secrets.VDS_PASS }}
+          VDS_HOST: ${{ vars.VDS_HOST || '83.220.174.166' }}
+          VDS_USER: ${{ vars.VDS_USER || 'root' }}
+          COURSE_IDS: ${{ inputs.course_ids }}
+        run: |
+          set -euo pipefail
+          test -n "$SSHPASS"
+          [[ "$VDS_HOST" =~ ^[a-zA-Z0-9.-]+$ && "$VDS_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          python3 - <<'PY'
+          import importlib.util, os
+          spec = importlib.util.spec_from_file_location('verify', 'scripts/verify-ai-courses.py')
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          module.targets(os.environ['COURSE_IDS'])
+          PY
+          host_keys="$RUNNER_TEMP/vds_known_hosts"
+          cp .github/vds_known_hosts "$host_keys"
+          chmod 600 "$host_keys"
+          options=(-o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$host_keys" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o PreferredAuthentications=password,keyboard-interactive -o NumberOfPasswordPrompts=1)
+          # Four courses: 4 * (620s command + 15s cleanup), plus SSH/setup margin.
+          command="timeout --signal=TERM --kill-after=30s 50m python3 - /srv/devcourse-finder '$COURSE_IDS'"
+          sshpass -e ssh -T "${options[@]}" "$VDS_USER@$VDS_HOST" "$command" < scripts/verify-ai-courses.py 2>&1 | tee "$RUNNER_TEMP/ai-verification.log"
+      - name: Preserve the bounded verification report
+        if: always()
+        run: |
+          {
+            echo '## Single-course AI acceptance'
+            echo 'Uses the deployed keys, existing shared daily budget and real extraction/review. Each report binds publication to one exact observation and compares protected financial fields.'
+            if [[ -f "$RUNNER_TEMP/ai-verification.log" ]]; then
+              echo '```json'
+              sed -n 's/^VERIFY_AI_REPORT //p' "$RUNNER_TEMP/ai-verification.log"
+              echo '```'
+            fi
+            echo 'A missing/failed report is not a successful enrichment. Source failure, no verified claims or a protected-field mismatch stops the run before another course.'
+          } >> "$GITHUB_STEP_SUMMARY"

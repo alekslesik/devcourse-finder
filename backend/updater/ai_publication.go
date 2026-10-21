@@ -254,7 +254,13 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 		applyAIProfile(&c, facts.Profile, partialProfile)
 		for i := range c.Offers {
 			if incoming, observed := facts.Learning[c.Offers[i].ID]; observed {
-				applyAILearning(&c.Offers[i], incoming, e.Extraction.DiscardedClaims > 0)
+				partial := e.Extraction.DiscardedClaims > 0
+				for _, d := range e.Documents {
+					if d.Scope == "offer" && d.OfferID == c.Offers[i].ID && d.Partial {
+						partial = true
+					}
+				}
+				applyAILearning(&c.Offers[i], incoming, partial)
 			}
 		}
 		if !c.Profile.Valid() {
@@ -278,6 +284,9 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 	return nil, nil
 }
 func (s *Service) publishAI(ctx context.Context) (int, error) {
+	return s.publishAISelection(ctx, "", 0)
+}
+func (s *Service) publishAISelection(ctx context.Context, target string, eventID int64) (int, error) {
 	updated := 0
 	for i := 0; i < aiPublisherLimit; i++ {
 		if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < 5*time.Second {
@@ -287,7 +296,7 @@ func (s *Service) publishAI(ctx context.Context) (int, error) {
 		var courseID string
 		var at time.Time
 		var raw []byte
-		err := s.DB.Pool.QueryRow(ctx, "SELECT id,course_id,observed_at,payload FROM catalog_ai_observations WHERE processed_at IS NULL ORDER BY id LIMIT 1").Scan(&id, &courseID, &at, &raw)
+		err := s.DB.Pool.QueryRow(ctx, "SELECT id,course_id,observed_at,payload FROM catalog_ai_observations WHERE processed_at IS NULL AND ($1='' OR course_id=$1) AND ($2::bigint=0 OR id=$2) ORDER BY id LIMIT 1", target, eventID).Scan(&id, &courseID, &at, &raw)
 		if errors.Is(err, pgx.ErrNoRows) {
 			break
 		}

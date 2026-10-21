@@ -179,8 +179,11 @@ func TestAINetologyPublicLiveSource(t *testing.T) {
 	if err != nil {
 		t.Fatal("public curriculum contract rejected")
 	}
-	if len(docs) != 1 || !docs[0].Partial || docs[0].Scope != "course" {
+	if !aiNetologyPublicBundle(docs, b) {
 		t.Fatal("unexpected scope")
+	}
+	for _, d := range docs {
+		t.Logf("scope=%s partial=%t bytes=%d", d.Scope, d.Partial, len(d.Text))
 	}
 	t.Logf("scope=course partial=true bytes=%d; numeric checkout and offer conditions NOT verified", len(docs[0].Text))
 }

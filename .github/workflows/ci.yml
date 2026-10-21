@@ -30,6 +30,8 @@ jobs:
         run: python3 -m unittest discover -s scripts -p 'test_collect_catalog.py'
       - name: Test manual AI enrichment helper
         run: python3 -m unittest discover -s scripts -p 'test_enrich_catalog.py'
+      - name: Test bounded single-course AI verification helper
+        run: python3 -m unittest discover -s scripts -p 'test_verify_ai_courses.py'
       - name: Test public HTTPS acceptance checks
         run: python3 -m unittest discover -s scripts -p 'test_public_https.py'
 
