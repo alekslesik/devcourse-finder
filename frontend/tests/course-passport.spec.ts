@@ -24,6 +24,13 @@ for(const width of [390,1440])for(const theme of ['light','dark'] as const){
   await page.screenshot({path:info.outputPath(`passport-${width}-${theme}.png`),fullPage:true});
   await page.getByRole('link',{name:'Условия',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.locator('#course-conditions')).toBeFocused();
+  await expect(page.locator('#course-conditions')).toHaveCSS('outline-style','none');
+  await page.getByRole('link',{name:'Источник',exact:true}).focus();await page.keyboard.press('Enter');
+  await expect(page.locator('#course-sources')).toBeFocused();
+  await expect(page.locator('#course-sources')).toHaveCSS('outline-style','none');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.courseSourceLink')).toBeFocused();
+  await expect(page.locator('.courseSourceLink')).toHaveCSS('outline-style','solid');
   if(width===390){
    await page.locator('.courseSources').scrollIntoViewIfNeeded();
    const dock=page.getByRole('region',{name:'Быстрые действия по тарифу'});

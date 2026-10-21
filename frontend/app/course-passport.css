@@ -4,6 +4,8 @@
 .coursePage .courseBack a {display:inline-flex; align-items:center; min-height:44px; padding:4px 0; text-decoration:none; color:var(--muted);}
 .courseLayout {display:grid; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) 380px; column-gap:48px; row-gap:32px; align-items:start;}
 .courseIntro {min-width:0; grid-column:1;}
+/* Anchor destinations keep focus for navigation without outlining whole sections. */
+.coursePage :is(.courseIntro,.courseTariffs,.courseConditions,.courseSources)[tabindex="-1"]:focus {outline:none;}
 .courseIdentity {display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;}
 .courseIdentity .provider {font-size:16px;}
 .coursePage h1 {font-size:60px; line-height:1.1; font-weight:600; letter-spacing:-.035em; margin:0 0 20px; text-wrap:balance;}
