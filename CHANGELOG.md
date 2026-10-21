@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.31.2] - 2026-10-21
+
+- Remove full-section focus outlines when navigating course passport anchors while preserving control focus indicators.
+
 ## [0.31.1] - 2026-10-21
 
 - Bind current Netology and Hexlet study conditions to selected tariffs and add bounded real-model verification with exact-observation publication and protected financial-field checks.
