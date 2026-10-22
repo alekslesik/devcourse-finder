@@ -42,7 +42,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
   return ()=>{observer?.disconnect();cancelAnimationFrame(frame);window.removeEventListener('scroll',queue);window.removeEventListener('resize',queue)};
  },[offer?.id]);
  useEffect(()=>{
-  const nodes=['course-overview','course-conditions','course-sources'].map(id=>document.getElementById(id)).filter((node):node is HTMLElement=>!!node);
+  const nodes=['course-overview','course-conditions'].map(id=>document.getElementById(id)).filter((node):node is HTMLElement=>!!node);
   let frame=0;
   function update(){
    frame=0;
@@ -71,7 +71,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
     {offers.map(entry=>{
      const tariff=entry.offer,selected=tariff.id===offer?.id,comparable=['open','continuous'].includes(tariff.enrollment);
      return <section key={tariff.id} className="courseSummary coursePurchase" data-offer={tariff.id} data-selected={selected} aria-labelledby={'tariff-'+tariff.id}>
-     <h2 id={'tariff-'+tariff.id}>{offers.length>1?<label className="courseTariffChoice"><input type="radio" name="course-offer" value={tariff.id} checked={selected} onChange={()=>selectOffer(tariff.id)} aria-controls="course-conditions"/><span>{tariff.name}</span></label>:tariff.name}</h2>
+     <h2 id={'tariff-'+tariff.id}>{offers.length>1?<label className="courseTariffChoice"><input type="radio" name="course-offer" value={tariff.id} checked={selected} onChange={()=>selectOffer(tariff.id)} aria-controls="course-conditions"/><span className="courseTariffMark" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="m4.5 10 3.5 3.5 7.5-7.5"/></svg></span><span>{tariff.name}</span></label>:tariff.name}</h2>
      <div className="coursePriceBlock"><strong className="coursePurchasePrice" data-unconfirmed={entry.effective_price===null}>{price(entry)}</strong><span>{entry.effective_price===null?'Полная стоимость уточняется':entry.effective_price===0?'Бесплатный тариф':'за весь курс'}</span></div>
      {entry.effective_price===null&&<p className="coursePriceNote">{tariff.price_kind==='from'?'Цена «от»: уточните полную стоимость у школы.':'Актуальная полная стоимость не подтверждена. Уточните её у школы.'}</p>}
      <ul className="coursePurchaseFacts">
@@ -92,7 +92,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
     </fieldset>
    </aside>
    <div className="courseContent">
-    <nav className="courseSections" aria-label="Разделы курса">{[['course-overview','Обзор'],['course-conditions','Условия'],['course-sources','Источник']].map(([id,label])=><a key={id} href={'#'+id} aria-current={section===id?'location':undefined} onClick={()=>setSection(id)}>{label}</a>)}</nav>
+    <nav className="courseSections" aria-label="Разделы курса">{[['course-overview','Обзор'],['course-conditions','Условия']].map(([id,label])=><a key={id} href={'#'+id} aria-current={section===id?'location':undefined} onClick={()=>setSection(id)}>{label}</a>)}</nav>
     <section className="courseConditions" id="course-conditions" tabIndex={-1} aria-labelledby="course-audience-title">
      <h2 id="course-audience-title"><CourseIcon kind="person"/>Для кого подходит</h2>
      <dl className="courseFacts"><Fact label="Кому подходит" unknown={!audience.length}>{experience}</Fact><Fact label="Требования к опыту" unknown={!prerequisite}>{requirement}</Fact></dl>
@@ -113,11 +113,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
      {c.topics.length>0&&<ul className="courseTopics">{c.topics.map(topic=><li key={topic}>{topic}</li>)}</ul>}
      <p>{c.topics.length?'Полное содержание и актуальные условия — у школы.':'Содержание программы уточняйте на сайте школы.'}</p>
      <a className="secondary linkButton courseProgramLink" href={c.source} target="_blank" rel="noopener noreferrer">Программа на сайте школы <ExternalMark/></a>
-    </section>
-    <section className="courseSources" id="course-sources" tabIndex={-1} aria-labelledby="course-sources-title">
-     <h2 id="course-sources-title"><CourseIcon kind="link"/>Источник</h2>
-     <a className="courseSourceLink" href={c.source} target="_blank" rel="noopener noreferrer">Опубликованная программа поставщика <ExternalMark/></a>
-     <p>Условия проверены {checked(c.checked_at)}. Проверка опубликованной программы не означает прохождение курса. Срок доступа и ограничения тарифа уточняйте у поставщика.</p>
+     <p className="courseConditionsChecked">Условия проверены: {checked(c.checked_at)}</p>
     </section>
    </div>
   </div>

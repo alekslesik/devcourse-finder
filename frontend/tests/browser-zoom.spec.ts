@@ -71,7 +71,7 @@ for(const theme of ['light','dark'] as const)test(`actual 200% tab zoom preserve
   await page.locator('.card .titleButton').first().focus();await page.keyboard.press('Enter');
   await expect(page.locator('.courseSummary')).toBeVisible();
   await noOverflow();
-  await page.getByRole('link',{name:'← Вернуться к подбору'}).focus();await page.keyboard.press('Enter');
+  await page.getByRole('navigation',{name:'Основная навигация'}).getByRole('link',{name:'Каталог',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.locator('.card')).toHaveCount(5);await noOverflow();
   const measurement=info.outputPath('actual-tab-zoom.json');
   await writeFile(measurement,JSON.stringify({theme,zoom,before,after},null,2));

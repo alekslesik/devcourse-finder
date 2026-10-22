@@ -51,9 +51,9 @@ test('return from course and comparison restores the exact applied catalog and p
  const query=new URL(page.url()).search;
  const course=page.locator('.card .titleButton').first();
  await course.click();
- await expect(page.getByRole('link',{name:'← Вернуться к подбору'})).toHaveAttribute('href','/courses'+query);
+ await expect(page.getByRole('navigation',{name:'Основная навигация'}).getByRole('link',{name:'Каталог',exact:true})).toHaveAttribute('href','/courses'+query);
  const snapshot=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('devcourse-catalog-context')!));
- await page.getByRole('link',{name:'← Вернуться к подбору'}).click();
+ await page.getByRole('navigation',{name:'Основная навигация'}).getByRole('link',{name:'Каталог',exact:true}).click();
  await expect(page.locator('.card')).toHaveCount(8);
  expect(new URL(page.url()).search).toBe(query);
  await expect.poll(()=>page.evaluate(()=>scrollY)).toBeCloseTo(snapshot.scrollY,0);
@@ -76,7 +76,8 @@ test('return from course and comparison restores the exact applied catalog and p
 test('direct entry and untrusted catalog context use the safe fallback',async({page})=>{
  await page.addInitScript(()=>sessionStorage.setItem('devcourse-catalog-context',JSON.stringify({url:'https://example.com/courses',scrollY:20})));
  await page.goto('/courses/demo-go-1');
- await expect(page.getByRole('link',{name:'← Каталог',exact:true})).toHaveAttribute('href','/courses');
+ await expect(page.locator('main').getByRole('link',{name:'← Каталог',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('navigation',{name:'Основная навигация'}).getByRole('link',{name:'Каталог',exact:true})).toHaveAttribute('href','/courses');
  await page.addInitScript(()=>{Object.defineProperty(window,'sessionStorage',{get(){throw new Error('blocked')}})});
  await page.goto('/compare?offers=demo-go-1-standard');
  await expect(page.getByRole('link',{name:'← Каталог',exact:true})).toHaveAttribute('href','/courses');
