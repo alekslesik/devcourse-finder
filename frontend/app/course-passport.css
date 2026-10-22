@@ -56,6 +56,7 @@
 .courseFact dd .courseIcon {width:18px; height:18px; color:var(--muted); margin-top:3px;}
 .courseProgram {margin-top:34px; padding-top:30px; border-top:1px solid var(--line);}
 .courseProgram p {font-size:14px; line-height:1.7; color:var(--muted);}
+.courseProgram .courseConditionsChecked {margin:16px 0 0; font-size:12px;}
 .coursePage .courseProgramLink {gap:8px; background:var(--secondary-surface); border-color:var(--control-border); text-decoration:none;}
 .courseTopics {display:grid; gap:8px; padding-left:22px;}
 .courseDock {display:none;}

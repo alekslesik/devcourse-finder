@@ -113,6 +113,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
      {c.topics.length>0&&<ul className="courseTopics">{c.topics.map(topic=><li key={topic}>{topic}</li>)}</ul>}
      <p>{c.topics.length?'Полное содержание и актуальные условия — у школы.':'Содержание программы уточняйте на сайте школы.'}</p>
      <a className="secondary linkButton courseProgramLink" href={c.source} target="_blank" rel="noopener noreferrer">Программа на сайте школы <ExternalMark/></a>
+     <p className="courseConditionsChecked">Условия проверены: {checked(c.checked_at)}</p>
     </section>
    </div>
   </div>

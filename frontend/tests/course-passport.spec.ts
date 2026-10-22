@@ -46,6 +46,7 @@ for(const width of [390,1440])for(const theme of ['light','dark'] as const){
   await expect(page.locator('#course-conditions')).toHaveCSS('outline-style','none');
   await expect(page.getByRole('link',{name:'Источник',exact:true})).toHaveCount(0);
   await expect(page.locator('#course-sources')).toHaveCount(0);
+  await expect(page.locator('.courseConditionsChecked')).toHaveText(/^Условия проверены: \d{2}\.\d{2}\.\d{4}$/);
   await page.keyboard.press('Tab');
   await expect(page.locator('.courseProgramLink')).toBeFocused();
   await expect(page.locator('.courseProgramLink')).toHaveCSS('outline-style','solid');
