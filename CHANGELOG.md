@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.31.3] - 2026-10-22
+
+- Simplify course pages by removing the Source section and redundant catalog breadcrumbs, and highlight selected tariffs with a custom checkmark and glass frame.
+
 ## [0.31.2] - 2026-10-21
 
 - Remove full-section focus outlines when navigating course passport anchors while preserving control focus indicators.

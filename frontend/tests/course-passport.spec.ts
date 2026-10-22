@@ -2,6 +2,25 @@ import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 for(const width of [390,1440])for(const theme of ['light','dark'] as const){
+ test(`tariff selection stays accessible: ${width}px ${theme}`,async({page},info)=>{
+  test.skip(process.env.E2E_REAL_API==='1','Synthetic multi-offer fixture is local to the frontend API fixture.');
+  await page.setViewportSize({width,height:1000});await page.emulateMedia({colorScheme:theme,reducedMotion:'reduce'});
+  await page.goto('/courses/passport-multi');
+  const conditions=page.getByRole('link',{name:'Условия',exact:true});
+  await conditions.click();await expect(conditions).toHaveAttribute('aria-current','location');
+  const choices=page.locator('.courseTariffList').getByRole('radio');
+  await choices.first().focus();await page.keyboard.press('ArrowDown');
+  await expect(choices.nth(1)).toBeChecked();await expect(choices.nth(1)).toBeFocused();
+  await expect(page.locator('.coursePurchase[data-selected=true]')).toHaveAttribute('data-offer','passport-free');
+  await expect(page.locator('.courseConditionsTariff')).toContainText('Вводный тариф');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
+  expect(axe.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))).toEqual([]);
+  await page.screenshot({path:info.outputPath(`tariff-selection-${width}-${theme}.png`),fullPage:true});
+ });
+}
+
+for(const width of [390,1440])for(const theme of ['light','dark'] as const){
  test(`course passport layout, anchors and actions: ${width}px ${theme}`,async({page},info)=>{
   await page.setViewportSize({width,height:1000});await page.emulateMedia({colorScheme:theme,reducedMotion:'reduce'});
   await page.goto('/courses/demo-go-1');
@@ -25,18 +44,17 @@ for(const width of [390,1440])for(const theme of ['light','dark'] as const){
   await page.getByRole('link',{name:'Условия',exact:true}).focus();await page.keyboard.press('Enter');
   await expect(page.locator('#course-conditions')).toBeFocused();
   await expect(page.locator('#course-conditions')).toHaveCSS('outline-style','none');
-  await page.getByRole('link',{name:'Источник',exact:true}).focus();await page.keyboard.press('Enter');
-  await expect(page.locator('#course-sources')).toBeFocused();
-  await expect(page.locator('#course-sources')).toHaveCSS('outline-style','none');
+  await expect(page.getByRole('link',{name:'Источник',exact:true})).toHaveCount(0);
+  await expect(page.locator('#course-sources')).toHaveCount(0);
   await page.keyboard.press('Tab');
-  await expect(page.locator('.courseSourceLink')).toBeFocused();
-  await expect(page.locator('.courseSourceLink')).toHaveCSS('outline-style','solid');
+  await expect(page.locator('.courseProgramLink')).toBeFocused();
+  await expect(page.locator('.courseProgramLink')).toHaveCSS('outline-style','solid');
   if(width===390){
-   await page.locator('.courseSources').scrollIntoViewIfNeeded();
+   await page.locator('.courseProgram').scrollIntoViewIfNeeded();
    const dock=page.getByRole('region',{name:'Быстрые действия по тарифу'});
    await expect(dock).toBeInViewport();
    await expect(dock.getByRole('link',{name:'На сайт курса'})).toHaveAttribute('href','/out/demo-go-1-standard');
-   const source=page.locator('.courseSourceLink');await source.focus();
+   const source=page.locator('.courseProgramLink');await source.focus();
    await expect.poll(async()=>((await source.boundingBox())!.y+(await source.boundingBox())!.height)<(await dock.boundingBox())!.y).toBe(true);
    await page.screenshot({path:info.outputPath(`passport-dock-${theme}.png`)});
    const dockAxe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
