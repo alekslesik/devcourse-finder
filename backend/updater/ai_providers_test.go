@@ -22,7 +22,7 @@ func TestAIRegistryRejectsUnsupportedAndNoncanonicalCandidates(t *testing.T) {
 		t.Fatal("external ID did not match URL")
 	}
 }
-func TestAIRegistrySourcesRemainValidAndBudgetScheduleUnchanged(t *testing.T) {
+func TestAIRegistrySourcesRemainValidWithoutOffSlotRuns(t *testing.T) {
 	for _, url := range []string{"https://stepik.org/course/42/promo", "https://practicum.yandex.ru/backend-developer", "https://netology.ru/programs/go", "https://code-basics.com/ru/languages/python"} {
 		c, ok := aiCandidateURL(url)
 		if !ok {
@@ -36,10 +36,10 @@ func TestAIRegistrySourcesRemainValidAndBudgetScheduleUnchanged(t *testing.T) {
 	if len(aiSourcePatterns()) != len(aiProviders) {
 		t.Fatal("SQL registry diverged")
 	}
-	// Registering providers must not create paid initial runs or off-day schedules.
-	offDay, _ := time.Parse(time.RFC3339, "2026-10-16T21:00:00+03:00")
-	if aiScheduledRunDue(offDay, nil) {
-		t.Fatal("registry changed weekly budget scheduling")
+	// Registering providers must not create paid initial runs outside the daily recovery slot.
+	offSlot, _ := time.Parse(time.RFC3339, "2026-10-16T12:00:00+03:00")
+	if aiScheduledRunDue(offSlot, nil) {
+		t.Fatal("registry introduced an off-slot paid run")
 	}
 }
 

@@ -175,21 +175,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	if !stepikAvailable {
 		slog.Warn("AI source paused", "provider", "stepik", "code", "source_unavailable")
 	}
-	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($2) AND ($3 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (coalesce(cardinality($4::text[]),0)=0 OR c.id=ANY($4::text[])) AND ($5<>'' OR a.next_attempt_at IS NULL OR a.next_attempt_at<=now()) ORDER BY a.attempted_at NULLS FIRST,c.id LIMIT $1`, s.Config.BatchSize, aiSourcePatterns(), stepikAvailable, s.Config.CourseIDs, s.TargetCourseID)
-	if err != nil {
-		return result, err
-	}
-	ids := []string{}
-	for rows.Next() {
-		var id string
-		if err = rows.Scan(&id); err != nil {
-			rows.Close()
-			return result, err
-		}
-		ids = append(ids, id)
-	}
-	err = rows.Err()
-	rows.Close()
+	ids, err := s.selectAICourses(ctx, stepikAvailable)
 	if err != nil {
 		return result, err
 	}

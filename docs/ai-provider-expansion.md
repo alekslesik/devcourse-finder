@@ -29,7 +29,7 @@ Implemented readers do not imply that every current page passes the contract.
 
 The native collectors still own discovery, prices, billing and enrollment. AI
 only enriches existing published identities. Paid analysis remains scheduled on
-Monday and Thursday at 21:00 Europe/Moscow, with the existing shared daily request
+Every day at 21:00 Europe/Moscow, with the existing shared daily request
 cap and unchanged manual-trigger semantics. Adding a provider increases the set
 of eligible courses, not the configured run size or request limit.
 

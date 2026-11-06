@@ -238,7 +238,7 @@ def write_summary(log, destination):
                      'Only due published courses are selected; source cooldowns and cache remain active. '
                      'A successful workflow can stop at its budget/batch cap with courses remaining. '
                      'Repeat after the UTC daily reset (03:00 Moscow) to continue. '
-                     'The permanent .env and Monday/Thursday schedule are unchanged.\n')
+                     'The permanent .env and daily 21:00 Moscow schedule are unchanged.\n')
 
 
 def main():
