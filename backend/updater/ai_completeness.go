@@ -1,6 +1,9 @@
 package updater
 
-import "devcourse-finder/catalog"
+import (
+	"devcourse-finder/catalog"
+	"time"
+)
 
 // Use the search matcher, rather than the presence of JSON keys: a stored
 // "unknown" or an entry requirement alone is not a confirmed suitability match.
@@ -25,10 +28,23 @@ func aiProfileMissing(c catalog.Course) map[string]bool {
 
 func aiMissingCount(c catalog.Course) int {
 	n := 0
-	for _, missing := range aiProfileMissing(c) {
-		if missing {
+	for field, missing := range aiProfileMissing(c) {
+		if missing && !aiHasRecommendation(c, field, time.Now()) {
 			n++
 		}
 	}
 	return n
+}
+
+func aiHasRecommendation(c catalog.Course, field string, now time.Time) bool {
+	tags := c.Recommendations.Tags(field)
+	if tags == nil {
+		return false
+	}
+	for _, v := range tags.Values {
+		if catalog.MatchRecommendation(c, field, v, now) {
+			return true
+		}
+	}
+	return false
 }

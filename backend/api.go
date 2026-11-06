@@ -35,7 +35,7 @@ func newHandler(db catalogRepository) http.Handler {
 		write(w, 200, map[string]bool{"ok": true})
 	})
 	mux.HandleFunc("GET /api/v1/catalog/options", func(w http.ResponseWriter, r *http.Request) {
-		write(w, 200, map[string]any{"languages": []string{"go", "python", "java", "javascript"}, "directions": []string{"basics", "backend", "frontend", "fullstack", "automation"}})
+		write(w, 200, map[string]any{"languages": []string{"go", "python", "java", "javascript"}, "directions": catalog.SearchDirections()})
 	})
 	mux.HandleFunc("GET /api/v1/courses", func(w http.ResponseWriter, r *http.Request) {
 		f, e := catalog.Parse(r.URL.Query())
@@ -52,10 +52,12 @@ func newHandler(db catalogRepository) http.Handler {
 		now := time.Now()
 		items := catalog.Search(cs, f, now)
 		total := len(items)
-		confirmed, unverified := 0, 0
+		confirmed, recommended, unverified := 0, 0, 0
 		for _, item := range items {
 			if item.ProfileMatch == "unverified" {
 				unverified++
+			} else if item.ProfileMatch == "recommended" {
+				recommended++
 			} else {
 				confirmed++
 			}
@@ -68,7 +70,7 @@ func newHandler(db catalogRepository) http.Handler {
 		if end > total {
 			end = total
 		}
-		response := map[string]any{"confirmed_total": confirmed, "unverified_total": unverified, "items": items[start:end], "total": total, "page": f.Page, "page_size": f.PageSize, "data_as_of": now, "applied_filters": r.URL.Query()}
+		response := map[string]any{"recommended_total": recommended, "confirmed_total": confirmed, "unverified_total": unverified, "items": items[start:end], "total": total, "page": f.Page, "page_size": f.PageSize, "data_as_of": now, "applied_filters": r.URL.Query()}
 		if f.Diagnostics {
 			response["diagnostics"] = catalog.ProfileFacets(cs, f, now)
 			prospective := f

@@ -83,18 +83,20 @@ type AIService struct {
 	Client         *http.Client
 }
 type AIRunResult struct {
-	ObservationID   int64  `json:"observation_id,omitempty"`
-	ID              int64  `json:"run_id"`
-	Attempted       int    `json:"attempted"`
-	Queued          int    `json:"queued"`
-	Cached          int    `json:"cached"`
-	Failed          int    `json:"failed"`
-	Tokens          int    `json:"tokens"`
-	Status          string `json:"status"`
-	Useful          int    `json:"useful_queued"`
-	Empty           int    `json:"empty_queued"`
-	VerifiedClaims  int    `json:"verified_claims"`
-	DiscardedClaims int    `json:"discarded_claims"`
+	RecommendationClaims int    `json:"recommendation_claims"`
+	FactualClaims        int    `json:"factual_claims"`
+	ObservationID        int64  `json:"observation_id,omitempty"`
+	ID                   int64  `json:"run_id"`
+	Attempted            int    `json:"attempted"`
+	Queued               int    `json:"queued"`
+	Cached               int    `json:"cached"`
+	Failed               int    `json:"failed"`
+	Tokens               int    `json:"tokens"`
+	Status               string `json:"status"`
+	Useful               int    `json:"useful_queued"`
+	Empty                int    `json:"empty_queued"`
+	VerifiedClaims       int    `json:"verified_claims"`
+	DiscardedClaims      int    `json:"discarded_claims"`
 }
 
 func (s *AIService) fail(ctx context.Context, id, code string) error {
@@ -155,7 +157,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	defer func() {
 		finish, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_, e := s.DB.Pool.Exec(finish, "UPDATE catalog_ai_runs SET finished_at=now(),status=$2,attempted=$3,queued=$4,cached=$5,failed=$6,tokens=$7,useful_queued=$8,empty_queued=$9,verified_claims=$10,discarded_claims=$11 WHERE id=$1", result.ID, result.Status, result.Attempted, result.Queued, result.Cached, result.Failed, result.Tokens, result.Useful, result.Empty, result.VerifiedClaims, result.DiscardedClaims)
+		_, e := s.DB.Pool.Exec(finish, "UPDATE catalog_ai_runs SET finished_at=now(),status=$2,attempted=$3,queued=$4,cached=$5,failed=$6,tokens=$7,useful_queued=$8,empty_queued=$9,verified_claims=$10,discarded_claims=$11,recommendation_claims=$12,factual_claims=$13 WHERE id=$1", result.ID, result.Status, result.Attempted, result.Queued, result.Cached, result.Failed, result.Tokens, result.Useful, result.Empty, result.VerifiedClaims, result.DiscardedClaims, result.RecommendationClaims, result.FactualClaims)
 		if err == nil {
 			err = e
 		}
@@ -187,23 +189,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 	for _, c := range courses {
 		byID[c.ID] = c
 	}
-	model := s.Model
-	if model == nil {
-		model = &OpenAIModel{Key: s.Config.Key, Model: s.Config.Model, VerifyModel: s.Config.VerifyModel}
-	}
-	primary := &AIEngine{DB: s.DB, Model: model, ModelName: "openai:" + s.Config.Model + "+" + s.Config.VerifyModel, DailyLimit: s.Config.DailyLimit}
-	resolver := aiFallbackResolver{primary: primary}
-	if s.Model == nil && strings.TrimSpace(s.Config.Key) == "" {
-		resolver.primary = nil
-	}
-	if strings.TrimSpace(s.Config.DeepSeekKey) != "" {
-		resolver.fallback = &AIEngine{
-			DB:         s.DB,
-			Model:      &DeepSeekModel{Key: s.Config.DeepSeekKey, Model: s.Config.DeepSeekModel, VerifyModel: s.Config.DeepSeekVerifyModel},
-			ModelName:  "deepseek:" + s.Config.DeepSeekModel + "+" + s.Config.DeepSeekVerifyModel,
-			DailyLimit: s.Config.DailyLimit,
-		}
-	}
+	resolver := s.resolver()
 	publisher := Service{DB: s.DB}
 	for _, id := range ids {
 		if err = ctx.Err(); err != nil {
@@ -236,7 +222,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			}
 		}
 		modelUsed, cached, tokens := "", false, 0
-		discarded, verified := 0, 0
+		discarded, verified, recommendations := 0, 0, 0
 		if readErr == nil {
 			var resolved AIResolved
 			resolved, readErr = resolver.Resolve(local, id, candidate, docs, at)
@@ -245,6 +231,11 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			stage, reason = resolved.Stage, resolved.Reason
 			if readErr == nil {
 				verified = len(resolved.Verification.Verified)
+				for _, i := range resolved.Verification.Verified {
+					if strings.HasPrefix(resolved.Extraction.Claims[i].Field, "recommended_") {
+						recommendations++
+					}
+				}
 			}
 			code = "invalid_ai_response"
 			result.Tokens += resolved.Usage.Total
@@ -275,6 +266,8 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 		}
 		cancel()
 		result.VerifiedClaims += verified
+		result.RecommendationClaims += recommendations
+		result.FactualClaims += verified - recommendations
 		result.DiscardedClaims += discarded
 		if readErr != nil {
 			result.Failed++
@@ -292,7 +285,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 		if _, err = s.DB.Pool.Exec(ctx, "UPDATE catalog_ai_sources SET diagnostic_stage=$2,diagnostic_reason=$3 WHERE course_id=$1 AND attempted_at=$4 AND code=$5", id, stage, reason, at, code); err != nil {
 			return result, err
 		}
-		slog.Info("AI course checked", "stage", stage, "reason", reason, "course_id", id, "code", code, "model", modelUsed, "cached", cached, "tokens", tokens, "discarded_claims", discarded, "verified_claims", verified)
+		slog.Info("AI course checked", "stage", stage, "reason", reason, "course_id", id, "code", code, "model", modelUsed, "cached", cached, "tokens", tokens, "discarded_claims", discarded, "verified_claims", verified, "recommendation_claims", recommendations, "factual_claims", verified-recommendations)
 		if aiProviderUnavailable(readErr) {
 			break
 		}
@@ -406,4 +399,25 @@ func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 		}
 	}
 	return rows.Err()
+}
+
+func (s AIService) resolver() *aiFallbackResolver {
+	model := s.Model
+	if model == nil {
+		model = &OpenAIModel{Key: s.Config.Key, Model: s.Config.Model, VerifyModel: s.Config.VerifyModel}
+	}
+	primary := &AIEngine{DB: s.DB, Model: model, ModelName: "openai:" + s.Config.Model + "+" + s.Config.VerifyModel, DailyLimit: s.Config.DailyLimit}
+	resolver := aiFallbackResolver{primary: primary}
+	if s.Model == nil && strings.TrimSpace(s.Config.Key) == "" {
+		resolver.primary = nil
+	}
+	if strings.TrimSpace(s.Config.DeepSeekKey) != "" {
+		resolver.fallback = &AIEngine{
+			DB:         s.DB,
+			Model:      &DeepSeekModel{Key: s.Config.DeepSeekKey, Model: s.Config.DeepSeekModel, VerifyModel: s.Config.DeepSeekVerifyModel},
+			ModelName:  "deepseek:" + s.Config.DeepSeekModel + "+" + s.Config.DeepSeekVerifyModel,
+			DailyLimit: s.Config.DailyLimit,
+		}
+	}
+	return &resolver
 }

@@ -96,8 +96,9 @@ func run() error {
 				defer done()
 				return updater.AISourceCheck(bounded, db, nil, args[2], os.Stdout)
 			}
-			if len(args) != 2 && !(len(args) == 3 && args[1] == "verify") {
-				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health or catalog-ai verify COURSE_ID", nil)
+			validArgs := len(args) == 2 && args[1] != "verify" && args[1] != "preview" || len(args) == 3 && (args[1] == "verify" || args[1] == "preview")
+			if !validArgs {
+				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health or catalog-ai verify|preview COURSE_ID", nil)
 			}
 			stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 			defer cancel()
@@ -112,7 +113,7 @@ func run() error {
 			if args[1] == "status" {
 				return updater.AIStatus(stop, db, os.Stdout)
 			}
-			if args[1] != "serve" && args[1] != "once" && args[1] != "verify" {
+			if args[1] != "serve" && args[1] != "once" && args[1] != "verify" && args[1] != "preview" {
 				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health", nil)
 			}
 			config, err := updater.LoadAIConfig()
@@ -120,6 +121,18 @@ func run() error {
 				return commandFailure("ai_config", "invalid_ai_configuration", "Set OPENAI_API_KEY and validate the AI collector configuration", err)
 			}
 			service := updater.AIService{DB: db, Config: config}
+			if args[1] == "preview" {
+				bounded, done := context.WithTimeout(stop, 10*time.Minute)
+				defer done()
+				report, previewErr := service.PreviewCourse(bounded, args[2])
+				if err := json.NewEncoder(os.Stdout).Encode(report); err != nil {
+					return err
+				}
+				if previewErr != nil {
+					return commandFailure("ai_preview", "ai_preview_failed", "AI preview did not complete; catalog was not changed", previewErr)
+				}
+				return nil
+			}
 			if args[1] == "verify" {
 				if len(args) != 3 {
 					return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai verify COURSE_ID", nil)

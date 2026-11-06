@@ -334,3 +334,27 @@ summary,.checkbox {min-height:44px;}
 @media(max-width:700px) {.siteNav {gap:12px; font-size:13px;} .siteNav a {white-space:nowrap;}}
 
 .siteVersion {font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums;}
+
+.routeForm>.recommendationSetting {grid-column:1/-1; min-width:0;}
+.recommendationSetting .checkbox {display:flex; gap:10px; align-items:center; margin:0; min-height:44px;}
+.recommendationSetting input[type=checkbox] {width:18px; height:18px; min-height:18px; flex:0 0 auto;}
+.recommendationSetting small {display:block; max-width:70ch; color:var(--muted); margin-top:4px;}
+.recommendedResults {margin-block-start:2rem;}
+.recommendedResults h3 {margin:0 0 .5rem; font-size:1.25rem;}
+.recommendedResults>p,.matchSummary {max-width:65ch; color:var(--muted); margin:0 0 1.25rem;}
+.reasons .advisoryReason {background:var(--accent-soft); color:var(--accent);}
+.card .profileUnknown {font-size:13px; color:var(--muted); margin:12px 0 0;}
+.recommendationEvidence {margin-top:12px; font-size:13px; overflow-wrap:anywhere;}
+.recommendationEvidence summary {cursor:pointer; color:var(--accent); min-height:44px; padding-block:10px;}
+.recommendationEvidence p,.recommendationEvidence blockquote {font:inherit; margin:8px 0; max-width:65ch;}
+.recommendationEvidence>div {margin-block:16px;}
+.recommendationEvidence a {color:var(--accent); text-decoration:underline; text-underline-offset:3px;}
+.recommendationEvidence small {display:block; color:var(--muted); margin-top:4px;}
+.recommendationOverview {margin-top:24px;}
+.recommendationOverview h3 {font-size:18px; margin:0 0 8px;}
+.recommendationOverview>p {font-size:14px; color:var(--muted);}
+.recommendationOverview dl {display:grid; gap:12px; margin:16px 0;}
+.recommendationOverview dt {font-size:13px; color:var(--muted);}
+.recommendationOverview dd {margin:4px 0 0;}
+.recommendationEvidence>summary {list-style:disclosure-closed inside;}
+.recommendationEvidence[open]>summary {list-style-type:disclosure-open;}

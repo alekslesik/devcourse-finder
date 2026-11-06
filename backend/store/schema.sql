@@ -206,3 +206,10 @@ ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS useful_queued integer NOT N
 ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS empty_queued integer NOT NULL DEFAULT 0;
 ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS verified_claims integer NOT NULL DEFAULT 0;
 ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS discarded_claims integer NOT NULL DEFAULT 0;
+
+-- AI interpretations stay separate from confirmed profile facts.
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS recommendations jsonb;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS recommendation_identity text NOT NULL DEFAULT '';
+
+ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS recommendation_claims integer NOT NULL DEFAULT 0;
+ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS factual_claims integer NOT NULL DEFAULT 0;

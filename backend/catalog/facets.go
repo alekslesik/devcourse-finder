@@ -8,10 +8,11 @@ import (
 // Facet counts distinct eligible courses with this facet's own constraint
 // removed. Other filters and offer eligibility still apply. Counts can overlap.
 type Facet struct {
-	Eligible int            `json:"eligible"`
-	Unknown  int            `json:"unknown"`
-	Selected string         `json:"selected"`
-	Counts   map[string]int `json:"counts"`
+	RecommendedCounts map[string]int `json:"recommended_counts,omitempty"`
+	Eligible          int            `json:"eligible"`
+	Unknown           int            `json:"unknown"`
+	Selected          string         `json:"selected"`
+	Counts            map[string]int `json:"counts"`
 }
 
 func matchesExperience(audience []string, value string) bool {
@@ -43,17 +44,21 @@ func ProfileFacets(courses []Course, f Filter, now time.Time) map[string]Facet {
 			values = []string{"try", "job", "switch", "deepen"}
 		case "direction":
 			selected, base.Direction = f.Direction, ""
-			values = []string{"basics", "backend", "frontend", "fullstack", "automation"}
+			values = SearchDirections()
 		}
 		eligible := Search(courses, base, now)
-		facet := Facet{Eligible: len(eligible), Selected: selected, Counts: map[string]int{}}
+		facet := Facet{Eligible: len(eligible), Selected: selected, Counts: map[string]int{}, RecommendedCounts: map[string]int{}}
 		for _, v := range values {
 			facet.Counts[v] = 0
+			facet.RecommendedCounts[v] = 0
 		}
 		for _, result := range eligible {
 			known := false
 			for _, v := range values {
 				matches := MatchProfile(result.Course, key, v) == "confirmed"
+				if f.IncludeRecommendations && MatchRecommendation(result.Course, key, v, now) {
+					facet.RecommendedCounts[v]++
+				}
 				if matches {
 					facet.Counts[v]++
 					known = true

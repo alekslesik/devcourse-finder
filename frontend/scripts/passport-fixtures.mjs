@@ -12,5 +12,8 @@ export function passportCourses(template){
   {...base,id:'passport-closed',name:'Закрытый тариф',price:3500000,duration_months:6,review:true,support_known:true,enrollment:'closed'},
  ];
  const empty=structuredClone(course);empty.id=empty.slug='passport-empty';empty.offers=[];empty.audience=['unknown'];empty.profile=undefined;
- return [course,empty];
+ const advisory=structuredClone(course);advisory.id=advisory.slug='passport-advisory';advisory.title='Демо: Оценка программы';advisory.profile=undefined;advisory.audience=['unknown'];advisory.goals=['unknown'];advisory.direction='unknown';advisory.offers=[{...base,id:'passport-advisory-offer',name:'Полная программа'}];
+ const tags=values=>({values,quote:'Программа включает основы Python, работу с данными и практический проект.',evidence:{source:advisory.source,locator:'section:program',digest:'a'.repeat(64),checked_at:new Date().toISOString()}});
+ advisory.recommendations={audience:tags(['none']),goals:tags(['try']),directions:tags(['data'])};
+ return [course,empty,advisory];
 }

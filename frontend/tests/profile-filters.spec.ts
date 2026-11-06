@@ -18,7 +18,7 @@ test('profile counts and default unknown results preserve filters and history on
  await expect(page.getByRole('heading',{level:2,name:'1 программа с подтверждёнными условиями'})).toBeVisible();
  await expect(page.locator('select[name=experience] option[value=basics]')).toHaveText('Знаю основы · 1');
  await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
- await expect(page.locator('.routeForm input[type=checkbox]')).toHaveCount(0);
+ await expect(page.getByRole('checkbox',{name:'Учитывать оценки ИИ',exact:true})).toBeChecked();
  await expect(page.locator('.profileNotice,.draftNotice')).toHaveCount(0);
  await page.getByLabel('До, ₽',{exact:true}).fill('350000');
  await page.getByLabel('Сортировка',{exact:true}).selectOption('price_asc');
@@ -53,7 +53,7 @@ test('legacy opt-ins cannot hide free courses or incomplete profiles',async({pag
  await expect(page.locator('.price.free')).toHaveText('Бесплатно');
  await expect(page.locator('.unverifiedResults')).toContainText('Курс с неполными данными');
  await expect(page).toHaveURL(/\/courses$/);
- await expect(page.locator('.routeForm input[type=checkbox]')).toHaveCount(0);
+ await expect(page.getByRole('checkbox',{name:'Учитывать оценки ИИ',exact:true})).toBeChecked();
  await page.getByRole('button',{name:'Сбросить',exact:true}).click();
  await expect(page.locator('.card')).toHaveCount(2);
  await page.reload();await expect(page.locator('.card')).toHaveCount(2);

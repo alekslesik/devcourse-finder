@@ -16,7 +16,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-const aiPolicyVersion = "course-facts-v4"
+const aiPolicyVersion = "course-facts-v5"
 const aiMaxText = 96000
 const aiMaxClaims = 40
 const aiOwnershipShift = 8
@@ -61,8 +61,9 @@ type AIVerification struct {
 	Verified []int `json:"verified_claim_ids"`
 }
 type AIFacts struct {
-	Profile  *catalog.CourseProfile
-	Learning map[string]*catalog.LearningConditions
+	Recommendations *catalog.CourseRecommendations
+	Profile         *catalog.CourseProfile
+	Learning        map[string]*catalog.LearningConditions
 }
 
 func aiStrictJSON(raw []byte, out any) error {
@@ -192,7 +193,8 @@ func aiCompile(c Candidate, docs []AIDocument, extraction AIExtraction, verifica
 			}
 		}
 		seen[key] = true
-		course := slices.Contains([]string{"prerequisites", "audience", "excluded_audience", "goals", "direction", "target_level"}, claim.Field)
+		recommendation := strings.HasPrefix(claim.Field, "recommended_")
+		course := recommendation || slices.Contains([]string{"prerequisites", "audience", "excluded_audience", "goals", "direction", "target_level"}, claim.Field)
 		learning := slices.Contains([]string{"duration", "weekly_workload", "review", "mentor", "community"}, claim.Field)
 		if course && (claim.OfferID != "" || d.Scope != "course") || learning && (claim.OfferID == "" || d.Scope != "offer" || d.OfferID != claim.OfferID) || !course && !learning {
 			return out, ErrAI
@@ -202,12 +204,44 @@ func aiCompile(c Candidate, docs []AIDocument, extraction AIExtraction, verifica
 		conditions := catalog.LearningConditions{}
 		numeric := claim.Field == "duration" || claim.Field == "weekly_workload"
 		support := claim.Field == "review" || claim.Field == "mentor" || claim.Field == "community"
-		tags := claim.Field == "audience" || claim.Field == "excluded_audience" || claim.Field == "goals"
+		tags := recommendation || claim.Field == "audience" || claim.Field == "excluded_audience" || claim.Field == "goals"
 		if !numeric && (claim.Min != nil || claim.Max != nil || claim.Unit != "") || !support && claim.Available != nil || !tags && len(claim.Values) > 0 || claim.Field != "prerequisites" && claim.Scope != "" {
 			return out, ErrAI
 		}
 		if (numeric || support || tags) && claim.Value != "" {
 			return out, ErrAI
+		}
+		if recommendation {
+			tags := &catalog.RecommendationTags{Values: claim.Values, Quote: q, Evidence: evidence}
+			rec := &catalog.CourseRecommendations{}
+			switch claim.Field {
+			case "recommended_audience":
+				rec.Audience = tags
+			case "recommended_goals":
+				rec.Goals = tags
+			case "recommended_directions":
+				rec.Directions = tags
+			default:
+				return out, ErrAI
+			}
+			if !rec.Valid() {
+				return out, ErrAI
+			}
+			if accepted[i] {
+				if out.Recommendations == nil {
+					out.Recommendations = &catalog.CourseRecommendations{}
+				}
+				if rec.Audience != nil {
+					out.Recommendations.Audience = tags
+				}
+				if rec.Goals != nil {
+					out.Recommendations.Goals = tags
+				}
+				if rec.Directions != nil {
+					out.Recommendations.Directions = tags
+				}
+			}
+			continue
 		}
 		switch claim.Field {
 		case "prerequisites":

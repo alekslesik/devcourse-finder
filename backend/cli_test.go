@@ -269,3 +269,12 @@ func TestCLIImportWithPostgres(t *testing.T) {
 		t.Fatalf("CLI price update missing: %v", err)
 	}
 }
+
+func TestCLIAIPreviewRequiresCourseID(t *testing.T) {
+	for _, args := range [][]string{{"catalog-ai", "preview"}, {"catalog-ai", "verify"}, {"catalog-ai", "preview", "stepik-42", "extra"}} {
+		t.Run(strings.Join(args, "_"), func(t *testing.T) {
+			result := cliProcess(t, "postgres://devcourse:test@127.0.0.1:1/test?sslmode=disable", map[string]string{"OPENAI_API_KEY": "", "DEEPSEEK_API_KEY": "test-only-key"}, args...)
+			assertCLIFailure(t, result, "catalog-ai", "arguments", "invalid_arguments")
+		})
+	}
+}

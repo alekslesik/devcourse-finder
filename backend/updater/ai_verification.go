@@ -24,6 +24,8 @@ type AIVerificationReport struct {
 // Retain every non-AI field, including all identity, billing, enrollment and
 // financial timestamps. The digest is an acceptance assertion, not write access.
 func aiProtectedDigest(c catalog.Course) string {
+	c.Recommendations = nil
+	c.RecommendationIdentity = ""
 	c.Profile = nil
 	c.ProfileOwnership = 0
 	c.Audience = nil
