@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.33.0] - 2026-11-06
+
+- Add independently reviewed AI course recommendations with source explanations, separate search groups and opt-out controls; support data/ML, algorithms and testing filters.
+
 ## [0.32.1] - 2026-11-06
 
 - Require explicit weekly-hour units in AI source quotes instead of accepting bare workload numbers; invalidate older AI analyses.

@@ -6,11 +6,12 @@ import CatalogActions from './catalog-actions';
 import CourseIcon from './course-icon';
 import ExternalMark from './external-mark';
 import ProviderName from './provider-name';
+import RecommendationOverview from './recommendation-overview';
 
 const languages:Record<string,string>={go:'Go',python:'Python',java:'Java',javascript:'JavaScript'};
 const schedule:Record<string,string>={flexible:'В своём темпе',scheduled:'По расписанию',unknown:'Уточните у школы'};
 const enrollment:Record<string,string>={open:'Открыт',continuous:'Постоянный',closed:'Закрыт',unknown:'Уточните у школы'};
-type PassportCourse=Pick<Course,'title'|'provider'|'language'|'summary'|'audience'|'profile'|'topics'|'source'|'checked_at'|'demo'>;
+type PassportCourse=Pick<Course,'title'|'provider'|'language'|'summary'|'audience'|'profile'|'recommendations'|'topics'|'source'|'checked_at'|'demo'>;
 type PassportItem=Pick<Item,'offer'|'effective_price'>;
 function Fact({label,children,unknown=false}:{label:string;children:ReactNode;unknown?:boolean}){
  return <div className="courseFact"><dt>{label}</dt><dd>{unknown&&<CourseIcon kind="unknown"/>}<span>{children}</span></dd></div>;
@@ -96,14 +97,15 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
     <section className="courseConditions" id="course-conditions" tabIndex={-1} aria-labelledby="course-audience-title">
      <h2 id="course-audience-title"><CourseIcon kind="person"/>Для кого подходит</h2>
      <dl className="courseFacts"><Fact label="Кому подходит" unknown={!audience.length}>{experience}</Fact><Fact label="Требования к опыту" unknown={!prerequisite}>{requirement}</Fact></dl>
+     <RecommendationOverview course={c}/>
      <h2><CourseIcon kind="code"/>Формат и поддержка</h2>
      {offers.length>1&&<p className="courseConditionsTariff">Условия тарифа: <strong>{offer?.name}</strong></p>}
      <dl className="courseFacts">
       <Fact label="Длительность" unknown={!courseDuration}>{courseDuration||'Уточните у школы'}</Fact>
       <Fact label="Нагрузка" unknown={!courseWorkload}>{courseWorkload||'Уточните у школы'}</Fact>
       <Fact label="Расписание" unknown={!offer||offer.schedule==='unknown'}>{offer?(schedule[offer.schedule]||schedule.unknown):schedule.unknown}</Fact>
-      <Fact label="Проверка кода" unknown={!offer||supportValue(offer,'review')===null}>{offer?supportText(offer,'review'):'Уточните у школы'}</Fact>
-      <Fact label="Индивидуальные занятия" unknown={!offer||supportValue(offer,'mentor')===null}>{offer?supportText(offer,'mentor'):'Уточните у школы'}</Fact>
+      <Fact label="Проверка кода" unknown={!offer||supportValue(offer,'review')===null}>{offer?supportText(offer,'review'):'Нет подтверждённых данных'}</Fact>
+      <Fact label="Индивидуальные занятия" unknown={!offer||supportValue(offer,'mentor')===null}>{offer?supportText(offer,'mentor'):'Нет подтверждённых данных'}</Fact>
       {offer?.learning_conditions?.community&&<Fact label="Учебное сообщество">{offer.learning_conditions.community.available?'Есть':'Нет'}</Fact>}
       <Fact label="Набор" unknown={!offer||offer.enrollment==='unknown'}>{offer?(enrollment[offer.enrollment]||enrollment.unknown):enrollment.unknown}</Fact>
      </dl>

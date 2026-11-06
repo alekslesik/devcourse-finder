@@ -78,8 +78,8 @@ test('discovered courses do not invent support when evidence is unknown',async({
  await page.goto('/courses?compare=demo-go-1-standard');
  await expect(page.getByRole('dialog').getByRole('table')).toBeVisible();
  await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Длительность',exact:true})})).toContainText('3 мес.');
- await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Проверка кода',exact:true})})).toContainText('Уточните у школы');
- await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Уточните у школы');
+ await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Проверка кода',exact:true})})).toContainText('Нет подтверждённых данных');
+ await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Нет подтверждённых данных');
 });
 
 for(const months of [null,3]){
@@ -119,5 +119,5 @@ test('verified ranges and independent human support reach cards and comparison',
  await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Длительность',exact:true})})).toContainText('2–4 мес.');
  await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Нагрузка',exact:true})})).toContainText('6–12 ч/нед.');
  await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Проверка кода',exact:true})})).toContainText('Есть');
- await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Уточните у школы');
+ await expect(dialog.getByRole('row').filter({has:page.getByRole('rowheader',{name:'Индивидуальные занятия',exact:true})})).toContainText('Нет подтверждённых данных');
 });

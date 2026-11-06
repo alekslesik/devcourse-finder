@@ -78,7 +78,7 @@ test('selected tariff keeps its price, conditions, outbound target and compariso
  await expect(fact('Кому подходит')).toHaveText('Без опыта · Программирую на другом языке');
  await expect(fact('Требования к опыту')).toHaveText('Знание основ на языке курса');
  await expect(purchase.locator('.coursePurchasePrice')).toContainText('70');
- await expect(fact('Проверка кода')).toHaveText('Уточните у школы');
+ await expect(fact('Проверка кода')).toHaveText('Нет подтверждённых данных');
  await choose('passport-free').check();
  await expect(purchase.locator('.coursePurchasePrice')).toHaveText('Бесплатно');
  await expect(fact('Проверка кода')).toHaveText('Нет');
@@ -92,7 +92,7 @@ test('selected tariff keeps its price, conditions, outbound target and compariso
  await choose('passport-from').check();
  await expect(purchase.locator('.coursePurchasePrice')).toHaveText('Цена не подтверждена');
  await expect(purchase).toContainText('Цена «от»');
- await expect(fact('Проверка кода')).toHaveText('Уточните у школы');
+ await expect(fact('Проверка кода')).toHaveText('Нет подтверждённых данных');
  await expect(purchase.getByRole('button',{name:'Добавить в сравнение'})).toHaveCount(0);
  await expect(purchase.getByRole('link',{name:'Проверить набор'})).toHaveAttribute('href','/out/passport-from');
  await choose('passport-closed').check();

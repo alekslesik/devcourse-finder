@@ -3,22 +3,25 @@ package updater
 import (
 	"context"
 	"strings"
+	"time"
 
 	"devcourse-finder/catalog"
 	"devcourse-finder/store"
 )
 
 type aiProviderCoverage struct {
-	Provider       string         `json:"provider"`
-	Eligible       int            `json:"eligible_courses"`
-	Mapped         int            `json:"mapped_courses"`
-	Attempted      int            `json:"attempted_courses"`
-	Verified       int            `json:"ever_verified_courses"`
-	SourceFailures int            `json:"source_failures"`
-	NeverAttempted int            `json:"never_attempted_courses"`
-	Due            int            `json:"due_courses"`
-	MissingProfile int            `json:"missing_profile_courses"`
-	ProfileUnknown map[string]int `json:"profile_unknown"`
+	Provider            string         `json:"provider"`
+	Eligible            int            `json:"eligible_courses"`
+	Mapped              int            `json:"mapped_courses"`
+	Attempted           int            `json:"attempted_courses"`
+	Verified            int            `json:"ever_verified_courses"`
+	SourceFailures      int            `json:"source_failures"`
+	NeverAttempted      int            `json:"never_attempted_courses"`
+	Due                 int            `json:"due_courses"`
+	MissingProfile      int            `json:"missing_profile_courses"`
+	ProfileUnknown      map[string]int `json:"profile_unknown"`
+	RecommendedProfile  map[string]int `json:"recommended_profile"`
+	UnclassifiedProfile int            `json:"unclassified_profile_courses"`
 }
 
 // Coverage is operational state, not a claim of semantic completeness/accuracy.
@@ -39,7 +42,7 @@ func aiCoverage(ctx context.Context, db *store.DB) ([]aiProviderCoverage, error)
 	defer rows.Close()
 	by := map[string]*aiProviderCoverage{}
 	for _, id := range aiProviderIDs() {
-		by[id] = &aiProviderCoverage{Provider: id, ProfileUnknown: map[string]int{"experience": 0, "goal": 0, "direction": 0}}
+		by[id] = &aiProviderCoverage{Provider: id, ProfileUnknown: map[string]int{"experience": 0, "goal": 0, "direction": 0}, RecommendedProfile: map[string]int{"experience": 0, "goal": 0, "direction": 0}}
 	}
 	for rows.Next() {
 		var id, source, code string
@@ -53,6 +56,9 @@ func aiCoverage(ctx context.Context, db *store.DB) ([]aiProviderCoverage, error)
 		}
 		v := by[c.Adapter]
 		v.Eligible++
+		if aiMissingCount(byCourse[id]) > 0 {
+			v.UnclassifiedProfile++
+		}
 		if !attempted {
 			v.NeverAttempted++
 		}
@@ -64,6 +70,9 @@ func aiCoverage(ctx context.Context, db *store.DB) ([]aiProviderCoverage, error)
 			if unknown {
 				v.ProfileUnknown[field]++
 				missing = true
+				if aiHasRecommendation(byCourse[id], field, time.Now()) {
+					v.RecommendedProfile[field]++
+				}
 			}
 		}
 		if missing {

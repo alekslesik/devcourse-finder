@@ -162,6 +162,7 @@ export interface components {
             demo: boolean;
             offers: components["schemas"]["Offer"][];
             profile?: components["schemas"]["CourseProfile"];
+            recommendations?: components["schemas"]["CourseRecommendations"];
         };
         Offer: {
             id: string;
@@ -196,8 +197,9 @@ export interface components {
             reasons: string[] | null;
             stale: boolean;
             /** @enum {string} */
-            profile_match?: "confirmed" | "unverified";
+            profile_match?: "confirmed" | "unverified" | "recommended";
             unknown_profile_fields?: ("experience" | "goal" | "direction")[];
+            recommendation_fields?: ("experience" | "goal" | "direction")[];
         };
         Unavailable: {
             id: string;
@@ -236,6 +238,8 @@ export interface components {
             unverified_total?: number;
             /** @description Unverified candidates satisfying all other constraints; included when diagnostics=true. */
             unknown_available?: number;
+            /** @description Courses satisfying selected profile filters with at least one AI interpretation and no unresolved profile fields, before pagination. */
+            recommended_total?: number;
         };
         Error: {
             error: string;
@@ -314,6 +318,10 @@ export interface components {
             counts: {
                 [key: string]: number;
             };
+            /** @description Additional advisory matches per value when include_recommendations=true; disjoint from confirmed counts for the same value. */
+            recommended_counts?: {
+                [key: string]: number;
+            };
         };
         ProfileValue: {
             /** @enum {string} */
@@ -350,6 +358,18 @@ export interface components {
             excluded_audience?: components["schemas"]["ProfileTags"] & {
                 values?: unknown;
             };
+        };
+        /** @description An independently reviewed AI interpretation of course content, not a school-confirmed condition. */
+        RecommendationTags: {
+            values: string[];
+            quote: string;
+            evidence: components["schemas"]["LearningEvidence"];
+        };
+        /** @description Advisory learner/goal/direction estimates, stored separately from verified facts. */
+        CourseRecommendations: {
+            audience?: components["schemas"]["RecommendationTags"];
+            goals?: components["schemas"]["RecommendationTags"];
+            directions?: components["schemas"]["RecommendationTags"];
         };
     };
     responses: never;
@@ -420,7 +440,7 @@ export interface operations {
         parameters: {
             query?: {
                 language?: "go" | "python" | "java" | "javascript";
-                direction?: "basics" | "backend" | "frontend" | "fullstack" | "automation";
+                direction?: "basics" | "backend" | "frontend" | "fullstack" | "automation" | "data" | "algorithms" | "testing";
                 experience?: "none" | "basics" | "projects" | "working" | "switch" | "experienced";
                 goal?: "try" | "job" | "switch" | "deepen";
                 budget?: "free" | "paid";
@@ -443,6 +463,8 @@ export interface operations {
                 diagnostics?: boolean;
                 /** @description Include unknown selected profile fields as unverified candidates. Confirmed incompatibilities are always excluded; all offer and price constraints still apply. */
                 include_unknown_profiles?: boolean;
+                /** @description Include separately labelled AI interpretations for unknown profile fields. Never overrides confirmed incompatibility or non-profile constraints. */
+                include_recommendations?: boolean;
             };
             header?: never;
             path?: never;

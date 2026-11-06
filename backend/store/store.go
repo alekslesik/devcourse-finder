@@ -33,7 +33,7 @@ type Querier interface {
 }
 
 func load(ctx context.Context, q Querier) ([]catalog.Course, error) {
-	rows, e := q.Query(ctx, "SELECT id,slug,title,provider,language,direction,summary,audience,goals,topics,source,checked_at,status,demo,profile,profile_ownership FROM courses ORDER BY id")
+	rows, e := q.Query(ctx, "SELECT id,slug,title,provider,language,direction,summary,audience,goals,topics,source,checked_at,status,demo,profile,profile_ownership,recommendations,recommendation_identity FROM courses ORDER BY id")
 	if e != nil {
 		return nil, e
 	}
@@ -41,14 +41,20 @@ func load(ctx context.Context, q Querier) ([]catalog.Course, error) {
 	idx := map[string]int{}
 	for rows.Next() {
 		var c catalog.Course
-		var profile []byte
-		e = rows.Scan(&c.ID, &c.Slug, &c.Title, &c.Provider, &c.Language, &c.Direction, &c.Summary, &c.Audience, &c.Goals, &c.Topics, &c.Source, &c.CheckedAt, &c.Status, &c.Demo, &profile, &c.ProfileOwnership)
+		var profile, recommendations []byte
+		e = rows.Scan(&c.ID, &c.Slug, &c.Title, &c.Provider, &c.Language, &c.Direction, &c.Summary, &c.Audience, &c.Goals, &c.Topics, &c.Source, &c.CheckedAt, &c.Status, &c.Demo, &profile, &c.ProfileOwnership, &recommendations, &c.RecommendationIdentity)
 		if e != nil {
 			rows.Close()
 			return nil, e
 		}
 		if len(profile) > 0 && string(profile) != "null" {
 			if e = json.Unmarshal(profile, &c.Profile); e != nil {
+				rows.Close()
+				return nil, e
+			}
+		}
+		if len(recommendations) > 0 && string(recommendations) != "null" {
+			if e = json.Unmarshal(recommendations, &c.Recommendations); e != nil {
 				rows.Close()
 				return nil, e
 			}
@@ -88,7 +94,21 @@ func load(ctx context.Context, q Querier) ([]catalog.Course, error) {
 			cs[i].Offers = append(cs[i].Offers, o)
 		}
 	}
-	return cs, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	for i := range cs {
+		if cs[i].RecommendationIdentity != catalog.CourseIdentityDigest(cs[i]) {
+			cs[i].Recommendations = nil
+			cs[i].RecommendationIdentity = ""
+		} else {
+			cs[i].Recommendations = catalog.RelevantRecommendations(cs[i])
+			if cs[i].Recommendations == nil {
+				cs[i].RecommendationIdentity = ""
+			}
+		}
+	}
+	return cs, nil
 }
 func (d *DB) Load(ctx context.Context) ([]catalog.Course, error) {
 	tx, e := d.Pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
@@ -131,6 +151,8 @@ func (d *DB) Import(ctx context.Context, data catalog.Dataset, operator string, 
 	}
 	data.Courses = append([]catalog.Course(nil), data.Courses...)
 	for i := range data.Courses {
+		data.Courses[i].Recommendations = nil
+		data.Courses[i].RecommendationIdentity = ""
 		data.Courses[i].ProfileOwnership = 0
 		data.Courses[i].Offers = append([]catalog.Offer(nil), data.Courses[i].Offers...)
 		for j := range data.Courses[i].Offers {
@@ -197,6 +219,16 @@ func importTx(ctx context.Context, tx pgx.Tx, old []catalog.Course, data catalog
 		profile, _ := json.Marshal(c.Profile)
 		_, e = tx.Exec(ctx, `INSERT INTO courses(id,slug,title,provider,language,direction,summary,audience,goals,topics,source,checked_at,status,demo,profile,profile_ownership) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16) ON CONFLICT(id) DO UPDATE SET slug=EXCLUDED.slug,title=EXCLUDED.title,provider=EXCLUDED.provider,language=EXCLUDED.language,direction=EXCLUDED.direction,summary=EXCLUDED.summary,audience=EXCLUDED.audience,goals=EXCLUDED.goals,topics=EXCLUDED.topics,source=EXCLUDED.source,checked_at=EXCLUDED.checked_at,status=EXCLUDED.status,demo=EXCLUDED.demo,profile=EXCLUDED.profile,profile_ownership=EXCLUDED.profile_ownership`, c.ID, c.Slug, c.Title, c.Provider, c.Language, c.Direction, c.Summary, c.Audience, c.Goals, c.Topics, c.Source, c.CheckedAt, c.Status, c.Demo, profile, c.ProfileOwnership)
 		if e != nil {
+			return e
+		}
+		recommendations := c.Recommendations
+		identity := c.RecommendationIdentity
+		if identity != catalog.CourseIdentityDigest(c) {
+			recommendations = nil
+			identity = ""
+		}
+		recJSON, _ := json.Marshal(recommendations)
+		if _, e = tx.Exec(ctx, "UPDATE courses SET recommendations=$2::jsonb,recommendation_identity=$3 WHERE id=$1", c.ID, recJSON, identity); e != nil {
 			return e
 		}
 		// Preserve omitted offers as unavailable so saved comparison URLs remain meaningful.

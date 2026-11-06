@@ -340,3 +340,9 @@ weekly workload, even if extraction and verification models both approve it.
 This rejects only the unsupported claim through normal partial-result handling;
 other valid claims still undergo independent verification. Older policy caches
 are not reused. Daily request limits continue to apply to fresh analyses.
+
+## Advisory classifications
+
+Policy v5 adds separately stored and independently reviewed course recommendations
+for experience, goals and directions without relaxing factual numeric/support
+contracts. See [search behaviour, provenance, limits and non-publishing preview](course-recommendations.md).

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"sort"
 	"time"
 
 	"devcourse-finder/catalog"
@@ -31,17 +30,7 @@ type AIEvent struct {
 }
 
 func aiIdentityDigest(c catalog.Course) string {
-	type identityOffer struct{ ID, Name, URL string }
-	offers := []identityOffer{}
-	for _, o := range c.Offers {
-		offers = append(offers, identityOffer{o.ID, o.Name, o.URL})
-	}
-	sort.Slice(offers, func(i, j int) bool { return offers[i].ID < offers[j].ID })
-	raw, _ := json.Marshal(struct {
-		ID, Title, Language, Source string
-		Offers                      []identityOffer
-	}{c.ID, c.Title, c.Language, c.Source, offers})
-	return fingerprint(raw)
+	return catalog.CourseIdentityDigest(c)
 }
 func (e AIEvent) valid() bool {
 	c, ok := candidateURL(e.Candidate.Adapter, e.Candidate.URL, "")
@@ -252,6 +241,30 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 			}
 		}
 		applyAIProfile(&c, facts.Profile, partialProfile)
+		next := catalog.CourseRecommendations{}
+		if facts.Recommendations != nil {
+			next = *facts.Recommendations
+		}
+		if partialProfile && current.Recommendations != nil {
+			if next.Audience == nil {
+				next.Audience = current.Recommendations.Audience
+			}
+			if next.Goals == nil {
+				next.Goals = current.Recommendations.Goals
+			}
+			if next.Directions == nil {
+				next.Directions = current.Recommendations.Directions
+			}
+		}
+		c.Recommendations = nil
+		c.RecommendationIdentity = ""
+		if next.Valid() {
+			c.Recommendations = &next
+			c.Recommendations = catalog.RelevantRecommendations(c)
+			if c.Recommendations != nil {
+				c.RecommendationIdentity = catalog.CourseIdentityDigest(c)
+			}
+		}
 		for i := range c.Offers {
 			if incoming, observed := facts.Learning[c.Offers[i].ID]; observed {
 				partial := e.Extraction.DiscardedClaims > 0

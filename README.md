@@ -508,7 +508,9 @@ For an extra collection, use **Actions → Collect catalog → Run workflow** on
 no terminal or deployment is needed. Persisted detail-check due times and the
 regular schedule remain in effect.
 
-### Optional OpenAI catalog collector
+### AI course facts and recommendations
+
+[Advisory recommendations](docs/course-recommendations.md) keep AI interpretations separate from confirmed facts, show exact source evidence, and can be disabled in the filter form.
 
 The separately scheduled `catalog-ai` service runs on **every day at 21:00 Europe/Moscow** and has identity-bound readers for all 13 native platforms, enriching only existing courses whose official source and tariff contracts pass independent quotation verification. Current source availability and completeness vary; see the [provider acceptance report](docs/ai-provider-expansion.md). It is disabled by default, uses a persistent request budget and leaves financial verification to existing workers. Manual enrichment is available under **Actions → Enrich catalog AI → Run workflow**, with a temporary shared request cap and a separate status-only mode. See [setup and operations](docs/ai-catalog-collector.md) and [the pilot specification](docs/ai-catalog-pilot-spec.md).
 

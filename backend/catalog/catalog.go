@@ -6,23 +6,25 @@ import (
 )
 
 type Course struct {
-	Profile          *CourseProfile `json:"profile,omitempty"`
-	ProfileOwnership int            `json:"-"`
-	ID               string         `json:"id"`
-	Slug             string         `json:"slug"`
-	Title            string         `json:"title"`
-	Provider         string         `json:"provider"`
-	Language         string         `json:"language"`
-	Direction        string         `json:"direction"`
-	Summary          string         `json:"summary"`
-	Audience         []string       `json:"audience"`
-	Goals            []string       `json:"goals"`
-	Topics           []string       `json:"topics"`
-	Source           string         `json:"source"`
-	CheckedAt        time.Time      `json:"checked_at"`
-	Status           string         `json:"status"`
-	Offers           []Offer        `json:"offers"`
-	Demo             bool           `json:"demo"`
+	Recommendations        *CourseRecommendations `json:"recommendations,omitempty"`
+	RecommendationIdentity string                 `json:"-"`
+	Profile                *CourseProfile         `json:"profile,omitempty"`
+	ProfileOwnership       int                    `json:"-"`
+	ID                     string                 `json:"id"`
+	Slug                   string                 `json:"slug"`
+	Title                  string                 `json:"title"`
+	Provider               string                 `json:"provider"`
+	Language               string                 `json:"language"`
+	Direction              string                 `json:"direction"`
+	Summary                string                 `json:"summary"`
+	Audience               []string               `json:"audience"`
+	Goals                  []string               `json:"goals"`
+	Topics                 []string               `json:"topics"`
+	Source                 string                 `json:"source"`
+	CheckedAt              time.Time              `json:"checked_at"`
+	Status                 string                 `json:"status"`
+	Offers                 []Offer                `json:"offers"`
+	Demo                   bool                   `json:"demo"`
 }
 
 // Billing preserves a recurring fee in its original currency. It is never a
@@ -65,9 +67,11 @@ type Filter struct {
 	Min, Max                                                               *int64
 	Hours                                                                  *int
 	IncludeFree, IncludeClosed, Diagnostics, IncludeUnknownProfiles        bool
+	IncludeRecommendations                                                 bool
 	Page, PageSize                                                         int
 }
 type Result struct {
+	RecommendationFields []string `json:"recommendation_fields,omitempty"`
 	ProfileMatch         string   `json:"profile_match,omitempty"`
 	UnknownProfileFields []string `json:"unknown_profile_fields,omitempty"`
 	Course               Course   `json:"course"`
@@ -91,19 +95,27 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			continue
 		}
 		unknown := []string{}
+		recommended := []string{}
 		incompatible := false
 		for _, pair := range [][2]string{{"experience", f.Experience}, {"goal", f.Goal}, {"direction", f.Direction}} {
 			switch MatchProfile(c, pair[0], pair[1]) {
 			case "incompatible":
 				incompatible = true
 			case "unknown":
-				unknown = append(unknown, pair[0])
+				if f.IncludeRecommendations && MatchRecommendation(c, pair[0], pair[1], now) {
+					recommended = append(recommended, pair[0])
+				} else {
+					unknown = append(unknown, pair[0])
+				}
 			}
 		}
 		if incompatible || len(unknown) > 0 && !f.IncludeUnknownProfiles {
 			continue
 		}
 		match := "confirmed"
+		if len(recommended) > 0 {
+			match = "recommended"
+		}
 		if len(unknown) > 0 {
 			match = "unverified"
 		}
@@ -136,6 +148,10 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 				continue
 			}
 			reasons := []string{}
+			for _, field := range recommended {
+				value := map[string]string{"experience": f.Experience, "goal": f.Goal, "direction": f.Direction}[field]
+				reasons = append(reasons, "Оценка ИИ: "+RecommendationLabel(field, value))
+			}
 			if f.Goal != "" && MatchProfile(c, "goal", f.Goal) == "confirmed" {
 				reasons = append(reasons, "Соответствует вашей цели")
 			}
@@ -154,7 +170,7 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			if len(reasons) > 3 {
 				reasons = reasons[:3]
 			}
-			candidates = append(candidates, Result{ProfileMatch: match, UnknownProfileFields: unknown, Course: c, Offer: o, Price: price, Reasons: reasons, Stale: now.Sub(c.CheckedAt) > 90*24*time.Hour})
+			candidates = append(candidates, Result{RecommendationFields: recommended, ProfileMatch: match, UnknownProfileFields: unknown, Course: c, Offer: o, Price: price, Reasons: reasons, Stale: now.Sub(c.CheckedAt) > 90*24*time.Hour})
 		}
 		sort.SliceStable(candidates, func(i, j int) bool {
 			a, b := candidates[i], candidates[j]
@@ -176,7 +192,8 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 	sort.SliceStable(out, func(i, j int) bool {
 		a, b := out[i], out[j]
 		if a.ProfileMatch != b.ProfileMatch {
-			return a.ProfileMatch == "confirmed"
+			rank := map[string]int{"confirmed": 0, "recommended": 1, "unverified": 2}
+			return rank[a.ProfileMatch] < rank[b.ProfileMatch]
 		}
 		if f.Sort == "price_asc" || f.Sort == "price_desc" {
 			if a.Price == nil && b.Price != nil {

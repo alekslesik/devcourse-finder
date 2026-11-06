@@ -19,5 +19,5 @@ export function duration(o:Offer){
 
 export function workload(o:Offer){const w=o.learning_conditions?.weekly_workload;return w?range(w.min,w.max)+' ч/нед.':o.hours!=null?o.hours+' ч/нед.':null}
 export function supportValue(o:Offer,kind:'review'|'mentor'):boolean|null{const v=o.learning_conditions?.[kind];if(v)return v.available;return o.support_known===false?null:o[kind]}
-export function supportText(o:Offer,kind:'review'|'mentor'){const v=supportValue(o,kind);return v===null?'Уточните у школы':v?'Есть':'Нет'}
+export function supportText(o:Offer,kind:'review'|'mentor'){const v=supportValue(o,kind);return v===null?'Нет подтверждённых данных':v?'Есть':'Нет'}
 export function supportLabel(o:Offer){if(supportValue(o,'mentor')===true)return 'Персональный наставник';if(supportValue(o,'review')===true)return 'Проверка заданий';if(o.learning_conditions?.community?.available)return 'Учебное сообщество';return supportValue(o,'mentor')===false&&supportValue(o,'review')===false?'Самостоятельно':null}
