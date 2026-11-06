@@ -33,6 +33,7 @@ test('AI recommendations explain matches and can be excluded without hiding unkn
 
 
 test('course detail keeps AI interpretations separate from unconfirmed requirements',async({page})=>{
+ test.skip(process.env.E2E_REAL_API==='1','Advisory detail fixture is local to the frontend API fixture; reviewed DB publication is covered by backend integration tests.');
  await page.goto('/courses/passport-advisory');
  const overview=page.locator('.recommendationOverview');
  await expect(overview.getByRole('heading',{name:'Оценка ИИ по программе'})).toBeVisible();
