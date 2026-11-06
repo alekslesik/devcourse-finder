@@ -14,14 +14,14 @@ func scheduleTime(t *testing.T, raw string) time.Time {
 	return at
 }
 
-func TestAIScheduleMoscowMondayThursdayBoundaries(t *testing.T) {
+func TestAIScheduleMoscowDailyBoundaries(t *testing.T) {
 	for _, tc := range []struct{ now, previous, next string }{
-		{"2026-10-12T20:59:59+03:00", "2026-10-08T21:00:00+03:00", "2026-10-12T21:00:00+03:00"},
-		{"2026-10-12T18:00:00Z", "2026-10-12T21:00:00+03:00", "2026-10-15T21:00:00+03:00"},
-		{"2026-10-13T12:00:00+03:00", "2026-10-12T21:00:00+03:00", "2026-10-15T21:00:00+03:00"},
-		{"2026-10-15T21:00:00+03:00", "2026-10-15T21:00:00+03:00", "2026-10-19T21:00:00+03:00"},
-		{"2026-10-18T23:59:59+03:00", "2026-10-15T21:00:00+03:00", "2026-10-19T21:00:00+03:00"},
-		{"2026-12-31T21:00:00+03:00", "2026-12-31T21:00:00+03:00", "2027-01-04T21:00:00+03:00"},
+		{"2026-10-12T20:59:59+03:00", "2026-10-11T21:00:00+03:00", "2026-10-12T21:00:00+03:00"},
+		{"2026-10-12T18:00:00Z", "2026-10-12T21:00:00+03:00", "2026-10-13T21:00:00+03:00"},
+		{"2026-10-13T12:00:00+03:00", "2026-10-12T21:00:00+03:00", "2026-10-13T21:00:00+03:00"},
+		{"2026-10-15T21:00:00+03:00", "2026-10-15T21:00:00+03:00", "2026-10-16T21:00:00+03:00"},
+		{"2026-10-18T23:59:59+03:00", "2026-10-18T21:00:00+03:00", "2026-10-19T21:00:00+03:00"},
+		{"2026-12-31T21:00:00+03:00", "2026-12-31T21:00:00+03:00", "2027-01-01T21:00:00+03:00"},
 	} {
 		previous, next := aiScheduleSlots(scheduleTime(t, tc.now))
 		if !previous.Equal(scheduleTime(t, tc.previous)) || !next.Equal(scheduleTime(t, tc.next)) {
@@ -34,7 +34,7 @@ func TestAIScheduleNoOffSlotStartupCatchupAndRestartDeduplication(t *testing.T) 
 	slot := scheduleTime(t, "2026-10-15T21:00:00+03:00")
 	old := slot.Add(-7 * 24 * time.Hour)
 	for _, last := range []*time.Time{nil, &old} {
-		for _, now := range []time.Time{slot.Add(-time.Minute), slot.Add(30 * time.Minute), slot.Add(24 * time.Hour)} {
+		for _, now := range []time.Time{slot.Add(-time.Minute), slot.Add(30 * time.Minute), slot.Add(12 * time.Hour)} {
 			if aiScheduledRunDue(now, last) {
 				t.Fatalf("off-slot startup made a paid run: %s", now)
 			}
@@ -44,6 +44,9 @@ func TestAIScheduleNoOffSlotStartupCatchupAndRestartDeduplication(t *testing.T) 
 				t.Fatalf("scheduled/recovery slot missed: %s", now)
 			}
 		}
+	}
+	if !aiScheduledRunDue(slot.Add(24*time.Hour), &slot) {
+		t.Fatal("previous day suppressed the next daily slot")
 	}
 	for _, last := range []time.Time{slot, slot.Add(time.Minute)} {
 		if aiScheduledRunDue(slot.Add(2*time.Minute), &last) {

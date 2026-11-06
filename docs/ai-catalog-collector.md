@@ -46,14 +46,14 @@ literal semantics; switch remains an independent background.
 
 ## Cost and resource limits
 
-- AI schedule: **Monday and Thursday at 21:00 Europe/Moscow**. Native API/page
+- AI schedule: **every day at 21:00 Europe/Moscow**. Native API/page
   collectors retain their 09:00/21:00 daily schedule; publication continues normally.
   AI startup outside a scheduled slot waits for the next slot, with no immediate
   paid initial run or replay of missed days. A restart within 30 minutes of a slot
   may recover that slot if no AI run has started since it began. Restarts do not
   repeat a started slot. Manual `catalog-ai once` remains available on any day
   and still respects source due times and the shared daily request budget.
-- At most 20 due courses per run (configurable 1–40), serial reads.
+- At most 20 due courses per daily run (configurable 1–40), serial reads. Never-attempted courses come first. Within the new and previously attempted groups, courses missing more filter fields (experience, goal, direction) precede complete profiles; oldest attempt and course ID break ties. Provider health, due times, explicit course selection and shared daily reservation limits still apply.
 - At most **40 reserved model requests per UTC day** by default (configurable
   1–200), shared persistently across manual runs/restarts. A complete two-request analysis is reserved atomically before extraction.
   Failed analyses consume the reserved pair conservatively; one remaining request
@@ -261,7 +261,7 @@ regressions cover independent extraction/review, scoped publication, no financia
 freshness changes, cache replay, changed-family rejection before model calls and
 changed-binding rejection after enqueue. This does not claim live model accuracy
 or complete coverage of Netology's current HTML. No paid provider requests were
-made to implement this stage. Budgets and Monday/Thursday scheduling are unchanged.
+made to implement this stage. The shared daily budget is unchanged; collection now runs daily at 21:00 Moscow.
 
 CodeBasics requires its stored course/primary-offer mapping, fresh anonymous
 Inertia identity/curriculum validation and the independent official free-policy
@@ -313,3 +313,20 @@ provider errors, `.env` contents and model keys are not included in the report.
 The workflow is dispatch-only. Publishing/merging a release does not trigger
 paid enrichment. Operational validation uses `mode=status`; development/CI use
 mocked Docker/model outputs and do not spend provider tokens.
+
+## Filter completeness and queue coverage
+
+`catalog-ai status` adds per-provider `never_attempted_courses`, `due_courses`,
+`missing_profile_courses` and `profile_unknown` counts for experience, goal and
+direction. These count published non-demo canonical supported courses. Unknown
+profile fields use the same confirmed-match semantics as search: a JSON profile
+or minimum prerequisite alone does not prove suitability. Counts are current
+coverage, not semantic accuracy or a promise that a model can recover absent facts.
+`due_courses` describes per-course due dates; provider availability and daily budget
+can still prevent execution. Native/operator/AI facts all contribute to coverage.
+
+Daily scheduling increases opportunities to close the backlog without raising
+the 40-request default cap. It still has no immediate paid startup run outside
+the 30-minute recovery slot and no replay of missed days. The full recommendation
+and source-quality rollout is tracked in epic #170; daily throughput alone does
+not resolve missing filter evidence or authorize inferred prices/support.

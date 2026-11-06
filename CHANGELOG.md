@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.32.0] - 2026-11-06
+
+- Run bounded AI enrichment daily and prioritize courses with missing search profiles; report filter completeness and backlog per provider.
+
 ## [0.31.3] - 2026-10-22
 
 - Simplify course pages by removing the Source section and redundant catalog breadcrumbs, and highlight selected tariffs with a custom checkmark and glass frame.
