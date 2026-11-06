@@ -16,7 +16,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-const aiPolicyVersion = "course-facts-v5"
+const aiPolicyVersion = "course-facts-v6"
 const aiMaxText = 96000
 const aiMaxClaims = 40
 const aiOwnershipShift = 8
@@ -193,6 +193,9 @@ func aiCompile(c Candidate, docs []AIDocument, extraction AIExtraction, verifica
 			}
 		}
 		seen[key] = true
+		if aiConflictingZeroEntry(claim, docs) {
+			return out, ErrAI
+		}
 		recommendation := strings.HasPrefix(claim.Field, "recommended_")
 		course := recommendation || slices.Contains([]string{"prerequisites", "audience", "excluded_audience", "goals", "direction", "target_level"}, claim.Field)
 		learning := slices.Contains([]string{"duration", "weekly_workload", "review", "mentor", "community"}, claim.Field)

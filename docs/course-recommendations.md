@@ -76,3 +76,10 @@ classification consistency and abstention, then publish only passing cases via
 the existing workflow/CLI. Measure useful profile coverage, not merely queued
 observations. The full 30–50-course semantic pilot and broader rollout remain
 tracked in #172 and #175; availability of the feature is not catalog completeness.
+
+Policy v6 adds a conservative local abstention guard: explicit statements that a
+course does not start from zero block no-experience prerequisites and beginner
+audience claims across the entire course document, even after model approval.
+Other independently supported fields remain eligible. This covers known direct
+Russian/English counterstatements; it is not a complete semantic contradiction
+detector, so manual pilot review remains necessary.
