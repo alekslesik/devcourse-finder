@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.32.1] - 2026-11-06
+
+- Require explicit weekly-hour units in AI source quotes instead of accepting bare workload numbers; invalidate older AI analyses.
+
 ## [0.32.0] - 2026-11-06
 
 - Run bounded AI enrichment daily and prioritize courses with missing search profiles; report filter completeness and backlog per provider.

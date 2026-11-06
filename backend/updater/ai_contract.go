@@ -16,7 +16,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-const aiPolicyVersion = "course-facts-v3"
+const aiPolicyVersion = "course-facts-v4"
 const aiMaxText = 96000
 const aiMaxClaims = 40
 const aiOwnershipShift = 8
@@ -87,6 +87,28 @@ func aiNumberInQuote(n float64, q string) bool {
 		value, err := strconv.ParseFloat(strings.ReplaceAll(token, ",", "."), 64)
 		if err == nil && value == n {
 			return true
+		}
+	}
+	return false
+}
+
+var aiEnglishWeeklyText = regexp.MustCompile(`(?i)(?:^|[^0-9.,])([0-9]+(?:[.,][0-9]+)?)(?:\s*(?:–|—|-|to)\s*([0-9]+(?:[.,][0-9]+)?))?\s*(?:hours?\s*(?:per|a|/)\s*week|h\s*/\s*week)(?:$|[^a-z])`)
+
+// Numbers occurring somewhere in a quote do not establish their unit. Bind
+// both endpoints to an explicit weekly-hours expression even if both models
+// approved the interpretation. Bare workload values and total study hours abstain.
+func aiWeeklyRangeInQuote(lo, hi float64, quote string) bool {
+	text := strings.ToLower(aiNormalize(quote))
+	for _, pattern := range []*regexp.Regexp{learningWeeklyText, aiEnglishWeeklyText} {
+		for _, m := range pattern.FindAllStringSubmatch(text, -1) {
+			min, _ := strconv.ParseFloat(strings.ReplaceAll(m[1], ",", "."), 64)
+			max := min
+			if m[2] != "" {
+				max, _ = strconv.ParseFloat(strings.ReplaceAll(m[2], ",", "."), 64)
+			}
+			if min == lo && max == hi {
+				return true
+			}
 		}
 	}
 	return false
@@ -202,6 +224,9 @@ func aiCompile(c Candidate, docs []AIDocument, extraction AIExtraction, verifica
 			p.TargetLevel = &catalog.ProfileValue{Value: claim.Value, Evidence: evidence}
 		case "duration", "weekly_workload":
 			if claim.Min == nil || claim.Max == nil || !aiNumberInQuote(*claim.Min, q) || !aiNumberInQuote(*claim.Max, q) {
+				return out, ErrAI
+			}
+			if claim.Field == "weekly_workload" && !aiWeeklyRangeInQuote(*claim.Min, *claim.Max, q) {
 				return out, ErrAI
 			}
 			r := &catalog.LearningRange{Min: *claim.Min, Max: *claim.Max, Unit: claim.Unit, Evidence: evidence}

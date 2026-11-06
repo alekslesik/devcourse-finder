@@ -330,3 +330,13 @@ the 40-request default cap. It still has no immediate paid startup run outside
 the 30-minute recovery slot and no replay of missed days. The full recommendation
 and source-quality rollout is tracked in epic #170; daily throughput alone does
 not resolve missing filter evidence or authorize inferred prices/support.
+
+## Weekly workload grounding
+
+Policy v4 requires the quoted numbers to appear in an explicit hours-per-week
+expression before either cached or fresh AI claims can be published. A source
+field saying only `1-3`, or `12 hours` without a weekly period, cannot establish
+weekly workload, even if extraction and verification models both approve it.
+This rejects only the unsupported claim through normal partial-result handling;
+other valid claims still undergo independent verification. Older policy caches
+are not reused. Daily request limits continue to apply to fresh analyses.

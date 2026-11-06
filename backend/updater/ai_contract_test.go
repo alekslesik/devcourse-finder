@@ -62,3 +62,47 @@ func TestAIDocumentLimitsAndForeignSource(t *testing.T) {
 		t.Fatal("trailing JSON accepted")
 	}
 }
+
+func TestAIWeeklyWorkloadRequiresExplicitBoundUnitsEvenAfterModelApproval(t *testing.T) {
+	for _, tc := range []struct {
+		quote  string
+		lo, hi float64
+		valid  bool
+	}{
+		{"Нагрузка: 1-3. Программа: основы Python для начинающих.", 1, 3, false},
+		{"Нагрузка: 12–15 часов. Программа изучения языка Go.", 12, 15, false},
+		{"В программе всего 120 часов видеолекций и заданий.", 120, 120, false},
+		{"На обучение требуется 8–12 часов в неделю.", 8, 12, true},
+		{"Workload: 1.5–3 hours per week for the Python course.", 1.5, 3, true},
+		{"Обучение 1–3 месяца. Нагрузка: 8–12 часов в неделю.", 1, 3, false},
+	} {
+		t.Run(tc.quote, func(t *testing.T) {
+			c, docs, x, _ := aiFixture()
+			for i := range docs {
+				docs[i].Text = tc.quote
+				docs[i].Digest = fingerprint([]byte(tc.quote))
+			}
+			x.Claims = []AIClaim{{Field: "weekly_workload", DocumentID: "offer", OfferID: "stepik-42-course", Quote: tc.quote, Min: valueFloat(tc.lo), Max: valueFloat(tc.hi), Unit: "hours_per_week"}}
+			_, err := aiCompile(c, docs, x, AIVerification{Complete: true, Verified: []int{0}}, time.Now())
+			if (err == nil) != tc.valid {
+				t.Fatal("weekly unit grounding", err)
+			}
+		})
+	}
+}
+
+func TestAIBareWorkloadIsDiscardedWithoutLosingAudience(t *testing.T) {
+	c, docs, x, _ := aiFixture()
+	text := "Курс разработан для начинающих без опыта программирования. Нагрузка: 1-3."
+	for i := range docs {
+		docs[i].Text = text
+		docs[i].Digest = fingerprint([]byte(text))
+	}
+	x.Claims[1].Quote = "Нагрузка: 1-3."
+	x.Claims[1].Min = valueFloat(1)
+	x.Claims[1].Max = valueFloat(3)
+	isolated, err := aiIsolateClaims(c, docs, x, time.Now())
+	if err != nil || isolated.DiscardedClaims != 1 || len(isolated.Claims) != 1 || isolated.Claims[0].Field != "audience" {
+		t.Fatal(isolated, err)
+	}
+}
