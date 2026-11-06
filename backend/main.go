@@ -96,7 +96,8 @@ func run() error {
 				defer done()
 				return updater.AISourceCheck(bounded, db, nil, args[2], os.Stdout)
 			}
-			if len(args) != 2 && !(len(args) == 3 && (args[1] == "verify" || args[1] == "preview")) {
+			validArgs := len(args) == 2 && args[1] != "verify" && args[1] != "preview" || len(args) == 3 && (args[1] == "verify" || args[1] == "preview")
+			if !validArgs {
 				return commandFailure("arguments", "invalid_arguments", "Usage: catalog-ai serve|once|status|health or catalog-ai verify|preview COURSE_ID", nil)
 			}
 			stop, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
