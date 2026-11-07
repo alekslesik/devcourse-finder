@@ -335,10 +335,6 @@ summary,.checkbox {min-height:44px;}
 
 .siteVersion {font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums;}
 
-.routeForm>.recommendationSetting {grid-column:1/-1; min-width:0;}
-.recommendationSetting .checkbox {display:flex; gap:10px; align-items:center; margin:0; min-height:44px;}
-.recommendationSetting input[type=checkbox] {width:18px; height:18px; min-height:18px; flex:0 0 auto;}
-.recommendationSetting small {display:block; max-width:70ch; color:var(--muted); margin-top:4px;}
 .recommendedResults {margin-block-start:2rem;}
 .recommendedResults h3 {margin:0 0 .5rem; font-size:1.25rem;}
 .recommendedResults>p,.matchSummary {max-width:65ch; color:var(--muted); margin:0 0 1.25rem;}
