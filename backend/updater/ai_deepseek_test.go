@@ -14,6 +14,7 @@ import (
 
 func TestDeepSeekJSONModeFixedEndpointAndSeparateVerifier(t *testing.T) {
 	c, docs, extraction, _ := aiFixture()
+	extraction.Claims = append(extraction.Claims, AIClaim{Field: "recommended_directions", DocumentID: "course", QuoteID: "s0", Values: []string{"basics"}})
 	calls := 0
 	model := &DeepSeekModel{Key: "deepseek-test-secret", Model: "deepseek-flash", VerifyModel: "deepseek-v4-pro"}
 	model.Client = &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
@@ -39,6 +40,23 @@ func TestDeepSeekJSONModeFixedEndpointAndSeparateVerifier(t *testing.T) {
 		prompt := messages[0].(map[string]any)["content"].(string)
 		if !strings.Contains(prompt, "JSON output contract") || !strings.Contains(prompt, "Shape example") {
 			t.Fatal("JSON schema/example omitted")
+		}
+		if calls == 2 {
+			var input struct {
+				Proposed []aiReviewClaim `json:"proposed_claims"`
+			}
+			if err := json.Unmarshal([]byte(messages[1].(map[string]any)["content"].(string)), &input); err != nil || len(input.Proposed) != 3 {
+				t.Fatal("review request lost claims", err)
+			}
+			for i, claim := range input.Proposed {
+				want := "literal_fact"
+				if i == 2 {
+					want = "curriculum_interpretation"
+				}
+				if claim.ClaimIndex != i || claim.EvaluationRule != want || claim.Field != extraction.Claims[i].Field {
+					t.Fatal("incorrect review input", claim)
+				}
+			}
 		}
 		payload, _ := json.Marshal(extraction)
 		if calls == 2 {

@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.33.2] - 2026-11-07
+
+- Keep reviewed AI matches enabled while removing the recommendation checkbox and form explanation; distinguish advisory and factual review rules with explicit claim indices.
+
 ## [0.33.1] - 2026-11-06
 
 - Reject AI entry-level claims when source statements about starting from zero conflict.

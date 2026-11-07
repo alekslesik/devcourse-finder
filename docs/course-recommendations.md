@@ -12,8 +12,10 @@ matches precede recommendations, which precede opt-in unknown candidates. All
 price, enrollment, weekly workload, human-support and schedule constraints remain
 hard requirements. A confirmed incompatibility always wins.
 
-The website enables this mode by default with an explicit “Учитывать оценки ИИ”
-control. Disabling it persists in the URL, reload and browser history. Facets show
+The website always includes reviewed AI recommendations, without a separate
+setting or explanatory block in the form. Legacy website links with
+`include_recommendations=false` are normalized to the same enabled behaviour.
+The API retains its explicit opt-in parameter and strict default. Facets show
 confirmed counts plus additional `+ N ИИ` counts. Results distinguish confirmed,
 recommended and insufficient-data groups. Cards explain exactly which fields are
 unknown and expose the official quote behind an interpretation. Detailed course
@@ -83,3 +85,9 @@ audience claims across the entire course document, even after model approval.
 Other independently supported fields remain eligible. This covers known direct
 Russian/English counterstatements; it is not a complete semantic contradiction
 detector, so manual pilot review remains necessary.
+
+Policy v7 gives every proposed claim an explicit `claim_index` and an
+`evaluation_rule`: curriculum interpretation for recommendations, literal school
+evidence for facts. Review decisions refer to claim indices, never quote segment
+IDs. It clarifies field-specific abstention while retaining all local scope,
+identity, contradiction, numeric and support safeguards.

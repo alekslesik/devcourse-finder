@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {readFileSync} from 'node:fs';
 const base=JSON.parse(readFileSync('../data/demo-catalog.json','utf8')).courses[0];
-test('AI recommendations explain matches and can be excluded without hiding unknowns',async({page})=>{
+test('AI recommendations stay enabled without a setting, including legacy links',async({page})=>{
  await page.setViewportSize({width:360,height:800});
  const quote='Программа включает основы Go, HTTP, API и практический проект для освоения нового языка.';
  const tags=(values:string[])=>({values,quote,evidence:{source:base.source,locator:'section:program',digest:'a'.repeat(64),checked_at:new Date().toISOString()}});
@@ -24,11 +24,15 @@ test('AI recommendations explain matches and can be excluded without hiding unkn
  await expect(page.locator('.unverifiedResults')).toContainText('Не хватает данных: подходящий опыт.');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(axe.violations.filter(v=>v.impact==='serious'||v.impact==='critical')).toEqual([]);
- await page.getByRole('checkbox',{name:'Учитывать оценки ИИ',exact:true}).uncheck();
+ await expect(page.getByRole('checkbox',{name:'Учитывать оценки ИИ',exact:true})).toHaveCount(0);
+ await expect(page.locator('#recommendation-help')).toHaveCount(0);
  await page.getByRole('button',{name:'Найти обучение'}).click();
- await expect(page).toHaveURL(/include_recommendations=false/);await expect(page.locator('.recommendedResults')).toHaveCount(0);await expect(page.locator('.unverifiedResults .card')).toHaveCount(1);
- await page.reload();await expect(page.getByRole('checkbox',{name:'Учитывать оценки ИИ',exact:true})).not.toBeChecked();await expect(page.locator('.recommendedResults')).toHaveCount(0);
- await page.goBack();await expect(page.getByRole('checkbox',{name:'Учитывать оценки ИИ',exact:true})).toBeChecked();await expect(page.locator('.recommendedResults')).toBeVisible();
+ await expect(group).toBeVisible();
+ await page.goto('/courses?language=go&experience=basics&goal=job&direction=backend&include_recommendations=false');
+ await expect(page).not.toHaveURL(/include_recommendations/);await expect(group).toBeVisible();
+ await page.reload();await expect(group).toBeVisible();
+ await page.getByRole('button',{name:'Найти обучение'}).click();await expect(group).toBeVisible();
+
 });
 
 
