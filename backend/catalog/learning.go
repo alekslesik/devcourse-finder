@@ -30,11 +30,12 @@ type LearningSupport struct {
 	Evidence  LearningEvidence `json:"evidence"`
 }
 type LearningConditions struct {
-	Duration       *LearningRange   `json:"duration,omitempty"`
-	WeeklyWorkload *LearningRange   `json:"weekly_workload,omitempty"`
-	Review         *LearningSupport `json:"review,omitempty"`
-	Mentor         *LearningSupport `json:"mentor,omitempty"`
-	Community      *LearningSupport `json:"community,omitempty"`
+	Duration        *LearningRange   `json:"duration,omitempty"`
+	WeeklyWorkload  *LearningRange   `json:"weekly_workload,omitempty"`
+	TotalStudyHours *LearningRange   `json:"total_study_hours,omitempty"`
+	Review          *LearningSupport `json:"review,omitempty"`
+	Mentor          *LearningSupport `json:"mentor,omitempty"`
+	Community       *LearningSupport `json:"community,omitempty"`
 }
 
 var learningDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)
@@ -43,11 +44,17 @@ func (e LearningEvidence) Valid() bool {
 	u, err := url.Parse(e.Source)
 	return err == nil && u.Scheme == "https" && u.Hostname() != "" && u.User == nil && u.Port() == "" && u.Fragment == "" && len(e.Source) <= 2048 && strings.TrimSpace(e.Locator) != "" && len(e.Locator) <= 256 && learningDigest.MatchString(e.Digest) && !e.CheckedAt.IsZero() && !e.CheckedAt.After(time.Now().Add(time.Minute))
 }
+func (r *LearningRange) validRange() bool {
+	if r == nil {
+		return true
+	}
+	return !math.IsNaN(r.Min) && !math.IsInf(r.Min, 0) && !math.IsNaN(r.Max) && !math.IsInf(r.Max, 0) && r.Min > 0 && r.Max >= r.Min && r.Evidence.Valid()
+}
 func (r *LearningRange) Valid(workload bool) bool {
 	if r == nil {
 		return true
 	}
-	if math.IsNaN(r.Min) || math.IsInf(r.Min, 0) || math.IsNaN(r.Max) || math.IsInf(r.Max, 0) || r.Min <= 0 || r.Max < r.Min || !r.Evidence.Valid() {
+	if !r.validRange() {
 		return false
 	}
 	if workload {
@@ -70,7 +77,7 @@ func (c *LearningConditions) Evidence() []LearningEvidence {
 		return nil
 	}
 	var out []LearningEvidence
-	for _, r := range []*LearningRange{c.Duration, c.WeeklyWorkload} {
+	for _, r := range []*LearningRange{c.Duration, c.WeeklyWorkload, c.TotalStudyHours} {
 		if r != nil {
 			out = append(out, r.Evidence)
 		}
@@ -87,6 +94,9 @@ func (c *LearningConditions) Valid() bool {
 		return true
 	}
 	if !c.Duration.Valid(false) || !c.WeeklyWorkload.Valid(true) {
+		return false
+	}
+	if h := c.TotalStudyHours; h != nil && (!h.validRange() || h.Unit != "hour" || h.Max > 10000) {
 		return false
 	}
 	for _, e := range c.Evidence() {

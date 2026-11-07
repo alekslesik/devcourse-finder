@@ -33,7 +33,7 @@ func TestLearningQueuePublicationRoundTripAndRollback(t *testing.T) {
 		t.Fatal(err)
 	}
 	loaded, err := db.Load(ctx)
-	if err != nil || len(loaded) != 1 || loaded[0].Offers[0].LearningConditions == nil || loaded[0].Offers[0].LearningOwnership == 0 || loaded[0].Offers[0].LearningConditions.WeeklyWorkload.Max != 12 {
+	if err != nil || len(loaded) != 1 || loaded[0].Offers[0].LearningConditions == nil || loaded[0].Offers[0].LearningOwnership == 0 || loaded[0].Offers[0].LearningConditions.WeeklyWorkload.Max != 12 || loaded[0].Offers[0].LearningConditions.TotalStudyHours.Max != 120 {
 		t.Fatal("round-trip failed", loaded, err)
 	}
 	// Failed sources are separate events and cannot clear or reconfirm facts.

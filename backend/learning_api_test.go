@@ -13,7 +13,7 @@ func TestLearningConditionsSearchContractAndPrivateOwnership(t *testing.T) {
 	repository := httpFixture()
 	var offer = catalog.Offer{ID: "learning", Name: "Learning", Price: value(int64(2000000)), PriceKind: "exact", PriceCheckedAt: time.Now().UTC(), Enrollment: "continuous", Schedule: "flexible", URL: repository.courses[0].Source, SupportKnown: value(false), LearningOwnership: 31, DurationCollected: true}
 	e := catalog.LearningEvidence{Source: offer.URL, Locator: "course.conditions", Digest: strings.Repeat("a", 64), CheckedAt: time.Now().UTC()}
-	offer.LearningConditions = &catalog.LearningConditions{Duration: &catalog.LearningRange{Min: 3, Max: 5, Unit: "month", Evidence: e}, WeeklyWorkload: &catalog.LearningRange{Min: 8, Max: 12, Unit: "hours_per_week", Evidence: e}, Review: &catalog.LearningSupport{Available: true, Evidence: e}}
+	offer.LearningConditions = &catalog.LearningConditions{Duration: &catalog.LearningRange{Min: 3, Max: 5, Unit: "month", Evidence: e}, WeeklyWorkload: &catalog.LearningRange{Min: 8, Max: 12, Unit: "hours_per_week", Evidence: e}, TotalStudyHours: &catalog.LearningRange{Min: 80, Max: 120, Unit: "hour", Evidence: e}, Review: &catalog.LearningSupport{Available: true, Evidence: e}}
 	repository.courses[0].Offers = []catalog.Offer{offer}
 	handler := newHandler(repository)
 	contract := newResponseContract(t)

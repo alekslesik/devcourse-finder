@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import type {ReactNode} from 'react';
-import {checked,duration,price,profiles,supportText,supportValue,workload,type Course,type Item} from '../lib/catalog';
+import {checked,duration,price,profiles,supportText,supportValue,workload,totalStudyHours,type Course,type Item} from '../lib/catalog';
 import CatalogActions from './catalog-actions';
 import CourseIcon from './course-icon';
 import ExternalMark from './external-mark';
@@ -29,6 +29,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
  const actionLabel=canCompare?'На сайт курса':'Проверить набор';
  const courseDuration=offer?duration(offer):null;
  const courseWorkload=offer?workload(offer):null;
+ const courseHours=offer?totalStudyHours(offer):null;
  const audience=(c.profile?.audience?.values||c.audience).filter(v=>v!=='unknown');
  const experience=audience.length?audience.map(v=>profiles[v]||v).join(' · '):'Аудитория не подтверждена';
  const prerequisite=c.profile?.prerequisites;
@@ -77,6 +78,7 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
      {entry.effective_price===null&&<p className="coursePriceNote">{tariff.price_kind==='from'?'Цена «от»: уточните полную стоимость у школы.':'Актуальная полная стоимость не подтверждена. Уточните её у школы.'}</p>}
      <ul className="coursePurchaseFacts">
       <li><CourseIcon kind="clock"/><span>{duration(tariff)||'Длительность уточняется'}</span></li>
+      {totalStudyHours(tariff)&&<li><CourseIcon kind="book"/><span>{totalStudyHours(tariff)}</span></li>}
       <li><CourseIcon kind="calendar"/><span>{schedule[tariff.schedule]||schedule.unknown}</span></li>
       <li><CourseIcon kind="people"/><span>{tariff.enrollment==='open'?'Набор открыт':tariff.enrollment==='continuous'?'Постоянный набор':tariff.enrollment==='closed'?'Набор закрыт':'Набор уточняется'}</span></li>
      </ul>
@@ -101,8 +103,9 @@ export default function CoursePassport({course:c,offers,initialOfferId}:{course:
      <h2><CourseIcon kind="code"/>Формат и поддержка</h2>
      {offers.length>1&&<p className="courseConditionsTariff">Условия тарифа: <strong>{offer?.name}</strong></p>}
      <dl className="courseFacts">
-      <Fact label="Длительность" unknown={!courseDuration}>{courseDuration||'Уточните у школы'}</Fact>
-      <Fact label="Нагрузка" unknown={!courseWorkload}>{courseWorkload||'Уточните у школы'}</Fact>
+      <Fact label="Длительность" unknown={!courseDuration}>{courseDuration||'Срок прохождения не указан'}</Fact>
+      {courseHours&&<Fact label="Общий объём обучения">{courseHours}</Fact>}
+      <Fact label="Нагрузка" unknown={!courseWorkload}>{courseWorkload||'Часы в неделю не указаны'}</Fact>
       <Fact label="Расписание" unknown={!offer||offer.schedule==='unknown'}>{offer?(schedule[offer.schedule]||schedule.unknown):schedule.unknown}</Fact>
       <Fact label="Проверка кода" unknown={!offer||supportValue(offer,'review')===null}>{offer?supportText(offer,'review'):'Нет подтверждённых данных'}</Fact>
       <Fact label="Индивидуальные занятия" unknown={!offer||supportValue(offer,'mentor')===null}>{offer?supportText(offer,'mentor'):'Нет подтверждённых данных'}</Fact>

@@ -15,10 +15,10 @@ Unknown, explicitly unavailable and confirmed available are distinct values.
 | Skypro | Target hero and validated product purchase section | Resume recommendations and closed enrollment cannot establish new publication |
 | OTUS | Accepted course instance calendar duration and course description | Video hours, academic lesson counts, generic conflicting FAQ |
 | Hexlet | Accepted instance and single exact verified offer with matching tariff section | Aggregate minimum prices cannot identify a named plan |
-| Stepik | Official API workload and dedicated course support description | Self-paced flags, automated tests, comment counts |
+| Stepik | Official API weekly/total workload and dedicated course support description | Self-paced flags, automated tests, comment counts |
 | JavaRush | Verified Premium purchase card | Subscription period and University/MentorPro conditions |
 | RS School | Current course Discord section | Conditional later-stage mentors, stage lengths and alumni history |
-| CodeBasics | Verified Inertia landing's own fields | Total video/practice hours, AI support and sibling landings |
+| CodeBasics | Verified Inertia landing's own fields | Video runtime, AI support and sibling landings |
 
 Each fact retains its own official URL, DOM/field locator, source digest and
 observation date. Successful source reads clear disappeared collector-owned facts;
@@ -45,7 +45,7 @@ accepted evidence. `source_unavailable` means a request failed; malformed source
 payloads remain rejected by existing identity/price checks. Synthetic contract
 mutations in fixtures are regression evidence, not live-source coverage. In
 particular, approximate Hexlet workload, JavaRush subscription months, CodeBasics
-total hours and conditional RS School stage support are not converted to facts.
+video runtime and conditional RS School stage support are not converted to facts.
 
 To repeat locally, start disposable PostgreSQL, export its connection as
 `TEST_DATABASE_URL`, then run from the repository root:
@@ -78,3 +78,30 @@ fields do not count. A course's newer check date cannot refresh an older fact.
 Collection continues twice daily; merging or publishing a release does not deploy.
 The existing course views consume typed ranges and partial support without layout
 changes; unknown workload remains hidden on cards.
+
+## Total study effort (#174)
+
+`learning_conditions.total_study_hours` is an optional evidence-bound range with
+`unit=hour` (positive, maximum 10,000). Stepik's own `workload` and the verified
+CodeBasics landing's `duration` can establish this fact only when the whole field
+explicitly states exact total study hours or a closed range. Video runtime,
+academic lesson hours, daily/weekly rates, approximate and one-sided claims abstain.
+No paid AI calls are needed for this deterministic source collection.
+
+The normal validated observation/publication path stores these hours in the
+existing JSON field, with independent collector ownership and source/date/digest.
+Successful later reads clear disappeared collector-owned hours; failures preserve
+them and curated hours remain protected. The AI fact contract cannot create or
+clear total effort. Recommendation-only mode still changes no school facts.
+
+Cards and tariff summaries label the range `ч всего`. Course conditions and the
+comparison table show it separately from calendar duration and weekly workload.
+Unknown calendar length remains unknown: no conversion from total hours, no
+participation in the weekly-hours filter or calendar-duration sort. Status adds
+`total_study_hours` offer coverage per provider. Existing rows acquire this optional
+field on a verified source refresh; a new release alone does not invent data.
+
+The ownership constraint now permits the sixth literal collector bit (32), but
+not an AI ownership bit for total hours. After these facts are published, rollback
+to older code/schema requires the pre-deployment backup or an explicit reviewed
+conversion of the new field/bit; blindly running the older schema is unsupported.

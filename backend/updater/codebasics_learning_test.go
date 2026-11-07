@@ -12,8 +12,8 @@ func TestCodeBasicsLearningUsesOnlyVerifiedLanding(t *testing.T) {
 	p.Props.Landing.Duration = "27 часов"
 	p.Props.Landing.Description = "Помощь AI без ограничений. Автоматическая проверка решений."
 	v := basicsLearning([]byte(`source`), p, c, now)
-	if len(v.Evidence()) != 0 {
-		t.Fatal("total hours/AI became conditions", v)
+	if v.TotalStudyHours == nil || v.TotalStudyHours.Max != 27 || v.TotalStudyHours.Unit != "hour" || v.Duration != nil || v.WeeklyWorkload != nil || v.Review != nil || v.Mentor != nil || v.Community != nil {
+		t.Fatal("total study hours lost or became calendar/workload/support", v)
 	}
 	// Contract mutation: a future explicit calendar duration remains literal.
 	p.Props.Landing.Duration = "2–4 недели"

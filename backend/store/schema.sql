@@ -179,7 +179,8 @@ CREATE TABLE IF NOT EXISTS catalog_ai_watermarks (
 -- Every AI-owned fact must also have its ordinary collector-ownership bit.
 ALTER TABLE offers DROP CONSTRAINT IF EXISTS offers_learning_ownership_check;
 ALTER TABLE offers ADD CONSTRAINT offers_learning_ownership_check CHECK (
- learning_ownership>=0 AND (learning_ownership & ~7967)=0
+ -- Six literal collector fields; only the original five allow AI ownership.
+ learning_ownership>=0 AND (learning_ownership & ~7999)=0
  AND ((learning_ownership>>8) & ~learning_ownership)=0
 );
 ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_profile_ownership_check;

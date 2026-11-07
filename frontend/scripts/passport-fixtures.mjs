@@ -15,5 +15,11 @@ export function passportCourses(template){
  const advisory=structuredClone(course);advisory.id=advisory.slug='passport-advisory';advisory.title='Демо: Оценка программы';advisory.profile=undefined;advisory.audience=['unknown'];advisory.goals=['unknown'];advisory.direction='unknown';advisory.offers=[{...base,id:'passport-advisory-offer',name:'Полная программа'}];
  const tags=values=>({values,quote:'Программа включает основы Python, работу с данными и практический проект.',evidence:{source:advisory.source,locator:'section:program',digest:'a'.repeat(64),checked_at:new Date().toISOString()}});
  advisory.recommendations={audience:tags(['none']),goals:tags(['try']),directions:tags(['data'])};
- return [course,empty,advisory];
+ const effort=structuredClone(course);effort.id=effort.slug='passport-effort';effort.title='Демо: Учебные часы';
+ const evidence={source:effort.source,locator:'course.workload',digest:'a'.repeat(64),checked_at:effort.checked_at};
+ effort.offers=[
+  {...base,id:'effort-self-paced',name:'Самостоятельный',duration_months:null,schedule:'flexible',learning_conditions:{total_study_hours:{min:20,max:40,unit:'hour',evidence}}},
+  {...base,id:'effort-scheduled',name:'С расписанием',duration_months:null,learning_conditions:{duration:{min:2,max:3,unit:'month',evidence},weekly_workload:{min:5,max:8,unit:'hours_per_week',evidence},total_study_hours:{min:80,max:120,unit:'hour',evidence}}},
+ ];
+ return [course,empty,advisory,effort];
 }

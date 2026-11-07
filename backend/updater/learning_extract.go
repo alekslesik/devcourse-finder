@@ -63,6 +63,31 @@ var learningOneSidedText = regexp.MustCompile(`(?:^|[^a-zа-я])(?:от|до|м�
 
 var learningClosedText = regexp.MustCompile(`(?:от\s+)?[0-9]+(?:[.,][0-9]+)?\s*(?:до|–|—|-)\s*[0-9]+(?:[.,][0-9]+)?\s*(?:час(?:а|ов)?|месяц(?:а|ев)?|недел(?:я|и|ь)|дн(?:я|ей)|год(?:а|ов)?)(?:[ .,!]|$)`)
 
+// Only a whole, dedicated effort field qualifies. Video runtime, academic
+// hours, daily/weekly rates, approximate and one-sided estimates remain unknown.
+var learningTotalText = regexp.MustCompile(`^(?:всего[: ]+|общая трудоёмкость[: ]+)?(?:от )?([0-9]+(?:[.,][0-9]+)?)(?:\s*(?:–|—|-|до)\s*([0-9]+(?:[.,][0-9]+)?))?\s*час(?:а|ов)?(?: (?:обучения|на прохождение курса))?[.!]?$`)
+
+func learningTotalHoursRange(text string, evidence catalog.LearningEvidence) *catalog.LearningRange {
+	text = strings.ToLower(strings.Join(strings.Fields(text), " "))
+	if learningOneSidedText.MatchString(learningClosedText.ReplaceAllString(text, " ")) {
+		return nil
+	}
+	m := learningTotalText.FindStringSubmatch(text)
+	if m == nil {
+		return nil
+	}
+	lo, _ := strconv.ParseFloat(strings.ReplaceAll(m[1], ",", "."), 64)
+	hi := lo
+	if m[2] != "" {
+		hi, _ = strconv.ParseFloat(strings.ReplaceAll(m[2], ",", "."), 64)
+	}
+	r := &catalog.LearningRange{Min: lo, Max: hi, Unit: "hour", Evidence: evidence}
+	if !(&catalog.LearningConditions{TotalStudyHours: r}).Valid() {
+		return nil
+	}
+	return r
+}
+
 func learningTextRange(text string, weekly bool, evidence catalog.LearningEvidence) *catalog.LearningRange {
 	text = strings.ToLower(strings.Join(strings.Fields(text), " "))
 	if learningOneSidedText.MatchString(learningClosedText.ReplaceAllString(text, " ")) || strings.Contains(text, "и более") || strings.Contains(text, "и меньше") {
