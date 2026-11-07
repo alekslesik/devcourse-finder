@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.34.0] - 2026-11-07
+
+- Add recommendation-only enrichment with isolated cache/publication and protected-fact verification; support bounded daily runs of up to 100 courses.
+
 ## [0.33.2] - 2026-11-07
 
 - Keep reviewed AI matches enabled while removing the recommendation checkbox and form explanation; distinguish advisory and factual review rules with explicit claim indices.

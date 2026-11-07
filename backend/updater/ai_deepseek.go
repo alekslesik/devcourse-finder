@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 func aiDeepSeekOutputInstructions(input any) string {
@@ -17,6 +18,9 @@ func aiDeepSeekOutputInstructions(input any) string {
 	// document/segment/tariff IDs, so repeating their enum for every field is noise.
 	contracts := map[string]any{}
 	for _, field := range []string{"prerequisites", "audience", "excluded_audience", "goals", "direction", "target_level", "duration", "weekly_workload", "review", "mentor", "community", "recommended_audience", "recommended_goals", "recommended_directions"} {
+		if m, ok := input.(map[string]any); ok && m["recommendations_only"] == true && !strings.HasPrefix(field, "recommended_") {
+			continue
+		}
 		properties := aiClaimSchema(field)["properties"].(map[string]any)
 		values := map[string]any{}
 		for _, key := range []string{"value", "values", "scope", "min", "max", "unit", "available"} {
@@ -25,19 +29,24 @@ func aiDeepSeekOutputInstructions(input any) string {
 		contracts[field] = values
 	}
 	encoded, _ := json.Marshal(contracts)
-	return `JSON output contract: {"course_url":"copy exact input course_url","complete":true,"claims":[claim objects]}. Every claim has only field,offer_id,document_id,quote_id,value,values,scope,min,max,unit,available. Shape example: {"course_url":"exact supplied URL","complete":true,"claims":[{"field":"audience","offer_id":"","document_id":"course","quote_id":"s4","value":"","values":["none"],"scope":"","min":null,"max":null,"unit":"","available":null}]}. This is a shape example, not evidence: never copy its values or IDs without finding them in the input. First find the exact supporting statement, then copy the ID of its actual segment. Never default quote_id to s0. Numeric values must occur literally in the chosen matching OFFER segment; values found elsewhere in the COURSE cannot be copied into a tariff claim. A price/installment block mentioning 36 payments cannot prove 8 months of study or 15 hours a week. Omit unsupported claims. Do not output quote text or discarded_claims. Irrelevant strings are "", values=[], min/max/available=null. Field contracts: ` + string(encoded)
+	contract := `JSON output contract: {"course_url":"copy exact input course_url","complete":true,"claims":[claim objects]}. Every claim has only field,offer_id,document_id,quote_id,value,values,scope,min,max,unit,available. Shape example: {"course_url":"exact supplied URL","complete":true,"claims":[{"field":"audience","offer_id":"","document_id":"course","quote_id":"s4","value":"","values":["none"],"scope":"","min":null,"max":null,"unit":"","available":null}]}. This is a shape example, not evidence: never copy its values or IDs without finding them in the input. First find the exact supporting statement, then copy the ID of its actual segment. Never default quote_id to s0. Numeric values must occur literally in the chosen matching OFFER segment; values found elsewhere in the COURSE cannot be copied into a tariff claim. A price/installment block mentioning 36 payments cannot prove 8 months of study or 15 hours a week. Omit unsupported claims. Do not output quote text or discarded_claims. Irrelevant strings are "", values=[], min/max/available=null. Field contracts: ` + string(encoded)
+	if m, ok := input.(map[string]any); ok && m["recommendations_only"] == true {
+		contract = strings.Replace(contract, `"field":"audience"`, `"field":"recommended_audience"`, 1)
+	}
+	return contract
 }
 
 // DeepSeekModel uses a fixed provider endpoint and the same grounded fact contract.
 type DeepSeekModel struct {
-	Key         string `json:"-"`
-	Model       string
-	VerifyModel string
-	Client      *http.Client
+	recommendationsOnly bool
+	Key                 string `json:"-"`
+	Model               string
+	VerifyModel         string
+	Client              *http.Client
 }
 
 func (m *DeepSeekModel) client() *OpenAIModel {
-	return &OpenAIModel{Key: m.Key, Model: m.Model, VerifyModel: m.VerifyModel, Client: m.Client, provider: "deepseek"}
+	return &OpenAIModel{Key: m.Key, Model: m.Model, VerifyModel: m.VerifyModel, Client: m.Client, provider: "deepseek", recommendationsOnly: m.recommendationsOnly}
 }
 
 func (m *DeepSeekModel) Extract(ctx context.Context, c Candidate, docs []AIDocument) (AIExtraction, AIUsage, error) {

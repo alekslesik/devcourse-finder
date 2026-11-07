@@ -53,7 +53,7 @@ literal semantics; switch remains an independent background.
   may recover that slot if no AI run has started since it began. Restarts do not
   repeat a started slot. Manual `catalog-ai once` remains available on any day
   and still respects source due times and the shared daily request budget.
-- At most 20 due courses per daily run (configurable 1–40), serial reads. Never-attempted courses come first. Within the new and previously attempted groups, courses missing more filter fields (experience, goal, direction) precede complete profiles; oldest attempt and course ID break ties. Provider health, due times, explicit course selection and shared daily reservation limits still apply.
+- At most 20 due courses per daily run (configurable 1–100), serial reads. Never-attempted courses come first. Within the new and previously attempted groups, courses missing more filter fields (experience, goal, direction) precede complete profiles; oldest attempt and course ID break ties. Provider health, due times, explicit course selection and shared daily reservation limits still apply.
 - At most **40 reserved model requests per UTC day** by default (configurable
   1–200), shared persistently across manual runs/restarts. A complete two-request analysis is reserved atomically before extraction.
   Failed analyses consume the reserved pair conservatively; one remaining request
@@ -346,3 +346,15 @@ are not reused. Daily request limits continue to apply to fresh analyses.
 Policy v5 adds separately stored and independently reviewed course recommendations
 for experience, goals and directions without relaxing factual numeric/support
 contracts. See [search behaviour, provenance, limits and non-publishing preview](course-recommendations.md).
+
+
+### Focused recommendations (v0.34.0)
+
+Production defaults to recommendation-only mode; see
+[course-recommendations.md](course-recommendations.md#recommendation-only-enrichment).
+It fills search suitability labels without changing school-confirmed conditions.
+Use `CATALOG_AI_RECOMMENDATIONS_ONLY=false` explicitly for mixed factual enrichment.
+The operator may configure up to 100 courses per run within the shared maximum
+200-request daily cap. Deployment-specific increases require operator budgeting;
+repository defaults remain 20 courses and 40 requests. Preview/publish pilot
+reports must distinguish advisory coverage from confirmed fact coverage.
