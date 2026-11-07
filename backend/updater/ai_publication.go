@@ -77,7 +77,7 @@ func (s *Service) enqueueAI(ctx context.Context, e AIEvent) error {
 	if _, err = tx.Exec(ctx, "INSERT INTO catalog_ai_observations(course_id,observed_at,payload) VALUES($1,$2,$3::jsonb) ON CONFLICT(course_id,observed_at) DO NOTHING", e.CourseID, e.ObservedAt, raw); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, `INSERT INTO catalog_ai_sources(course_id,attempted_at,next_attempt_at,code,failures) VALUES($1,$2,now()+interval '12 hours','queued',0) ON CONFLICT(course_id) DO UPDATE SET code='queued',next_attempt_at=now()+interval '12 hours',failures=0 WHERE catalog_ai_sources.attempted_at<=$2`, e.CourseID, e.ObservedAt); err != nil {
+	if _, err = tx.Exec(ctx, `INSERT INTO catalog_ai_sources(course_id,attempted_at,next_attempt_at,code,failures) VALUES($1,$2,now()+interval '12 hours','queued',0) ON CONFLICT(course_id) DO UPDATE SET code='queued',next_attempt_at=now()+interval '12 hours',failures=0 WHERE catalog_ai_sources.attempted_at<=$2 AND catalog_ai_sources.code<>'manual_review_required'`, e.CourseID, e.ObservedAt); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -339,6 +339,14 @@ func (s *Service) publishAISelection(ctx context.Context, target string, eventID
 		code := "invalid_ai_observation"
 		n, err := s.DB.UpdateVerified(ctx, aiSourceHosts(), "automatic-ai-catalog-publisher", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
 			var courses []catalog.Course
+			var held bool
+			if err := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM catalog_ai_sources WHERE course_id=$1 AND code='manual_review_required')", courseID).Scan(&held); err != nil {
+				return nil, err
+			}
+			if held {
+				valid = false
+				code = "manual_review_required"
+			}
 			if valid {
 				var last *time.Time
 				err := tx.QueryRow(ctx, "SELECT observed_at FROM catalog_ai_watermarks WHERE course_id=$1", courseID).Scan(&last)

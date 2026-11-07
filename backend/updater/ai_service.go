@@ -16,6 +16,7 @@ import (
 	"devcourse-finder/catalog"
 	"devcourse-finder/store"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type AIConfig struct {
@@ -109,7 +110,7 @@ type AIRunResult struct {
 }
 
 func (s *AIService) fail(ctx context.Context, id, code string) error {
-	_, err := s.DB.Pool.Exec(ctx, `UPDATE catalog_ai_sources SET code=$2,failures=failures+1,next_attempt_at=now()+least(24,2*greatest(1,failures+1))*interval '1 hour' WHERE course_id=$1`, id, code)
+	_, err := s.DB.Pool.Exec(ctx, `UPDATE catalog_ai_sources SET code=$2,failures=failures+1,next_attempt_at=now()+least(24,2*greatest(1,failures+1))*interval '1 hour' WHERE course_id=$1 AND code<>'manual_review_required'`, id, code)
 	return err
 }
 func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
@@ -213,8 +214,12 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			continue
 		}
 		at := time.Now().UTC().Truncate(time.Microsecond)
-		if _, err = s.DB.Pool.Exec(ctx, `INSERT INTO catalog_ai_sources(course_id,attempted_at,next_attempt_at,code) VALUES($1,$2,now()+interval '15 minutes','reading') ON CONFLICT(course_id) DO UPDATE SET attempted_at=$2,next_attempt_at=now()+interval '15 minutes',code='reading'`, id, at); err != nil {
+		var readingTag pgconn.CommandTag
+		if readingTag, err = s.DB.Pool.Exec(ctx, `INSERT INTO catalog_ai_sources(course_id,attempted_at,next_attempt_at,code) VALUES($1,$2,now()+interval '15 minutes','reading') ON CONFLICT(course_id) DO UPDATE SET attempted_at=$2,next_attempt_at=now()+interval '15 minutes',code='reading' WHERE catalog_ai_sources.code<>'manual_review_required'`, id, at); err != nil {
 			return result, err
+		}
+		if readingTag.RowsAffected() == 0 {
+			continue
 		}
 		result.Attempted++
 		local, cancel := context.WithTimeout(ctx, 300*time.Second)
