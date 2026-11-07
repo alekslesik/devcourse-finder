@@ -13,6 +13,7 @@ const (
 	learningReview
 	learningMentor
 	learningCommunity
+	learningTotalStudyHours
 )
 
 // Ownership is private database metadata. Imported curated facts have no owned
@@ -55,6 +56,7 @@ func applyLearningConditions(o *catalog.Offer, incoming *catalog.LearningConditi
 	}
 	rangeField(&old.Duration, next.Duration, learningDuration, !o.DurationCollected && (o.Weeks != nil || o.DurationMonths != nil))
 	rangeField(&old.WeeklyWorkload, next.WeeklyWorkload, learningWorkload, o.Hours != nil)
+	rangeField(&old.TotalStudyHours, next.TotalStudyHours, learningTotalStudyHours, false)
 	legacySupport := o.SupportKnown == nil || *o.SupportKnown
 	supportField(&old.Review, next.Review, learningReview, legacySupport)
 	supportField(&old.Mentor, next.Mentor, learningMentor, legacySupport)

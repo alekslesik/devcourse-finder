@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.35.0] - 2026-11-07
+
+- Separate total study effort from calendar duration and weekly workload in source collection, course cards, details and comparison.
+
 ## [0.34.1] - 2026-11-07
 
 - Keep manually rejected AI classifications out of automatic selection and publication until reviewed.

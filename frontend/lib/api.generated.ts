@@ -307,6 +307,7 @@ export interface components {
             review?: components["schemas"]["LearningSupport"];
             mentor?: components["schemas"]["LearningSupport"];
             community?: components["schemas"]["LearningSupport"];
+            total_study_hours?: components["schemas"]["LearningTotalStudyHours"];
         };
         ProfileFacet: {
             /** @description Eligible distinct courses with only this facet filter removed. */
@@ -370,6 +371,14 @@ export interface components {
             audience?: components["schemas"]["RecommendationTags"];
             goals?: components["schemas"]["RecommendationTags"];
             directions?: components["schemas"]["RecommendationTags"];
+        };
+        /** @description Total course study effort in hours, not calendar duration, video runtime or hours per week. Preserves the source range. */
+        LearningTotalStudyHours: {
+            min: number;
+            max: number;
+            /** @enum {string} */
+            unit: "hour";
+            evidence: components["schemas"]["LearningEvidence"];
         };
     };
     responses: never;

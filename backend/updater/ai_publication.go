@@ -160,6 +160,9 @@ func applyAILearning(o *catalog.Offer, incoming *catalog.LearningConditions, par
 	if incoming != nil {
 		next = *incoming
 	}
+	// Total study effort is collected from literal source fields, outside the AI
+	// claim contract. An AI abstention must neither clear nor replace it.
+	next.TotalStudyHours = old.TotalStudyHours
 	previousOwnership := o.LearningOwnership
 	preserved := 0
 	if partial {

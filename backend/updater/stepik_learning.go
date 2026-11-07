@@ -10,6 +10,7 @@ func stepikLearning(data []byte, course stepikCourse, c Candidate, now time.Time
 	source := candidateEndpoint(c)
 	facts := &catalog.LearningConditions{}
 	facts.WeeklyWorkload = learningTextRange(course.Workload, true, learningProof(data, source, "courses[id="+c.ExternalID+"].workload", now))
+	facts.TotalStudyHours = learningTotalHoursRange(course.Workload, learningProof(data, source, "courses[id="+c.ExternalID+"].workload", now))
 	// is_self_paced is scheduling, not a promise of no support; automatic task
 	// checks, discussion counts, subscriptions and enrollment dates prove none of
 	// the human support/calendar duration fields.

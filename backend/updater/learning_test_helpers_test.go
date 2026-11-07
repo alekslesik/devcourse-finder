@@ -29,6 +29,9 @@ func reobserveLearning(t *testing.T, e QueuedObservation, at time.Time) QueuedOb
 		if v.WeeklyWorkload != nil {
 			v.WeeklyWorkload.Evidence.CheckedAt = at
 		}
+		if v.TotalStudyHours != nil {
+			v.TotalStudyHours.Evidence.CheckedAt = at
+		}
 		for _, s := range []*catalog.LearningSupport{v.Review, v.Mentor, v.Community} {
 			if s != nil {
 				s.Evidence.CheckedAt = at

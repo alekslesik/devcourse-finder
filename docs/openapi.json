@@ -1386,6 +1386,9 @@
           },
           "community": {
             "$ref": "#/components/schemas/LearningSupport"
+          },
+          "total_study_hours": {
+            "$ref": "#/components/schemas/LearningTotalStudyHours"
           }
         },
         "required": []
@@ -1670,6 +1673,38 @@
           }
         },
         "additionalProperties": false
+      },
+      "LearningTotalStudyHours": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Total course study effort in hours, not calendar duration, video runtime or hours per week. Preserves the source range.",
+        "properties": {
+          "min": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10000
+          },
+          "max": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10000
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "hour"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/LearningEvidence"
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "unit",
+          "evidence"
+        ]
       }
     }
   },

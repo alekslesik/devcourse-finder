@@ -12,6 +12,7 @@ func learningStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 	rows, err := db.Pool.Query(ctx, `SELECT c.provider,count(*),
  count(*) FILTER(WHERE o.learning_conditions->'duration' IS NOT NULL),
  count(*) FILTER(WHERE o.learning_conditions->'weekly_workload' IS NOT NULL),
+ count(*) FILTER(WHERE o.learning_conditions->'total_study_hours' IS NOT NULL),
  count(*) FILTER(WHERE o.learning_conditions->'review' IS NOT NULL),
  count(*) FILTER(WHERE o.learning_conditions->'mentor' IS NOT NULL),
  count(*) FILTER(WHERE o.learning_conditions->'community' IS NOT NULL),
@@ -23,12 +24,12 @@ func learningStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 	defer rows.Close()
 	for rows.Next() {
 		var provider string
-		var offers, duration, workload, review, mentor, community int
+		var offers, duration, workload, totalStudyHours, review, mentor, community int
 		var oldest *time.Time
-		if err = rows.Scan(&provider, &offers, &duration, &workload, &review, &mentor, &community, &oldest); err != nil {
+		if err = rows.Scan(&provider, &offers, &duration, &workload, &totalStudyHours, &review, &mentor, &community, &oldest); err != nil {
 			return err
 		}
-		if err = json.NewEncoder(w).Encode(map[string]any{"learning_conditions_coverage": true, "provider": provider, "offers": offers, "duration": duration, "weekly_workload": workload, "review": review, "mentor": mentor, "community": community, "oldest_fact_at": oldest}); err != nil {
+		if err = json.NewEncoder(w).Encode(map[string]any{"learning_conditions_coverage": true, "provider": provider, "offers": offers, "duration": duration, "weekly_workload": workload, "total_study_hours": totalStudyHours, "review": review, "mentor": mentor, "community": community, "oldest_fact_at": oldest}); err != nil {
 			return err
 		}
 	}

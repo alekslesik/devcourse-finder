@@ -54,3 +54,20 @@ func TestLearningSupportRequiresExplicitAvailability(t *testing.T) {
 		t.Fatal(fact, err)
 	}
 }
+
+func TestTotalStudyHoursCannotBecomeCalendarDurationOrWeeklyWorkload(t *testing.T) {
+	e := learningTestEvidence()
+	h := &LearningRange{Min: 20, Max: 40, Unit: "hour", Evidence: e}
+	c := &LearningConditions{TotalStudyHours: h}
+	if !c.Valid() || h.Valid(false) || h.Valid(true) || len(c.Evidence()) != 1 {
+		t.Fatal(c)
+	}
+	if (Offer{LearningConditions: c}).WithinWeeklyHours(168) {
+		t.Fatal("total effort passed weekly filter")
+	}
+	for _, bad := range []*LearningRange{{Min: 0, Max: 10, Unit: "hour", Evidence: e}, {Min: 20, Max: 10, Unit: "hour", Evidence: e}, {Min: 1, Max: 10001, Unit: "hour", Evidence: e}, {Min: 10, Max: 20, Unit: "hours_per_week", Evidence: e}, {Min: 10, Max: 20, Unit: "hour"}} {
+		if (&LearningConditions{TotalStudyHours: bad}).Valid() {
+			t.Fatal("invalid total effort", bad)
+		}
+	}
+}
