@@ -24,32 +24,37 @@ type response struct {
 	Total            int              `json:"total"`
 	Confirmed        int              `json:"confirmed_total"`
 	Unverified       int              `json:"unverified_total"`
+	Recommended      int              `json:"recommended_total"`
 	UnknownAvailable int              `json:"unknown_available"`
 	Page             int              `json:"page"`
 	PageSize         int              `json:"page_size"`
 }
 type row struct {
-	Language   string   `json:"language"`
-	Facet      string   `json:"facet"`
-	Selected   string   `json:"selected"`
-	Eligible   int      `json:"eligible"`
-	Confirmed  int      `json:"confirmed"`
-	Unknown    int      `json:"unknown"`
-	Excluded   int      `json:"excluded"`
-	APITotal   int      `json:"api_total"`
-	APIUnknown int      `json:"api_unknown_available"`
-	Match      bool     `json:"matches_backend"`
-	UnknownIDs []string `json:"unknown_ids"`
+	Language       string   `json:"language"`
+	Facet          string   `json:"facet"`
+	Selected       string   `json:"selected"`
+	Eligible       int      `json:"eligible"`
+	Confirmed      int      `json:"confirmed"`
+	Unknown        int      `json:"unknown"`
+	Excluded       int      `json:"excluded"`
+	APITotal       int      `json:"api_total"`
+	Recommended    int      `json:"recommended"`
+	APIRecommended int      `json:"api_recommended_total"`
+	APIUnknown     int      `json:"api_unknown_available"`
+	Match          bool     `json:"matches_backend"`
+	UnknownIDs     []string `json:"unknown_ids"`
 }
 type report struct {
-	Started   time.Time      `json:"started_at"`
-	Finished  time.Time      `json:"finished_at"`
-	Courses   int            `json:"snapshot_courses"`
-	Snapshot  string         `json:"snapshot_digest"`
-	Stable    bool           `json:"stable_snapshot"`
-	Pass      bool           `json:"pass"`
-	Providers map[string]int `json:"providers"`
-	Rows      []row          `json:"rows"`
+	Started      time.Time                  `json:"started_at"`
+	Finished     time.Time                  `json:"finished_at"`
+	Courses      int                        `json:"snapshot_courses"`
+	Snapshot     string                     `json:"snapshot_digest"`
+	Stable       bool                       `json:"stable_snapshot"`
+	Pass         bool                       `json:"pass"`
+	Providers    map[string]int             `json:"providers"`
+	Rows         []row                      `json:"rows"`
+	Coverage     map[string]profileCoverage `json:"coverage"`
+	Combinations []combination              `json:"combinations"`
 }
 type auditor struct {
 	client *http.Client
@@ -133,20 +138,15 @@ func (a auditor) run(ctx context.Context) (out report, err error) {
 	}
 	out.Courses = len(courses)
 	out.Snapshot = digest
+	out.Coverage = summarizeCoverage(courses, out.Started)
 	for _, c := range courses {
 		u, _ := url.Parse(c.Source)
 		out.Providers[u.Hostname()]++
 	}
-	for _, language := range []string{"python", "javascript", "java", "go"} {
+	for _, language := range []string{"", "python", "javascript", "java", "go"} {
 		base, _ := catalog.Parse(url.Values{"language": {language}})
 		eligible := catalog.Search(courses, base, out.Started)
-		for _, facet := range []struct {
-			key    string
-			values []string
-		}{
-			{"experience", []string{"none", "basics", "projects", "working", "switch", "experienced"}},
-			{"goal", []string{"try", "job", "switch", "deepen"}},
-		} {
+		for _, facet := range auditFacets {
 			for _, selected := range facet.values {
 				q := url.Values{"language": {language}, facet.key: {selected}, "diagnostics": {"true"}}
 				f, _ := catalog.Parse(q)
@@ -177,11 +177,35 @@ func (a auditor) run(ctx context.Context) (out report, err error) {
 					return out, e
 				}
 				r.Match = r.Match && expanded.Total == r.Confirmed+r.Unknown && expanded.Confirmed == r.Confirmed && expanded.Unverified == r.Unknown
+				// AI counts are additional, disjoint matches; unknown shrinks by
+				// exactly that amount, without promoting advice to confirmed.
+				for _, item := range eligible {
+					if catalog.MatchRecommendation(item.Course, facet.key, selected, out.Started) {
+						r.Recommended++
+					}
+				}
+				q.Del("include_unknown_profiles")
+				q.Set("include_recommendations", "true")
+				advisory, e := a.get(ctx, q)
+				if e != nil {
+					return out, e
+				}
+				r.APIRecommended = advisory.Recommended
+				r.Match = r.Match && advisory.Total == r.Confirmed+r.Recommended && advisory.Confirmed == r.Confirmed && advisory.Recommended == r.Recommended && advisory.Unverified == 0 && advisory.UnknownAvailable == r.Unknown-r.Recommended
+				q.Set("include_unknown_profiles", "true")
+				all, e := a.get(ctx, q)
+				if e != nil {
+					return out, e
+				}
+				r.Match = r.Match && all.Total == r.Confirmed+r.Unknown && all.Confirmed == r.Confirmed && all.Recommended == r.Recommended && all.Unverified == r.Unknown-r.Recommended
 				sort.Strings(r.UnknownIDs)
 				out.Rows = append(out.Rows, r)
 				out.Pass = out.Pass && r.Match
 			}
 		}
+	}
+	if err = a.auditCombinations(ctx, courses, &out); err != nil {
+		return out, err
 	}
 	_, second, err := a.snapshot(ctx)
 	if err != nil {
