@@ -7,20 +7,22 @@ import (
 )
 
 type AIPreviewReport struct {
-	CourseID        string                         `json:"course_id"`
-	Policy          string                         `json:"policy"`
-	Model           string                         `json:"model,omitempty"`
-	Cached          bool                           `json:"cached"`
-	Tokens          int                            `json:"tokens"`
-	CatalogWrites   int                            `json:"catalog_writes"`
-	Recommendations *catalog.CourseRecommendations `json:"recommendations,omitempty"`
-	VerifiedClaims  []AIClaim                      `json:"verified_claims,omitempty"`
-	DiscardedClaims int                            `json:"discarded_claims"`
+	RecommendationsOnly bool                           `json:"recommendations_only"`
+	CourseID            string                         `json:"course_id"`
+	Policy              string                         `json:"policy"`
+	Model               string                         `json:"model,omitempty"`
+	Cached              bool                           `json:"cached"`
+	Tokens              int                            `json:"tokens"`
+	CatalogWrites       int                            `json:"catalog_writes"`
+	Recommendations     *catalog.CourseRecommendations `json:"recommendations,omitempty"`
+	VerifiedClaims      []AIClaim                      `json:"verified_claims,omitempty"`
+	DiscardedClaims     int                            `json:"discarded_claims"`
 }
 
 // Preview uses the real source, models, cache and shared daily reservation cap,
 // but never enqueues/publishes observations or changes course attempt dates.
 func (s AIService) PreviewCourse(ctx context.Context, id string) (report AIPreviewReport, err error) {
+	report.RecommendationsOnly = s.Config.RecommendationsOnly
 	report.CourseID = id
 	report.Policy = aiEffectivePolicy()
 	ids, e := ParseAICourseIDs(id)
@@ -69,6 +71,7 @@ func (s AIService) PreviewCourse(ctx context.Context, id string) (report AIPrevi
 	if e != nil {
 		return report, e
 	}
+	docs = s.aiDocuments(docs)
 	now := time.Now().UTC()
 	result, e := s.resolver().Resolve(ctx, id, candidate, docs, now)
 	report.Model = result.ModelName

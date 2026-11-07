@@ -9,6 +9,7 @@ import (
 )
 
 type AIVerificationReport struct {
+	FactsUnchanged     *bool            `json:"facts_unchanged,omitempty"`
 	CourseID           string           `json:"course_id"`
 	Run                AIRunResult      `json:"run"`
 	Code               string           `json:"code"`
@@ -102,6 +103,7 @@ func (s AIService) VerifyCourse(ctx context.Context, id string) (report AIVerifi
 		return report, err
 	}
 	report.FinancialBefore = aiProtectedDigest(before)
+	protectedFacts := aiRecommendationProtectedDigest(before)
 	report.Run, err = s.Run(ctx)
 	if err != nil {
 		return report, err
@@ -119,6 +121,13 @@ func (s AIService) VerifyCourse(ctx context.Context, id string) (report AIVerifi
 	after, err := load()
 	if err != nil {
 		return report, err
+	}
+	if s.Config.RecommendationsOnly {
+		unchanged := protectedFacts == aiRecommendationProtectedDigest(after)
+		report.FactsUnchanged = &unchanged
+		if !unchanged {
+			return report, errors.New("protected course facts changed")
+		}
 	}
 	report.FinancialAfter = aiProtectedDigest(after)
 	report.FinancialUnchanged = report.FinancialBefore == report.FinancialAfter

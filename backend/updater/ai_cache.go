@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"devcourse-finder/store"
@@ -13,10 +14,11 @@ import (
 var ErrAIBudget = errors.New("AI daily request budget exhausted")
 
 type AIEngine struct {
-	DB         *store.DB
-	Model      AIModel
-	ModelName  string
-	DailyLimit int
+	RecommendationsOnly bool
+	DB                  *store.DB
+	Model               AIModel
+	ModelName           string
+	DailyLimit          int
 }
 type AIResolved struct {
 	Extraction   AIExtraction
@@ -74,6 +76,9 @@ func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, do
 		if aiStrictJSON(x, &out.Extraction) != nil || aiStrictJSON(v, &out.Verification) != nil {
 			return out, ErrAI
 		}
+		if e.RecommendationsOnly && !aiOnlyRecommendations(out.Extraction.Claims) {
+			return out, ErrAI
+		}
 		if _, err = aiCompile(c, docs, out.Extraction, out.Verification, at); err != nil {
 			return out, err
 		}
@@ -98,6 +103,9 @@ func (e *AIEngine) Resolve(ctx context.Context, courseID string, c Candidate, do
 	}
 	if err != nil {
 		return out, err
+	}
+	if e.RecommendationsOnly && !aiOnlyRecommendations(out.Extraction.Claims) {
+		return out, ErrAI
 	}
 	out.Stage = "grounding"
 	out.Extraction, err = aiIsolateClaims(c, docs, out.Extraction, at)
@@ -170,6 +178,9 @@ func (e *AIEngine) carryForward(ctx context.Context, courseID string, c Candidat
 				continue
 			}
 			claim := prior.Claims[i]
+			if e.RecommendationsOnly && !strings.HasPrefix(claim.Field, "recommended_") {
+				continue
+			}
 			claim.QuoteID = "" // Revalidate the literal old quote even if segment boundaries changed.
 			key := claim.OfferID + ":" + claim.Field
 			if seen[key] || len(x.Claims) >= aiMaxClaims {

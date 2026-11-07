@@ -35,11 +35,12 @@ type AIModel interface {
 	Verify(context.Context, Candidate, []AIDocument, AIExtraction) (AIVerification, AIUsage, error)
 }
 type OpenAIModel struct {
-	Key         string `json:"-"`
-	Model       string
-	VerifyModel string
-	Client      *http.Client
-	provider    string // Internal fixed endpoint selector; never a configurable URL.
+	recommendationsOnly bool
+	Key                 string `json:"-"`
+	Model               string
+	VerifyModel         string
+	Client              *http.Client
+	provider            string // Internal fixed endpoint selector; never a configurable URL.
 }
 
 func (m *OpenAIModel) request(ctx context.Context, prompt string, input any, schema map[string]any, out any) (AIUsage, error) {
@@ -204,6 +205,9 @@ func aiExtractionSchema() map[string]any {
 	return aiObject(map[string]any{"course_url": aiString(), "complete": map[string]any{"type": "boolean"}, "claims": map[string]any{"type": "array", "maxItems": aiMaxClaims, "items": map[string]any{"anyOf": branches}}})
 }
 func (m *OpenAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocument) (AIExtraction, AIUsage, error) {
+	if m.recommendationsOnly {
+		docs = aiRecommendationDocuments(docs)
+	}
 	var out AIExtraction
 	schema := aiExtractionSchema()
 	properties := schema["properties"].(map[string]any)
@@ -214,6 +218,12 @@ func (m *OpenAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocumen
 		fields := []string{"prerequisites", "audience", "excluded_audience", "goals", "direction", "target_level", "recommended_audience", "recommended_goals", "recommended_directions"}
 		if d.Scope == "offer" {
 			fields = []string{"duration", "weekly_workload", "review", "mentor", "community"}
+		}
+		if m.recommendationsOnly {
+			if d.Scope != "course" {
+				continue
+			}
+			fields = []string{"recommended_audience", "recommended_goals", "recommended_directions"}
 		}
 		for _, field := range fields {
 			branch := aiClaimSchema(field)
@@ -229,7 +239,16 @@ func (m *OpenAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocumen
 		}
 	}
 	properties["claims"].(map[string]any)["items"] = map[string]any{"anyOf": branches}
-	usage, err := m.request(ctx, aiExtractionPrompt, map[string]any{"course_url": c.URL, "documents": aiPromptDocuments(docs)}, schema, &out)
+	prompt := aiExtractionPrompt
+	input := map[string]any{"course_url": c.URL, "documents": aiPromptDocuments(docs)}
+	if m.recommendationsOnly {
+		prompt = aiRecommendationExtractionPrompt
+		input["recommendations_only"] = true
+	}
+	usage, err := m.request(ctx, prompt, input, schema, &out)
+	if err == nil && m.recommendationsOnly && !aiOnlyRecommendations(out.Claims) {
+		err = ErrAI
+	}
 	if err == nil && out.DiscardedClaims != 0 {
 		err = ErrAI
 	}
@@ -239,6 +258,9 @@ func (m *OpenAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocumen
 }
 
 func (m *OpenAIModel) Verify(ctx context.Context, c Candidate, docs []AIDocument, extraction AIExtraction) (AIVerification, AIUsage, error) {
+	if m.recommendationsOnly {
+		docs = aiRecommendationDocuments(docs)
+	}
 	var out AIVerification
 	schema := aiObject(map[string]any{"complete": map[string]any{"type": "boolean"}, "verified_claim_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer"}}})
 	reviewer := *m

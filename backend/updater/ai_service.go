@@ -19,6 +19,7 @@ import (
 )
 
 type AIConfig struct {
+	RecommendationsOnly bool
 	Key                 string `json:"-"`
 	Model               string
 	VerifyModel         string
@@ -56,13 +57,20 @@ func LoadAIConfig() (AIConfig, error) {
 		name   string
 		target *int
 		max    int
-	}{{"CATALOG_AI_BATCH_SIZE", &c.BatchSize, 40}, {"CATALOG_AI_DAILY_REQUEST_LIMIT", &c.DailyLimit, 200}} {
+	}{{"CATALOG_AI_BATCH_SIZE", &c.BatchSize, 100}, {"CATALOG_AI_DAILY_REQUEST_LIMIT", &c.DailyLimit, 200}} {
 		if raw := os.Getenv(item.name); raw != "" {
 			n, err := strconv.Atoi(raw)
 			if err != nil || n < 1 || n > item.max {
 				return c, ErrAI
 			}
 			*item.target = n
+		}
+	}
+	if raw := os.Getenv("CATALOG_AI_RECOMMENDATIONS_ONLY"); raw != "" {
+		var err error
+		c.RecommendationsOnly, err = strconv.ParseBool(raw)
+		if err != nil {
+			return c, ErrAI
 		}
 	}
 	if raw := os.Getenv("CATALOG_AI_COURSE_IDS"); raw != "" {
@@ -83,6 +91,7 @@ type AIService struct {
 	Client         *http.Client
 }
 type AIRunResult struct {
+	RecommendationsOnly  bool   `json:"recommendations_only"`
 	RecommendationClaims int    `json:"recommendation_claims"`
 	FactualClaims        int    `json:"factual_claims"`
 	ObservationID        int64  `json:"observation_id,omitempty"`
@@ -104,11 +113,12 @@ func (s *AIService) fail(ctx context.Context, id, code string) error {
 	return err
 }
 func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
+	result.RecommendationsOnly = s.Config.RecommendationsOnly
 	if s.TargetCourseID != "" {
 		s.Config.CourseIDs = []string{s.TargetCourseID}
 		s.Config.BatchSize = 1
 	}
-	if s.Config.BatchSize < 1 || s.Config.BatchSize > 40 || s.Config.DailyLimit < 1 || s.Config.DailyLimit > 200 {
+	if s.Config.BatchSize < 1 || s.Config.BatchSize > 100 || s.Config.DailyLimit < 1 || s.Config.DailyLimit > 200 {
 		return result, ErrAI
 	}
 	probeStepik := len(s.Config.CourseIDs) == 0
@@ -209,6 +219,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 		result.Attempted++
 		local, cancel := context.WithTimeout(ctx, 300*time.Second)
 		candidate, docs, readErr := aiFetchDocuments(local, s.DB, client, c)
+		docs = s.aiDocuments(docs)
 		code := "source_unavailable"
 		stage, reason := "source", "unavailable"
 		if errors.Is(readErr, ErrAI) {
@@ -240,7 +251,7 @@ func (s *AIService) Run(ctx context.Context) (result AIRunResult, err error) {
 			code = "invalid_ai_response"
 			result.Tokens += resolved.Usage.Total
 			if readErr == nil {
-				event := AIEvent{Version: 1, CourseID: id, IdentityDigest: aiIdentityDigest(c), Candidate: candidate, ObservedAt: at, Model: resolved.ModelName, Policy: aiEffectivePolicy(), Documents: docs, Extraction: resolved.Extraction, Verification: resolved.Verification}
+				event := AIEvent{RecommendationsOnly: s.Config.RecommendationsOnly, Version: 1, CourseID: id, IdentityDigest: aiIdentityDigest(c), Candidate: candidate, ObservedAt: at, Model: resolved.ModelName, Policy: aiEffectivePolicy(), Documents: docs, Extraction: resolved.Extraction, Verification: resolved.Verification}
 				stage, reason = "enqueue", "queue_failed"
 				readErr = publisher.enqueueAI(local, event)
 				code = "ai_queue_failed"
@@ -356,6 +367,7 @@ func AIHealth(ctx context.Context, db *store.DB) error {
 	return nil
 }
 func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
+	configuredMode, _ := strconv.ParseBool(os.Getenv("CATALOG_AI_RECOMMENDATIONS_ONLY"))
 	var dayRequests int
 	var dayTokens int64
 	err := db.Pool.QueryRow(ctx, "SELECT requests,total_tokens FROM catalog_ai_daily_budget WHERE day=(now() AT TIME ZONE 'UTC')::date").Scan(&dayRequests, &dayTokens)
@@ -378,7 +390,7 @@ func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	if err = json.NewEncoder(w).Encode(map[string]any{"source_codes": codes, "provider_health": health, "provider_coverage": coverage, "ai_collector": true, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
+	if err = json.NewEncoder(w).Encode(map[string]any{"source_codes": codes, "provider_health": health, "provider_coverage": coverage, "ai_collector": true, "recommendations_only": configuredMode, "requests_reserved_today": dayRequests, "tokens_today": dayTokens, "pending": pending, "policy": aiEffectivePolicy(), "supported_providers": aiProviderIDs()}); err != nil {
 		return err
 	}
 	rows, err := db.Pool.Query(ctx, "SELECT course_id,code,attempted_at,verified_at,next_attempt_at,failures,diagnostic_stage,diagnostic_reason FROM catalog_ai_sources ORDER BY attempted_at DESC LIMIT 40")
@@ -404,19 +416,20 @@ func AIStatus(ctx context.Context, db *store.DB, w io.Writer) error {
 func (s AIService) resolver() *aiFallbackResolver {
 	model := s.Model
 	if model == nil {
-		model = &OpenAIModel{Key: s.Config.Key, Model: s.Config.Model, VerifyModel: s.Config.VerifyModel}
+		model = &OpenAIModel{Key: s.Config.Key, Model: s.Config.Model, VerifyModel: s.Config.VerifyModel, recommendationsOnly: s.Config.RecommendationsOnly}
 	}
-	primary := &AIEngine{DB: s.DB, Model: model, ModelName: "openai:" + s.Config.Model + "+" + s.Config.VerifyModel, DailyLimit: s.Config.DailyLimit}
+	primary := &AIEngine{DB: s.DB, Model: model, ModelName: "openai:" + s.Config.Model + "+" + s.Config.VerifyModel + s.aiModeSuffix(), DailyLimit: s.Config.DailyLimit, RecommendationsOnly: s.Config.RecommendationsOnly}
 	resolver := aiFallbackResolver{primary: primary}
 	if s.Model == nil && strings.TrimSpace(s.Config.Key) == "" {
 		resolver.primary = nil
 	}
 	if strings.TrimSpace(s.Config.DeepSeekKey) != "" {
 		resolver.fallback = &AIEngine{
-			DB:         s.DB,
-			Model:      &DeepSeekModel{Key: s.Config.DeepSeekKey, Model: s.Config.DeepSeekModel, VerifyModel: s.Config.DeepSeekVerifyModel},
-			ModelName:  "deepseek:" + s.Config.DeepSeekModel + "+" + s.Config.DeepSeekVerifyModel,
-			DailyLimit: s.Config.DailyLimit,
+			DB:                  s.DB,
+			Model:               &DeepSeekModel{Key: s.Config.DeepSeekKey, Model: s.Config.DeepSeekModel, VerifyModel: s.Config.DeepSeekVerifyModel, recommendationsOnly: s.Config.RecommendationsOnly},
+			ModelName:           "deepseek:" + s.Config.DeepSeekModel + "+" + s.Config.DeepSeekVerifyModel + s.aiModeSuffix(),
+			RecommendationsOnly: s.Config.RecommendationsOnly,
+			DailyLimit:          s.Config.DailyLimit,
 		}
 	}
 	return &resolver

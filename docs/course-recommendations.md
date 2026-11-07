@@ -91,3 +91,28 @@ Policy v7 gives every proposed claim an explicit `claim_index` and an
 evidence for facts. Review decisions refer to claim indices, never quote segment
 IDs. It clarifies field-specific abstention while retaining all local scope,
 identity, contradiction, numeric and support safeguards.
+
+## Recommendation-only enrichment
+
+Production Compose defaults `CATALOG_AI_RECOMMENDATIONS_ONLY=true`. In this mode
+only course-scoped curriculum documents and the three recommended_* fields are
+sent to extraction. The independent verifier retains per-claim decisions and
+all local identity/source/contradiction checks. Provider output, cache reads,
+carry-forward and publication each reject literal facts in this lane. Cache model
+identities have a `:recommendations` suffix, separate from mixed fact analysis.
+Policy v8 includes the focused extraction contract.
+
+Publication preserves every existing profile requirement, audience fact, outcome,
+learning condition, support flag, price and timestamp. Unmentioned prior advice
+is preserved until its normal expiry rather than erased by a stochastic abstention;
+explicit counterevidence blocks retained zero-entry advice. Recommendations still
+cannot override confirmed incompatibility. Targeted verification additionally
+reports `facts_unchanged` using a digest of all public facts and private collector
+ownership flags. Missing or false acceptance assertions stop the operator run.
+
+`catalog-ai preview COURSE_ID` and `catalog-ai verify COURSE_ID` honour this mode;
+preview still performs no catalog/queue/attempt writes. Set
+`CATALOG_AI_RECOMMENDATIONS_ONLY=false` explicitly for the original strict factual
+collector when needed. Mode selection never raises the shared daily cap. Batch
+size supports 1–100 courses, and the daily cap remains 1–200 requests (default 40);
+200 requests can reserve at most 100 extraction/review pairs, including failures.

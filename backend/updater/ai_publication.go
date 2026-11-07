@@ -17,16 +17,17 @@ const aiProfileMask = profilePrerequisites | profileAudience | profileGoals | pr
 const aiLearningMask = learningDuration | learningWorkload | learningReview | learningMentor | learningCommunity
 
 type AIEvent struct {
-	Version        int            `json:"version"`
-	CourseID       string         `json:"course_id"`
-	IdentityDigest string         `json:"identity_digest"`
-	Candidate      Candidate      `json:"candidate"`
-	ObservedAt     time.Time      `json:"observed_at"`
-	Model          string         `json:"model"`
-	Policy         string         `json:"policy"`
-	Documents      []AIDocument   `json:"documents"`
-	Extraction     AIExtraction   `json:"extraction"`
-	Verification   AIVerification `json:"verification"`
+	RecommendationsOnly bool           `json:"recommendations_only,omitempty"`
+	Version             int            `json:"version"`
+	CourseID            string         `json:"course_id"`
+	IdentityDigest      string         `json:"identity_digest"`
+	Candidate           Candidate      `json:"candidate"`
+	ObservedAt          time.Time      `json:"observed_at"`
+	Model               string         `json:"model"`
+	Policy              string         `json:"policy"`
+	Documents           []AIDocument   `json:"documents"`
+	Extraction          AIExtraction   `json:"extraction"`
+	Verification        AIVerification `json:"verification"`
 }
 
 func aiIdentityDigest(c catalog.Course) string {
@@ -36,6 +37,16 @@ func (e AIEvent) valid() bool {
 	c, ok := candidateURL(e.Candidate.Adapter, e.Candidate.URL, "")
 	if !ok || c.URL != e.Candidate.URL || c.ExternalID != e.Candidate.ExternalID || e.Version != 1 || e.CourseID == "" || !evidenceDigest.MatchString(e.IdentityDigest) || e.Policy != aiEffectivePolicy() || len(e.Model) == 0 || len(e.Model) > 200 || e.ObservedAt.IsZero() {
 		return false
+	}
+	if e.RecommendationsOnly {
+		if !aiOnlyRecommendations(e.Extraction.Claims) {
+			return false
+		}
+		for _, d := range e.Documents {
+			if d.Scope != "course" {
+				return false
+			}
+		}
 	}
 	_, err := aiCompile(c, e.Documents, e.Extraction, e.Verification, e.ObservedAt)
 	return err == nil
@@ -240,12 +251,14 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 				partialProfile = true
 			}
 		}
-		applyAIProfile(&c, facts.Profile, partialProfile)
+		if !e.RecommendationsOnly {
+			applyAIProfile(&c, facts.Profile, partialProfile)
+		}
 		next := catalog.CourseRecommendations{}
 		if facts.Recommendations != nil {
 			next = *facts.Recommendations
 		}
-		if partialProfile && current.Recommendations != nil {
+		if (partialProfile || e.RecommendationsOnly) && current.Recommendations != nil {
 			if next.Audience == nil {
 				next.Audience = current.Recommendations.Audience
 			}
@@ -256,6 +269,9 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 				next.Directions = current.Recommendations.Directions
 			}
 		}
+		if e.RecommendationsOnly && next.Audience != nil && aiConflictingZeroEntry(AIClaim{Field: "recommended_audience", Values: next.Audience.Values}, e.Documents) {
+			next.Audience = nil
+		}
 		c.Recommendations = nil
 		c.RecommendationIdentity = ""
 		if next.Valid() {
@@ -265,15 +281,17 @@ func mergeAI(old []catalog.Course, e AIEvent, code *string) ([]catalog.Course, e
 				c.RecommendationIdentity = catalog.CourseIdentityDigest(c)
 			}
 		}
-		for i := range c.Offers {
-			if incoming, observed := facts.Learning[c.Offers[i].ID]; observed {
-				partial := e.Extraction.DiscardedClaims > 0
-				for _, d := range e.Documents {
-					if d.Scope == "offer" && d.OfferID == c.Offers[i].ID && d.Partial {
-						partial = true
+		if !e.RecommendationsOnly {
+			for i := range c.Offers {
+				if incoming, observed := facts.Learning[c.Offers[i].ID]; observed {
+					partial := e.Extraction.DiscardedClaims > 0
+					for _, d := range e.Documents {
+						if d.Scope == "offer" && d.OfferID == c.Offers[i].ID && d.Partial {
+							partial = true
+						}
 					}
+					applyAILearning(&c.Offers[i], incoming, partial)
 				}
-				applyAILearning(&c.Offers[i], incoming, partial)
 			}
 		}
 		if !c.Profile.Valid() {

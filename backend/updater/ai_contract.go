@@ -16,7 +16,7 @@ import (
 	"devcourse-finder/catalog"
 )
 
-const aiPolicyVersion = "course-facts-v7"
+const aiPolicyVersion = "course-facts-v8"
 const aiMaxText = 96000
 const aiMaxClaims = 40
 const aiOwnershipShift = 8
