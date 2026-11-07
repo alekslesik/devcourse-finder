@@ -116,3 +116,17 @@ preview still performs no catalog/queue/attempt writes. Set
 collector when needed. Mode selection never raises the shared daily cap. Batch
 size supports 1–100 courses, and the daily cap remains 1–200 requests (default 40);
 200 requests can reserve at most 100 extraction/review pairs, including failures.
+
+## Manual review holds
+
+If manual pilot review finds an unsupported classification, operators retain the
+source/result/reason in the deployment report and mark its AI source row
+`code=manual_review_required`. This quarantines the course from both automatic
+and explicit-target selection, enqueue status updates, failure retries and the
+publisher (including already queued observations). It does not hide the course
+or modify any school facts. Preview remains available for investigation.
+
+A reviewed release explicitly changes that source row back to `pending` with
+`next_attempt_at=now()`. Never release a hold solely because another day or budget
+became available; inspect the source and classification first. Changes to hold
+state and the original source-row snapshot belong in the operator report.

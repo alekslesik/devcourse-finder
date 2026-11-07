@@ -77,7 +77,7 @@ func (s *Service) enqueueAI(ctx context.Context, e AIEvent) error {
 	if _, err = tx.Exec(ctx, "INSERT INTO catalog_ai_observations(course_id,observed_at,payload) VALUES($1,$2,$3::jsonb) ON CONFLICT(course_id,observed_at) DO NOTHING", e.CourseID, e.ObservedAt, raw); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, `INSERT INTO catalog_ai_sources(course_id,attempted_at,next_attempt_at,code,failures) VALUES($1,$2,now()+interval '12 hours','queued',0) ON CONFLICT(course_id) DO UPDATE SET code='queued',next_attempt_at=now()+interval '12 hours',failures=0 WHERE catalog_ai_sources.attempted_at<=$2`, e.CourseID, e.ObservedAt); err != nil {
+	if _, err = tx.Exec(ctx, `INSERT INTO catalog_ai_sources(course_id,attempted_at,next_attempt_at,code,failures) VALUES($1,$2,now()+interval '12 hours','queued',0) ON CONFLICT(course_id) DO UPDATE SET code='queued',next_attempt_at=now()+interval '12 hours',failures=0 WHERE catalog_ai_sources.attempted_at<=$2 AND catalog_ai_sources.code<>'manual_review_required'`, e.CourseID, e.ObservedAt); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -339,6 +339,19 @@ func (s *Service) publishAISelection(ctx context.Context, target string, eventID
 		code := "invalid_ai_observation"
 		n, err := s.DB.UpdateVerified(ctx, aiSourceHosts(), "automatic-ai-catalog-publisher", func(ctx context.Context, tx pgx.Tx, old []catalog.Course) ([]catalog.Course, error) {
 			var courses []catalog.Course
+			var sourceCode string
+			sourceErr := tx.QueryRow(ctx, "SELECT code FROM catalog_ai_sources WHERE course_id=$1 FOR UPDATE", courseID).Scan(&sourceCode)
+			if errors.Is(sourceErr, pgx.ErrNoRows) {
+				valid = false
+				code = "ai_source_missing"
+			} else if sourceErr != nil {
+				return nil, sourceErr
+			}
+			if sourceCode == "manual_review_required" {
+				valid = false
+				code = "manual_review_required"
+			}
+
 			if valid {
 				var last *time.Time
 				err := tx.QueryRow(ctx, "SELECT observed_at FROM catalog_ai_watermarks WHERE course_id=$1", courseID).Scan(&last)
@@ -369,7 +382,7 @@ func (s *Service) publishAISelection(ctx context.Context, target string, eventID
 			if _, err := tx.Exec(ctx, "UPDATE catalog_ai_observations SET processed_at=now(),code=$2 WHERE id=$1 AND processed_at IS NULL", id, code); err != nil {
 				return nil, err
 			}
-			if _, err := tx.Exec(ctx, `UPDATE catalog_ai_sources SET code=$2,diagnostic_stage='publication',diagnostic_reason=$2,verified_at=CASE WHEN $2 IN ('ai_verified','ai_no_change') THEN $3 ELSE verified_at END WHERE course_id=$1 AND attempted_at<=$3`, courseID, code, at); err != nil {
+			if _, err := tx.Exec(ctx, `UPDATE catalog_ai_sources SET code=$2,diagnostic_stage='publication',diagnostic_reason=$2,verified_at=CASE WHEN $2 IN ('ai_verified','ai_no_change') THEN $3 ELSE verified_at END WHERE course_id=$1 AND attempted_at<=$3 AND code<>'manual_review_required'`, courseID, code, at); err != nil {
 				return nil, err
 			}
 			return courses, nil

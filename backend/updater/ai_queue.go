@@ -11,7 +11,7 @@ import (
 // complete profiles. The oldest attempt breaks ties so retries cannot monopolize
 // a batch. Explicit verification retains its existing due-time exemption.
 func (s AIService) selectAICourses(ctx context.Context, stepikAvailable bool) ([]string, error) {
-	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id,a.attempted_at FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND c.source LIKE ANY($1) AND ($2 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (coalesce(cardinality($3::text[]),0)=0 OR c.id=ANY($3::text[])) AND ($4<>'' OR a.next_attempt_at IS NULL OR a.next_attempt_at<=now())`, aiSourcePatterns(), stepikAvailable, s.Config.CourseIDs, s.TargetCourseID)
+	rows, err := s.DB.Pool.Query(ctx, `SELECT c.id,a.attempted_at FROM courses c LEFT JOIN catalog_ai_sources a ON a.course_id=c.id WHERE c.status='published' AND NOT c.demo AND coalesce(a.code,'')<>'manual_review_required' AND c.source LIKE ANY($1) AND ($2 OR c.source NOT LIKE 'https://stepik.org/course/%') AND (coalesce(cardinality($3::text[]),0)=0 OR c.id=ANY($3::text[])) AND ($4<>'' OR a.next_attempt_at IS NULL OR a.next_attempt_at<=now())`, aiSourcePatterns(), stepikAvailable, s.Config.CourseIDs, s.TargetCourseID)
 	if err != nil {
 		return nil, err
 	}
