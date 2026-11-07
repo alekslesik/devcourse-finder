@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.35.1] - 2026-11-07
+
+- Audit unique profile coverage, all direction filters, AI result groups and combined course-selection routes against a stable public catalog snapshot.
+
 ## [0.35.0] - 2026-11-07
 
 - Separate total study effort from calendar duration and weekly workload in source collection, course cards, details and comparison.
