@@ -2,18 +2,20 @@ import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {readFileSync} from 'node:fs';
 const template=JSON.parse(readFileSync('../data/demo-catalog.json','utf8')).courses[0];
-for(const width of [390,1440])test(`discovery requests school variety and AI subjects with stable navigation: ${width}px`,async({page},info)=>{
+for(const width of [390,1440])test(`recent sort applies school and AI interleaving internally: ${width}px`,async({page},info)=>{
  await page.setViewportSize({width,height:900});
  const requests:URLSearchParams[]=[];
  const items=Array.from({length:36},(_,n)=>({course:{...template,id:'course-'+n,slug:'course-'+n,title:((n+1)%3===0?'Нейросети ':'Программирование ')+n},offer:{...template.offers[0],id:'offer-'+n},ai_course:(n+1)%3===0,effective_price:0,reasons:[],stale:false,profile_match:'confirmed'}));
  await page.route('**/api/v1/courses?*',route=>{
   const q=new URL(route.request().url()).searchParams;requests.push(q);
-  const ordered=q.get('sort')==='recent'?[...items].reverse():items;
+  const ordered=q.get('sort')==='price_asc'?[...items].reverse():items;
   const pageNo=Number(q.get('page')||1),size=Number(q.get('page_size')||12);
   return route.fulfill({json:{items:ordered.slice((pageNo-1)*size,pageNo*size),total:items.length,confirmed_total:items.length,page:pageNo,page_size:size}});
  });
  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(18);
- await expect(page.getByLabel('Сортировка',{exact:true})).toHaveValue('discovery');
+ const sort=page.getByLabel('Сортировка',{exact:true});
+ await expect(sort).toHaveValue('recent');
+ expect(await sort.locator('option').allTextContents()).toEqual(['Сначала свежие данные','Сначала дешевле','Сначала дороже','Сначала короче']);
  expect(requests[0].get('sort')).toBe('discovery');expect(requests[0].get('page_size')).toBe('18');
  await expect(page.getByText('Про ИИ',{exact:true})).toHaveCount(6);
  for(const slot of [3,6,9,12,15,18])await expect(page.locator('.card').nth(slot-1)).toContainText('Про ИИ');
@@ -24,11 +26,21 @@ for(const width of [390,1440])test(`discovery requests school variety and AI sub
  await page.getByRole('button',{name:'Далее →',exact:true}).click();await expect(page).toHaveURL(/page=2/);
  await expect(page.locator('.card').first()).toContainText('Программирование 18');
  expect((await page.locator('.card h3').allTextContents()).some(v=>first.includes(v))).toBe(false);
- await page.getByLabel('Сортировка',{exact:true}).selectOption('recent');await expect(page).toHaveURL(/sort=recent/);
+ await sort.selectOption('price_asc');await expect(page).toHaveURL(/sort=price_asc/);
  await expect(page.locator('.card').first()).toContainText('Нейросети 35');
- await page.reload();await expect(page.getByLabel('Сортировка',{exact:true})).toHaveValue('recent');
+ await page.reload();await expect(sort).toHaveValue('price_asc');
  await expect(page.locator('.card').first()).toContainText('Нейросети 35');
+ for(const value of ['price_desc','duration']){
+  await sort.selectOption(value);await expect(page).toHaveURL(new RegExp('sort='+value));
+  await expect.poll(()=>requests.at(-1)?.get('sort')).toBe(value);
+  await page.reload();await expect(sort).toHaveValue(value);await expect.poll(()=>requests.at(-1)?.get('sort')).toBe(value);
+ }
+ await sort.selectOption('recent');await expect(page).not.toHaveURL(/[?&]sort=/);await expect(sort).toHaveValue('recent');
+ await expect(page.locator('.card').first()).toContainText('Программирование 0');
+ await page.goto('/courses?sort=discovery&language=go&page=2');await expect(sort).toHaveValue('recent');await expect(page).toHaveURL(/page=2/);await expect(page).toHaveURL(/language=go/);await expect(page).not.toHaveURL(/[?&]sort=/);
+ await expect(page.locator('.card').first()).toContainText('Программирование 18');
+ await page.reload();await expect(sort).toHaveValue('recent');await expect(page.locator('.card').first()).toContainText('Программирование 18');
  await page.goto('/courses?sort=recent&page_size=12');await expect(page.locator('.card')).toHaveCount(12);
  await page.getByRole('button',{name:'Найти обучение'}).click();await expect(page.locator('.card')).toHaveCount(12);
- await expect(page).toHaveURL(/page_size=12/);await expect(page).toHaveURL(/sort=recent/);
+ await expect(page).toHaveURL(/page_size=12/);await expect(page).not.toHaveURL(/[?&]sort=/);await expect(sort).toHaveValue('recent');
 });

@@ -1,9 +1,21 @@
 # Diverse course discovery
 
-The website defaults to `sort=discovery` and requests 18 courses per page. The public
-API keeps its existing omitted-sort behaviour (recent data) and 12-item default;
-clients can opt into discovery and any supported page size explicitly. Existing
-price, duration and recent sorts retain their ordering semantics.
+The website keeps the normal `Сначала свежие данные` (`recent`) choice selected
+by default, alongside price ascending/descending and duration. School and AI
+interleaving is an automatic second stage within that website choice, not a
+separate `Разные школы и ИИ` option or filter. The maintainer explicitly prefers
+catalog-wide variety: an older course from another school may precede a newer
+one, while freshness order is retained within each school's subject queue.
+
+The website requests the existing internal API strategy `sort=discovery` with
+18 courses per page for its normal recent choice. Price and duration choices pass
+through unchanged. The canonical website URL omits the default sort; old
+`sort=discovery` links normalize to the normal recent choice without losing the
+page or filters. Explicit `sort=recent` links also resolve to this default.
+
+Direct public API clients keep the existing omitted-sort/recent behaviour and
+12-item default. The internal discovery strategy remains available explicitly;
+no API sorting contract or catalog ranking algorithm changes in this UI fix.
 
 Discovery runs after all hard filters, exact-tariff selection and confidence
 classification, over the complete result set before pagination. It never adds,
