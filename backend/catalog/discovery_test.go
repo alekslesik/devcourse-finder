@@ -184,6 +184,7 @@ func TestDiscoveryHandlesIntersectingSchoolAndSubjectShortages(t *testing.T) {
 		{"AI and ordinary at smaller school", [2]int{144, 12}, [2]int{0, 18}, true, true},
 		{"AI only at dominant school", [2]int{0, 18}, [2]int{144, 0}, true, true},
 		{"all AI", [2]int{}, [2]int{90, 12}, true, true},
+		{"two-card final page", [2]int{5, 18}, [2]int{12, 3}, true, true},
 		{"sparse AI does not block ordinary smaller schools", [2]int{144, 18}, [2]int{0, 3}, true, false},
 		{"one school", [2]int{70, 0}, [2]int{1, 0}, false, false},
 		{"one AI course", [2]int{90, 18}, [2]int{1, 0}, false, false},

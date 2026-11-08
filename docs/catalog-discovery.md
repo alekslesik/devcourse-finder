@@ -23,8 +23,9 @@ Account for finite supply across the complete matching set in fixed 18-card
 windows, independent of the caller's page size. Keep a broad initial overview,
 while retaining stock for later pages where possible. Then distribute the
 remaining AI subjects and courses outside the largest school proportionally
-across the remaining windows. Cumulative allowances carry unspent shares forward
-and spread scarce stock into the tail instead of exhausting it at the front.
+across the remaining card capacity. Cumulative allowances account for partial
+final windows, carry unspent shares forward and spread scarce stock into the tail
+instead of exhausting it at the front.
 When the available subjects make an allowance impossible, relax the AI allowance
 first, then the school allowance; never drop a matching course or leave a hole.
 

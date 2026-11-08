@@ -132,14 +132,15 @@ func discoveryOrder(in []Result) []Result {
 					budget.other = min(discoveryWindow, max(len(pools)-1, remainingOther-windowsLeft+1))
 				} else {
 					if spreadStart == -1 {
-						spreadStart, spreadAI, spreadOther = window, remainingAI, remainingOther
+						spreadStart, spreadAI, spreadOther = len(out), remainingAI, remainingOther
 					}
-					elapsed := window - spreadStart + 1
-					windows := elapsed + windowsLeft - 1
-					// Cumulative shares distribute even a stock smaller than the number
-					// of pages across the whole tail, with unused shares carried forward.
-					budget.ai = max(0, spreadAI*elapsed/windows-(spreadAI-remainingAI))
-					budget.other = max(0, spreadOther*elapsed/windows-(spreadOther-remainingOther))
+					through := min(end, (window+1)*discoveryWindow) - spreadStart
+					capacity := end - spreadStart
+					// Weight cumulative shares by actual card capacity: a two-card
+					// final page must not reserve as much inventory as a full page.
+					// Unspent shares carry forward, including sparse stock in the tail.
+					budget.ai = max(0, spreadAI*through/capacity-(spreadAI-remainingAI))
+					budget.other = max(0, spreadOther*through/capacity-(spreadOther-remainingOther))
 				}
 			}
 			lane := 0
