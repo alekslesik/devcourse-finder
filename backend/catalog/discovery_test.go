@@ -107,6 +107,153 @@ func TestDiscoveryDiverseSchoolsEveryThirdAIAndStablePagination(t *testing.T) {
 	}
 }
 
+func TestDiscoverySpreadsFiniteSchoolsAndAIOverEveryCatalogPage(t *testing.T) {
+	now := time.Now().UTC()
+	// The live catalog is heavily skewed toward one platform. A plain round-robin
+	// consumes every smaller school within five pages and AI within eleven.
+	stock := []struct {
+		provider  string
+		total, ai int
+	}{
+		{"Яндекс Практикум", 12, 0}, {"OTUS", 14, 1}, {"Хекслет", 4, 0},
+		{"Stepik", 722, 61}, {"Skillbox", 4, 3}, {"Нетология", 2, 0},
+		{"Skillfactory", 1, 0}, {"Skypro", 1, 0}, {"HTML Academy", 3, 0},
+		{"PurpleSchool", 14, 0}, {"CodeBasics", 5, 0}, {"JavaRush", 1, 0},
+		{"JavaScript.ru", 1, 0},
+	}
+	var courses []Course
+	for pi, school := range stock {
+		for n := 0; n < school.total; n++ {
+			c := fixture(now)
+			c.ID = fmt.Sprintf("stock-%02d-%03d", pi, n)
+			c.Provider = school.provider
+			c.Title = "Программирование"
+			if n < school.ai {
+				c.Title = "LLM-приложения"
+			}
+			courses = append(courses, c)
+		}
+	}
+	got := Search(courses, Filter{Sort: "discovery"}, now)
+	if len(got) != 784 {
+		t.Fatal("missing courses", len(got))
+	}
+	ids := map[string]bool{}
+	aiTotal := 0
+	for start, page := 0, 1; start < len(got); start, page = start+18, page+1 {
+		end := start + 18
+		if end > len(got) {
+			end = len(got)
+		}
+		schools, ai := map[string]bool{}, 0
+		for _, item := range got[start:end] {
+			if ids[item.Course.ID] {
+				t.Fatal("duplicate across pages", item.Course.ID)
+			}
+			ids[item.Course.ID] = true
+			schools[schoolKey(item.Course)] = true
+			if item.AICourse {
+				ai++
+			}
+		}
+		aiTotal += ai
+		if len(schools) < 2 || ai < 1 {
+			t.Fatalf("page %d exhausted finite inventory: schools=%v AI=%d", page, schools, ai)
+		}
+		if page == 1 && (len(schools) != 13 || ai != 6) {
+			t.Fatalf("initial overview narrowed: schools=%v AI=%d", schools, ai)
+		}
+	}
+	if aiTotal != 65 {
+		t.Fatal("AI subjects invented or lost", aiTotal)
+	}
+	// Page-size changes only regroup the same global order, including far pages.
+	if !reflect.DeepEqual(got, Search(courses, Filter{Sort: "discovery", Page: 40, PageSize: 12}, now)) {
+		t.Fatal("far-page request reranked the catalog")
+	}
+}
+
+func TestDiscoveryHandlesIntersectingSchoolAndSubjectShortages(t *testing.T) {
+	now := time.Now().UTC()
+	for _, tc := range []struct {
+		name                          string
+		ordinary, ai                  [2]int
+		schoolsEveryPage, aiEveryPage bool
+	}{
+		{"AI only at smaller school", [2]int{144, 0}, [2]int{0, 18}, true, true},
+		{"AI and ordinary at smaller school", [2]int{144, 12}, [2]int{0, 18}, true, true},
+		{"AI only at dominant school", [2]int{0, 18}, [2]int{144, 0}, true, true},
+		{"all AI", [2]int{}, [2]int{90, 12}, true, true},
+		{"two-card final page", [2]int{5, 18}, [2]int{12, 3}, true, true},
+		{"sparse AI does not block ordinary smaller schools", [2]int{144, 18}, [2]int{0, 3}, true, false},
+		{"one school", [2]int{70, 0}, [2]int{1, 0}, false, false},
+		{"one AI course", [2]int{90, 18}, [2]int{1, 0}, false, false},
+		{"one smaller-school course", [2]int{90, 1}, [2]int{30, 0}, false, false},
+		{"sparse stock reaches the last page", [2]int{180, 5}, [2]int{6, 0}, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var courses []Course
+			for pi, provider := range []string{"Stepik", "Independent author"} {
+				for n := 0; n < tc.ordinary[pi]+tc.ai[pi]; n++ {
+					c := fixture(now)
+					c.ID = fmt.Sprintf("%d-%03d", pi, n)
+					c.Provider = provider
+					c.Title = "Программирование"
+					if n < tc.ai[pi] {
+						c.Title = "Нейросети"
+					}
+					courses = append(courses, c)
+				}
+			}
+			before := Search(courses, Filter{Sort: "recent"}, now)
+			got := Search(courses, Filter{Sort: "discovery"}, now)
+			want := map[string]string{}
+			for _, item := range before {
+				want[item.Course.ID] = item.Offer.ID
+			}
+			for _, item := range got {
+				if want[item.Course.ID] != item.Offer.ID {
+					t.Fatal("course duplicated, invented or tariff replaced", item.Course.ID)
+				}
+				delete(want, item.Course.ID)
+			}
+			if len(want) != 0 {
+				t.Fatal("valid courses dropped", len(want))
+			}
+			if tc.name == "sparse stock reaches the last page" {
+				last := got[len(got)/18*18:]
+				smallerSchool, ai := false, false
+				for _, item := range last {
+					smallerSchool = smallerSchool || item.Course.Provider == "Independent author"
+					ai = ai || item.AICourse
+				}
+				if !smallerSchool || !ai {
+					t.Fatal("sparse stock was consumed before the tail")
+				}
+			}
+			if !tc.schoolsEveryPage {
+				return
+			}
+			for start := 0; start < len(got); start += 18 {
+				end := start + 18
+				if end > len(got) {
+					end = len(got)
+				}
+				schools, ai := map[string]bool{}, 0
+				for _, item := range got[start:end] {
+					schools[schoolKey(item.Course)] = true
+					if item.AICourse {
+						ai++
+					}
+				}
+				if len(schools) < 2 || (tc.aiEveryPage && ai == 0) {
+					t.Fatalf("page %d lost diversity despite sufficient stock: %v, AI=%d", start/18+1, schools, ai)
+				}
+			}
+		})
+	}
+}
+
 func TestDiscoveryShortageAndHardFiltersNeverInsertUnmatchedCourses(t *testing.T) {
 	now := time.Now().UTC()
 	courses := discoveryFixtures(now)
