@@ -9,7 +9,7 @@ import (
 
 func Parse(q url.Values) (Filter, error) {
 	f := Filter{Language: q.Get("language"), Direction: q.Get("direction"), Experience: q.Get("experience"), Goal: q.Get("goal"), Budget: q.Get("budget"), Support: q.Get("support"), Schedule: q.Get("schedule"), Sort: q.Get("sort"), Page: 1, PageSize: 12}
-	enums := map[string][]string{"language": {"go", "python", "java", "javascript"}, "direction": SearchDirections(), "experience": {"none", "basics", "projects", "working", "switch", "experienced"}, "goal": {"try", "job", "switch", "deepen"}, "budget": {"free", "paid"}, "support": {"self", "review", "mentor"}, "schedule": {"flexible", "scheduled"}, "sort": {"recent", "price_asc", "price_desc", "duration"}}
+	enums := map[string][]string{"language": {"go", "python", "java", "javascript"}, "direction": SearchDirections(), "experience": {"none", "basics", "projects", "working", "switch", "experienced"}, "goal": {"try", "job", "switch", "deepen"}, "budget": {"free", "paid"}, "support": {"self", "review", "mentor"}, "schedule": {"flexible", "scheduled"}, "sort": {"discovery", "recent", "price_asc", "price_desc", "duration"}}
 	for k, allowed := range enums {
 		if v := q.Get(k); v != "" && !slices.Contains(allowed, v) {
 			return f, fmt.Errorf("invalid %s", k)

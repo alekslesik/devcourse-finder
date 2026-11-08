@@ -95,7 +95,7 @@ func newHandler(db catalogRepository) http.Handler {
 			if c.Slug == r.PathValue("slug") && c.Status == "published" {
 				offers := []catalog.Result{}
 				for _, o := range c.Offers {
-					offers = append(offers, catalog.Result{Course: c, Offer: o, Price: catalog.EffectivePrice(o, time.Now())})
+					offers = append(offers, catalog.Result{AICourse: catalog.IsAICourse(c), Course: c, Offer: o, Price: catalog.EffectivePrice(o, time.Now())})
 				}
 				write(w, 200, map[string]any{"course": c, "offers": offers})
 				return
@@ -135,7 +135,7 @@ func newHandler(db catalogRepository) http.Handler {
 						if o.Enrollment == "closed" {
 							result = append(result, map[string]any{"id": id, "unavailable": true, "reason": "closed"})
 						} else {
-							result = append(result, catalog.Result{Course: c, Offer: o, Price: catalog.EffectivePrice(o, time.Now())})
+							result = append(result, catalog.Result{AICourse: catalog.IsAICourse(c), Course: c, Offer: o, Price: catalog.EffectivePrice(o, time.Now())})
 						}
 						found = true
 					}

@@ -34,7 +34,7 @@ for(const theme of ['light','dark'] as const)test(`actual 200% tab zoom preserve
   const id=await extension.getAttribute('id');
   await controller.goto(`chrome-extension://${id}/zoom.html`);
   const page=await context.newPage();await page.goto('http://127.0.0.1:3091/courses');
-  await expect(page.locator('.card')).toHaveCount(12);
+  await expect(page.locator('.card')).toHaveCount(18);
   const before=await page.evaluate(()=>({width:innerWidth,dpr:devicePixelRatio}));
   const zoom=await controller.evaluate(async()=>{
    const {tabs}=(globalThis as unknown as {chrome:TabZoomAPI}).chrome;

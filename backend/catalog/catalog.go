@@ -71,6 +71,7 @@ type Filter struct {
 	Page, PageSize                                                         int
 }
 type Result struct {
+	AICourse             bool     `json:"ai_course,omitempty"`
 	RecommendationFields []string `json:"recommendation_fields,omitempty"`
 	ProfileMatch         string   `json:"profile_match,omitempty"`
 	UnknownProfileFields []string `json:"unknown_profile_fields,omitempty"`
@@ -170,7 +171,7 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 			if len(reasons) > 3 {
 				reasons = reasons[:3]
 			}
-			candidates = append(candidates, Result{RecommendationFields: recommended, ProfileMatch: match, UnknownProfileFields: unknown, Course: c, Offer: o, Price: price, Reasons: reasons, Stale: now.Sub(c.CheckedAt) > 90*24*time.Hour})
+			candidates = append(candidates, Result{AICourse: IsAICourse(c), RecommendationFields: recommended, ProfileMatch: match, UnknownProfileFields: unknown, Course: c, Offer: o, Price: price, Reasons: reasons, Stale: now.Sub(c.CheckedAt) > 90*24*time.Hour})
 		}
 		sort.SliceStable(candidates, func(i, j int) bool {
 			a, b := candidates[i], candidates[j]
@@ -229,6 +230,9 @@ func Search(courses []Course, f Filter, now time.Time) []Result {
 		}
 		return a.Course.ID < b.Course.ID
 	})
+	if f.Sort == "discovery" {
+		return discoveryOrder(out)
+	}
 	return out
 }
 

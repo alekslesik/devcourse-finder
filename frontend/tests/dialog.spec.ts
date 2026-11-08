@@ -27,7 +27,7 @@ test('legacy comparison traps focus, blocks the background and restores focus on
 });
 
 test('history-opened comparison restores its previous control on button and backdrop close',async({page})=>{
- await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
+ await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(18);
  const sort=page.getByLabel('Сортировка',{exact:true});
  const open=async()=>{
   await sort.focus();

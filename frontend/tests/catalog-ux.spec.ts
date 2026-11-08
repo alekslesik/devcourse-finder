@@ -46,7 +46,7 @@ test('submitted results receive focus, passive updates announce without moving i
 test('return from course and comparison restores the exact applied catalog and position',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.goto('/courses?sort=price_asc&page=2');
- await expect(page.locator('.card')).toHaveCount(8);
+ await expect(page.locator('.card')).toHaveCount(2);
  await page.locator('.card').first().scrollIntoViewIfNeeded();
  const query=new URL(page.url()).search;
  const course=page.locator('.card .titleButton').first();
@@ -54,20 +54,20 @@ test('return from course and comparison restores the exact applied catalog and p
  await expect(page.getByRole('navigation',{name:'Основная навигация'}).getByRole('link',{name:'Каталог',exact:true})).toHaveAttribute('href','/courses'+query);
  const snapshot=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('devcourse-catalog-context')!));
  await page.getByRole('navigation',{name:'Основная навигация'}).getByRole('link',{name:'Каталог',exact:true}).click();
- await expect(page.locator('.card')).toHaveCount(8);
+ await expect(page.locator('.card')).toHaveCount(2);
  expect(new URL(page.url()).search).toBe(query);
  await expect.poll(()=>page.evaluate(()=>scrollY)).toBeCloseTo(snapshot.scrollY,0);
  await page.getByLabel('Сравнить тариф').first().check();
  await page.getByRole('button',{name:'Сравнить →'}).click();
  await page.getByRole('link',{name:'← Вернуться к подбору'}).click();
- await expect(page.locator('.card')).toHaveCount(8);
+ await expect(page.locator('.card')).toHaveCount(2);
  expect(new URL(page.url()).search).toBe(query);
  await page.getByRole('button',{name:'Сравнить →'}).click();
  await page.getByRole('link',{name:'Удалить',exact:true}).click();
  await expect(page.getByText('Выберите от одного до трёх тарифов в каталоге.')).toBeVisible();
  await expect(page.getByRole('link',{name:'← Вернуться к подбору'})).toHaveAttribute('href','/courses'+query);
  await page.getByRole('link',{name:'← Вернуться к подбору'}).click();
- await expect(page.locator('.card')).toHaveCount(8);
+ await expect(page.locator('.card')).toHaveCount(2);
  expect(new URL(page.url()).search).toBe(query);
  await page.reload();
  await expect(page.getByLabel('Сортировка',{exact:true})).toHaveValue('price_asc');
@@ -137,11 +137,11 @@ test('a later passive action cancels focus transfer from an in-flight submit',as
  let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
  await page.route('**/api/v1/courses*',async route=>{
   const p=new URL(route.request().url()).searchParams;
-  if(p.get('language')==='go'&&!p.has('sort')){await gate;try{await route.fulfill({json:{items:[],total:0,page:1,page_size:12}});}catch{}}
+  if(p.get('language')==='go'&&p.get('sort')==='discovery'){await gate;try{await route.fulfill({json:{items:[],total:0,page:1,page_size:12}});}catch{}}
   else await route.continue();
  });
  try {
-  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
+  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(18);
   await page.getByRole('radio',{name:'Go',exact:true}).check();
   await page.getByRole('button',{name:'Найти обучение'}).click();
   await expect(page.locator('.results')).toHaveAttribute('aria-busy','true');

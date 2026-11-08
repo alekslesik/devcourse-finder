@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.36.0] - 2026-11-08
+
+- Add diverse-school discovery with an AI-subject course in every third available slot, stable pagination and an 18-course website default.
+
 ## [0.35.1] - 2026-11-07
 
 - Audit unique profile coverage, all direction filters, AI result groups and combined course-selection routes against a stable public catalog snapshot.

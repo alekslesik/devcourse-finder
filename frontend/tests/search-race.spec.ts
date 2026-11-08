@@ -32,7 +32,7 @@ for(const outcome of ['success','http-error','processing-error'] as const){
    }
   });
   await page.goto('/courses');
-  await expect(page.locator('.card')).toHaveCount(12);
+  await expect(page.locator('.card')).toHaveCount(18);
   await page.getByRole('radio',{name:'Go',exact:true}).check();
   await page.getByLabel('Ваша цель').selectOption('try');
   await page.getByRole('button',{name:'Найти обучение'}).click();

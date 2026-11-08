@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 
 test('AC-02: Go switch search submits the full budget in kopecks and preserves rubles in the form',async({page})=>{
  await page.goto('/courses');
- await expect(page.locator('.card')).toHaveCount(12);
+ await expect(page.locator('.card')).toHaveCount(18);
  await page.getByRole('radio',{name:'Go',exact:true}).check();
  await page.getByLabel('Текущий опыт').selectOption('switch');
  await page.getByLabel('Ваша цель').selectOption('switch');
