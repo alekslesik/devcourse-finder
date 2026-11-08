@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.36.2] - 2026-11-08
+
+- Keep the normal recent-data sort selected while applying school and AI interleaving internally; remove the separate discovery option and normalize legacy links.
+
 ## [0.36.1] - 2026-11-08
 
 - Spread finite school and AI-subject inventory across all discovery pages while preserving stable pagination, filters and the broad first-page overview.
