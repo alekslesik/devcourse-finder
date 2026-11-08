@@ -200,6 +200,8 @@ export interface components {
             profile_match?: "confirmed" | "unverified" | "recommended";
             unknown_profile_fields?: ("experience" | "goal" | "direction")[];
             recommendation_fields?: ("experience" | "goal" | "direction")[];
+            /** @description The course title or explicitly listed curriculum topics identify AI, ML or LLM content; independent of AI-generated recommendations and support features. */
+            ai_course?: boolean;
         };
         Unavailable: {
             id: string;
@@ -455,7 +457,8 @@ export interface operations {
                 budget?: "free" | "paid";
                 support?: "self" | "review" | "mentor";
                 schedule?: "flexible" | "scheduled";
-                sort?: "recent" | "price_asc" | "price_desc" | "duration";
+                /** @description discovery balances schools and schedules AI-subject courses every third position where available, preserving profile-match groups; existing explicit sorts retain their semantics. Omitted sort keeps recent order for API compatibility. */
+                sort?: "discovery" | "recent" | "price_asc" | "price_desc" | "duration";
                 /** @description Amount in kopecks; exact current full price only */
                 min?: number;
                 /** @description Amount in kopecks; exact current full price only */

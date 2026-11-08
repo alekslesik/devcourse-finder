@@ -10,7 +10,7 @@ test('search survives unavailable randomUUID and synchronous analytics failures'
     };
   });
   await page.goto('/courses');
-  await expect(page.locator('.card')).toHaveCount(12);
+  await expect(page.locator('.card')).toHaveCount(18);
   await page.getByRole('radio', {name: 'Go', exact: true}).check();
   await page.getByRole('button', {name: 'Найти обучение'}).click();
   await expect(page.locator('.card')).toHaveCount(5);
@@ -68,7 +68,7 @@ test('theme persists across routes and follows system changes with blocked stora
 
 test('sorting preserves drafts, budgets validate, and chips/history restore applied filters', async ({page}) => {
   await page.goto('/courses');
-  await expect(page.locator('.card')).toHaveCount(12);
+  await expect(page.locator('.card')).toHaveCount(18);
   await page.getByRole('radio',{name:'Python',exact:true}).check();
   await page.getByLabel('До, ₽',{exact:true}).fill('1000');
   await page.getByLabel('Сортировка',{exact:true}).selectOption('price_asc');
@@ -90,10 +90,10 @@ test('sorting preserves drafts, budgets validate, and chips/history restore appl
 });
 
 test('clearing comparison selection stays cleared after reload',async({page})=>{
-  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
+  await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(18);
   await page.getByLabel('Сравнить тариф').first().check();
   await page.getByRole('button',{name:'Очистить',exact:true}).click();
-  await page.reload();await expect(page.locator('.card')).toHaveCount(12);
+  await page.reload();await expect(page.locator('.card')).toHaveCount(18);
   await expect(page.getByLabel('Сравнить тариф').first()).not.toBeChecked();
 });
 

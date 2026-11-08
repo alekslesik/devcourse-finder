@@ -4,7 +4,7 @@ for(const theme of ['light','dark'] as const)test(`touch input and shortened vie
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,colorScheme:theme,reducedMotion:'reduce'});
  try{
   const page=await context.newPage();await page.goto('http://127.0.0.1:3091/courses');
-  await expect(page.locator('.card')).toHaveCount(12);
+  await expect(page.locator('.card')).toHaveCount(18);
   await page.getByRole('group',{name:'Выберите язык разработки'}).getByRole('button',{name:'Go',exact:true}).tap();
   await expect(page.getByRole('radio',{name:'Go',exact:true})).toBeChecked();
   const max=page.getByLabel('До, ₽',{exact:true});await max.tap();await max.fill('100000');

@@ -7,12 +7,12 @@ test('search, empty results, reset and API error preserve the form',async({page}
  await expect(page).toHaveURL(/\/courses\?.*language=go/);await expect(page.locator('.card')).toHaveCount(1);
  await page.getByLabel('От, ₽', {exact:true}).fill('1');await page.getByLabel('До, ₽',{exact:true}).fill('1');await page.getByRole('button',{name:'Найти обучение'}).click();
  await expect(page.getByText('Подходящая программа ещё не нашлась')).toBeVisible();await expect(page.getByLabel('До, ₽',{exact:true})).toHaveValue('1');
- await page.getByRole('button',{name:'Показать все программы'}).click();await expect(page.locator('.card')).toHaveCount(12);
+ await page.getByRole('button',{name:'Показать все программы'}).click();await expect(page.locator('.card')).toHaveCount(18);
  await page.route('**/api/v1/courses*',route=>route.fulfill({status:503,json:{error:'unavailable'}}));await page.getByRole('radio',{name:'Python',exact:true}).check();await page.getByRole('button',{name:'Найти обучение'}).click();
  await expect(page.locator('main').getByRole('alert')).toContainText('Каталог временно недоступен');await expect(page.getByRole('radio',{name:'Python',exact:true})).toBeChecked();
 });
 test('AC-10: three tariffs, fourth rejected, comparison URL in a fresh context and outbound',async({page,browser})=>{
- await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
+ await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(18);
  const checks=page.getByLabel('Сравнить тариф');for(let i=0;i<3;i++)await checks.nth(i).check();await checks.nth(3).click();
  await expect(page.locator('.demoBanner[role=status]')).toContainText('уже 3 тарифа');await expect(checks.nth(3)).not.toBeChecked();for(let i=0;i<3;i++)await expect(checks.nth(i)).toBeChecked();const selected=['demo-go-1-standard','demo-go-2-standard','demo-go-3-standard'];await page.getByRole('button',{name:'Сравнить →'}).click();
  await expect(page).toHaveURL(/\/compare\?offers=/);expect(new URL(page.url()).searchParams.get('offers')?.split(',')).toEqual(selected);await expect(page.locator('thead th')).toHaveCount(4);
@@ -26,7 +26,7 @@ test('course permanent URL and unknown comparison item',async({page})=>{
 test('AC-19: complete search and comparison by keyboard at 360px',async({page})=>{
  await page.setViewportSize({width:360,height:800});
  for(const path of ['/courses','/courses/demo-go-1','/compare?offers=demo-go-1-standard','/about']){
-  await page.goto(path);if(path==='/courses')await expect(page.locator('.card')).toHaveCount(12);
+  await page.goto(path);if(path==='/courses')await expect(page.locator('.card')).toHaveCount(18);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();expect(results.violations.filter(v=>v.impact==='critical'||v.impact==='serious').map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))).toEqual([]);
  }

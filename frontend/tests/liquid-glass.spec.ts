@@ -36,7 +36,7 @@ for(const theme of ['light','dark'] as const)test(`forced-color palettes preserv
    expect(border.color,selector).not.toBe('rgba(0, 0, 0, 0)');
   }
  };
- await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(12);
+ await page.goto('/courses');await expect(page.locator('.card')).toHaveCount(18);
  await boundaries(['header','.languageScene','.workspace aside','.card']);
  await page.getByLabel('Сравнить тариф').first().check();await boundaries(['.compareBar']);
  await page.goto('/courses/demo-go-1');await boundaries(['.coursePurchase']);
