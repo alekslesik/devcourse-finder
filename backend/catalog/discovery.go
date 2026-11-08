@@ -65,6 +65,14 @@ type discoverySchool struct {
 	shown int
 }
 
+// The website's canonical page size is also the scheduling window. Keep this
+// independent of the requested page size so changing pagination never reranks.
+const discoveryWindow = 18
+
+type discoveryBudget struct {
+	window, ai, other, usedAI, usedOther int
+}
+
 // Apply once to the complete matching set, before HTTP pagination. No course is
 // added, removed or duplicated, and a later page is a continuation of this order.
 // Confirmation groups remain strict boundaries; an AI-content quota never
@@ -101,23 +109,80 @@ func discoveryOrder(in []Result) []Result {
 			}
 			return a < b
 		})
+		var dominant *discoverySchool
+		remainingAI := 0
+		for _, pool := range pools {
+			remainingAI += len(pool.items[1])
+			if dominant == nil || len(pool.items[0])+len(pool.items[1]) > len(dominant.items[0])+len(dominant.items[1]) {
+				dominant = pool
+			}
+		}
+		remainingOther := end - start - len(dominant.items[0]) - len(dominant.items[1])
+		budget := discoveryBudget{window: -1}
+		spreadStart, spreadAI, spreadOther := -1, 0, 0
 		for len(out) < end {
+			window := len(out) / discoveryWindow
+			if budget.window != window {
+				windowsLeft := (end-1)/discoveryWindow - window + 1
+				budget = discoveryBudget{window: window}
+				if window == 0 {
+					// Keep the initial overview broad; spread the remaining stock over
+					// later pages instead of consuming smaller schools at the front.
+					budget.ai = min(discoveryWindow, max((remainingAI+windowsLeft-1)/windowsLeft, remainingAI-windowsLeft+1))
+					budget.other = min(discoveryWindow, max(len(pools)-1, remainingOther-windowsLeft+1))
+				} else {
+					if spreadStart == -1 {
+						spreadStart, spreadAI, spreadOther = window, remainingAI, remainingOther
+					}
+					elapsed := window - spreadStart + 1
+					windows := elapsed + windowsLeft - 1
+					// Cumulative shares distribute even a stock smaller than the number
+					// of pages across the whole tail, with unused shares carried forward.
+					budget.ai = max(0, spreadAI*elapsed/windows-(spreadAI-remainingAI))
+					budget.other = max(0, spreadOther*elapsed/windows-(spreadOther-remainingOther))
+				}
+			}
 			lane := 0
-			if (len(out)+1)%3 == 0 {
+			if (len(out)+1)%3 == 0 && budget.usedAI < budget.ai {
 				lane = 1
 			}
 			var best *discoverySchool
-			for attempt := 0; attempt < 2 && best == nil; attempt++ {
-				for _, pool := range pools {
-					if pool.next[lane] < len(pool.items[lane]) && (best == nil || pool.shown < best.shown) {
-						best = pool
+			preferred := lane
+			for relaxation := 0; relaxation < 3 && best == nil; relaxation++ {
+				for attempt := 0; attempt < 2 && best == nil; attempt++ {
+					lane = (preferred + attempt) % 2
+					for _, pool := range pools {
+						if pool.next[lane] == len(pool.items[lane]) {
+							continue
+						}
+						if relaxation < 2 {
+							// If only AI subjects remain, exceed their allowance before
+							// spending the smaller schools' supply for future pages.
+							if (relaxation == 0 && lane == 1 && budget.usedAI >= budget.ai) || (pool != dominant && budget.usedOther >= budget.other) {
+								continue
+							}
+							// When only smaller schools have AI courses, retain one
+							// minority slot for that subject rather than spending it on
+							// an ordinary course before the first AI position.
+							if lane == 0 && pool != dominant && remainingAI > 0 && budget.ai > 0 && budget.usedAI == 0 && dominant.next[1] == len(dominant.items[1]) && budget.other-budget.usedOther <= 1 {
+								continue
+							}
+						}
+						if best == nil || pool.shown < best.shown {
+							best = pool
+						}
 					}
-				}
-				if best == nil {
-					lane = 1 - lane
 				}
 			}
 			out = append(out, best.items[lane][best.next[lane]])
+			if lane == 1 {
+				budget.usedAI++
+				remainingAI--
+			}
+			if best != dominant {
+				budget.usedOther++
+				remainingOther--
+			}
 			best.next[lane]++
 			best.shown++
 			shown[best.key] = best.shown
