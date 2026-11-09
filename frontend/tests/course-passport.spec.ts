@@ -107,6 +107,7 @@ test('shared tariff selection is server rendered and invalid IDs fall back safel
  test.skip(process.env.E2E_REAL_API==='1','Synthetic multi-offer fixture is local to the frontend API fixture.');
  const context=await browser.newContext({javaScriptEnabled:false});
  try{
+  await context.route('https://mc.yandex.ru/**',route=>route.abort());
   const page=await context.newPage();
   await page.goto('http://127.0.0.1:3091/courses/passport-multi?offer=passport-free');
   await expect(page.locator('input[name=course-offer][value=passport-free]')).toBeChecked();
