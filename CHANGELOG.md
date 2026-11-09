@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.37.0] - 2026-11-09
+
+- Add Yandex Metrika counter 114139174 with Webvisor, click maps, link tracking, ecommerce and deduplicated client-side page views.
+
 ## [0.36.2] - 2026-11-08
 
 - Keep the normal recent-data sort selected while applying school and AI interleaving internally; remove the separate discovery option and normalize legacy links.
