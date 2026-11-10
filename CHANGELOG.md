@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.37.1] - 2026-11-10
+
+- Fill filter gaps fairly across schools and include scoped course curricula in AI enrichment without relaxing matching, pricing or evidence safeguards.
+
 ## [0.37.0] - 2026-11-09
 
 - Add Yandex Metrika counter 114139174 with Webvisor, click maps, link tracking, ecommerce and deduplicated client-side page views.

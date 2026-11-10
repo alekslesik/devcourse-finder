@@ -44,3 +44,41 @@ func TestAIRegistryOnlyEnablesSupportedAcademyFormat(t *testing.T) {
 		t.Fatal("profession enabled by intensive contract")
 	}
 }
+
+func TestAICourseCurriculumIncludesTaughtContentButExcludesOtherProducts(t *testing.T) {
+	for _, tc := range []struct{ provider, program, project string }{
+		{"otus", "Программа", "Проектная работа"},
+		{"htmlacademy", "Программа курса", "Учебный проект"},
+	} {
+		t.Run(tc.provider, func(t *testing.T) {
+			raw := []byte(`<nav><h2>` + tc.program + `</h2><p>MENU_ONLY: список других программ обучения.</p></nav><section><h2>` + tc.program + `</h2><h3>Разработка приложений</h3><p>CURRICULUM_ONLY: работа с типами данных, обработка ошибок, тестирование и разработка приложений.</p></section><section><h2>` + tc.project + `</h2><p>PROJECT_ONLY: самостоятельный проект с API, хранением данных и автоматическими тестами.</p></section><aside class="related-course"><h2>` + tc.program + `</h2><p>OTHER_PRODUCT: программа соседнего курса.</p></aside><section class="tariffs"><h2>` + tc.program + `</h2><p>VIP_ONLY: персональное наставничество в дорогом тарифе.</p></section><form><h2>` + tc.project + `</h2><p>FORM_ONLY: оставьте контактные данные для консультации.</p></form>`)
+			text := aiCourseSections(raw, Candidate{Adapter: tc.provider})
+			for _, want := range []string{"CURRICULUM_ONLY", "PROJECT_ONLY"} {
+				if !strings.Contains(text, want) {
+					t.Fatal("course content omitted", want, text)
+				}
+			}
+			for _, bad := range []string{"MENU_ONLY", "OTHER_PRODUCT", "VIP_ONLY", "FORM_ONLY"} {
+				if strings.Contains(text, bad) {
+					t.Fatal("out-of-scope text admitted", bad, text)
+				}
+			}
+		})
+	}
+}
+
+func TestAIPurpleCurriculumDoesNotBorrowAITariffProjects(t *testing.T) {
+	raw := []byte(`<section><h2>План курса</h2><h3>Функции и коллекции</h3><p>COMMON_PROGRAM: основы языка, функции, коллекции и работа с файловой системой.</p></section><section><h2>Что будем писать?</h2><p>AI и тренажёры</p><p>OPTIONAL_AI_PROJECT: CRM система и менеджер паролей для дополнительного тарифа.</p></section>`)
+	text := aiCourseSections(raw, Candidate{Adapter: "purpleschool"})
+	if !strings.Contains(text, "COMMON_PROGRAM") || strings.Contains(text, "OPTIONAL_AI_PROJECT") {
+		t.Fatal("optional project gallery became shared curriculum", text)
+	}
+}
+
+func TestAIAmbiguousCurriculumDoesNotInventAScope(t *testing.T) {
+	raw := []byte(`<section><h2>Программа</h2><p>FIRST_PROGRAM: подробная программа курса с практическими заданиями на Python.</p></section><section><h2>Программа</h2><p>SECOND_PROGRAM: другая подробная программа с практическими заданиями на Java.</p></section><section><h2>Проектная работа</h2><p>BOUND_PROJECT: текущий проект курса с разработкой приложения и автоматическими тестами.</p></section>`)
+	text := aiCourseSections(raw, Candidate{Adapter: "otus"})
+	if strings.Contains(text, "FIRST_PROGRAM") || strings.Contains(text, "SECOND_PROGRAM") || !strings.Contains(text, "BOUND_PROJECT") {
+		t.Fatal("ambiguous program leaked or independent project lost", text)
+	}
+}

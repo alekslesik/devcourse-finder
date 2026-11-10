@@ -214,6 +214,18 @@ func aiBuildBoundDocuments(raw []byte, c Candidate, current, remote catalog.Cour
 	return docs, nil
 }
 
+// Course-bound curriculum blocks observed on the supported public pages. Keep
+// independent program/project sections separate: they may coexist, whereas two
+// competing roots for the same semantic block must still fail closed.
+var aiCurriculumHeadings = map[string][][]string{
+	"otus":        {{"Программа", "Программа курса", "Программа обучения"}, {"Проектная работа"}},
+	"htmlacademy": {{"Программа курса"}, {"Учебный проект"}, {"Личные проекты"}},
+	// Its separate project gallery includes AI-tariff badges, so it cannot
+	// establish the shared course curriculum for the cheaper self-study offer.
+	"purpleschool": {{"План курса"}},
+	"skillbox":     {{"Программа обучения"}},
+}
+
 func aiCourseSections(raw []byte, c Candidate) string {
 	doc := learningDocument(raw)
 	// Remove unsafe descendants before profileSection's text-based boundary logic.
@@ -232,8 +244,9 @@ func aiCourseSections(raw []byte, c Candidate) string {
 	var text []string
 	headingsList := [][]string{h.Audience, h.Requirements, h.Outcomes}
 	if c.Adapter == "skillbox" {
-		headingsList = append(headingsList, []string{"Составите резюме, которое притягивает оферы"}, []string{"Программа обучения"})
+		headingsList = append(headingsList, []string{"Составите резюме, которое притягивает оферы"})
 	}
+	headingsList = append(headingsList, aiCurriculumHeadings[c.Adapter]...)
 	for _, headings := range headingsList {
 		n := aiSemanticSection(doc, headings)
 		if n != nil {
