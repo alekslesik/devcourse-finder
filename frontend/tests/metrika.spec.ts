@@ -17,6 +17,10 @@ async function productionHost(page:Page){
 const calls=(page:Page)=>page.evaluate(()=>window.__metrikaCalls??window.ym?.a??[]);
 const sdk="window.__metrikaCalls=(window.ym?.a||[]).slice();window.ym=(...args)=>window.__metrikaCalls.push(args);";
 
+// A search also posts a keepalive event. Drain the forwarding routes before
+// Playwright disposes their request context, including on the slower real stack.
+test.afterEach(async({page})=>{await page.unrouteAll({behavior:'wait'})});
+
 test('initial visit, queued SPA views and history initialize exactly once',async({page})=>{
  await productionHost(page);
  let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve});

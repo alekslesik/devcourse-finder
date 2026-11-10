@@ -6,6 +6,7 @@ Merged pull requests receive the matching Git tag and GitHub Release.
 ## [0.37.1] - 2026-11-10
 
 - Fill filter gaps fairly across schools and include scoped course curricula in AI enrichment without relaxing matching, pricing or evidence safeguards.
+- Drain in-flight Metrika test routes before disposing their request context.
 
 ## [0.37.0] - 2026-11-09
 
