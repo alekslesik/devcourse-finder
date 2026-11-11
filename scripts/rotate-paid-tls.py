@@ -82,7 +82,8 @@ def atomic_write(path, data, mode=0o600):
 def activate(directory):
     command = ['docker', 'compose', '--project-directory', str(directory), 'exec', '-T', 'proxy', 'caddy']
     for action in ('validate', 'reload'):
-        run(*command, action, '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile')
+        flags = ['--force'] if action == 'reload' else []
+        run(*command, action, *flags, '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile')
 
 
 def verify_served(host, expected):

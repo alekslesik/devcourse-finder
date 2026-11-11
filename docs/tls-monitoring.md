@@ -56,7 +56,8 @@ python3 /srv/devcourse-finder/current/scripts/check-public-https.py
 The helper verifies the hostname and trusted intermediate chain, the retained
 GlobalSign issuer, validity (at least 30 days), matching public keys and extended
 expiry. It shares the deployment lock. Installation keeps a root-only rollback
-pair, validates/reloads Caddy and checks the actual locally served trusted
+pair, validates and force-reloads Caddy (so an unchanged Caddyfile reloads the supplied
+certificate files), then checks the actual locally served trusted
 certificate fingerprint. Reload or fingerprint failure restores and reloads the
 old pair; a failed rollback is an explicit failure. An already installed pair is
 checked without rewriting files or reloading. Default validation never replaces

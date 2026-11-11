@@ -1,5 +1,4 @@
 import importlib.util
-import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -11,6 +10,16 @@ spec.loader.exec_module(rotation)
 
 
 class RotationTests(unittest.TestCase):
+    def test_reload_forces_manual_certificate_reload_with_unchanged_caddyfile(self):
+        with patch.object(rotation, 'run') as run:
+            rotation.activate(Path('/srv/devcourse-finder/ingress'))
+            self.assertEqual(run.call_count, 2)
+            validate, reload = [call.args for call in run.call_args_list]
+            self.assertIn('validate', validate)
+            self.assertNotIn('--force', validate)
+            self.assertIn('reload', reload)
+            self.assertIn('--force', reload)
+
     def test_private_key_permissions_and_symlink_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             key = Path(temporary) / 'private.key'
