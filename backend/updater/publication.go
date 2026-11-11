@@ -103,11 +103,11 @@ func mergeDiscovered(ctx context.Context, tx pgx.Tx, old []catalog.Course, candi
 	}
 	o = learningObservationForOffer(o, record.Offers[0].ID)
 	mergeObservation := o
-	if candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" || candidate.Adapter == "javarush" {
+	if candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" || candidate.Adapter == "javarush" || candidate.Adapter == "codechick" || candidate.Adapter == "learnpython" {
 		mergeObservation.ValidUntil = nil
 	} // Rolling lease must not prevent closure confirmation.
 	courses, err := merge(ctx, tx, old, resolved, resolved.ID, mergeObservation, observedAt, code)
-	if (candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" || candidate.Adapter == "javarush") && len(courses) > 0 {
+	if (candidate.Adapter == "rsschool" || candidate.Adapter == "htmlacademy" || candidate.Adapter == "skypro" || candidate.Adapter == "javarush" || candidate.Adapter == "codechick" || candidate.Adapter == "learnpython") && len(courses) > 0 {
 		for i := range courses[0].Offers {
 			if courses[0].Offers[i].ID == resolved.Offers[0].ID {
 				courses[0].Offers[i].ValidUntil = o.ValidUntil

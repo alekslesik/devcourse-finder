@@ -8,13 +8,13 @@ import (
 	"devcourse-finder/catalog"
 )
 
-var providerNames = map[string]string{"javarush": "JavaRush", "skypro": "Skypro", "skillfactory": "Skillfactory", "skillbox": "Skillbox", "htmlacademy": "HTML Academy", "rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
+var providerNames = map[string]string{"codechick": "CodeChick", "learnpython": "LearnPython.org", "javarush": "JavaRush", "skypro": "Skypro", "skillfactory": "Skillfactory", "skillbox": "Skillbox", "htmlacademy": "HTML Academy", "rsschool": "RS School", "purpleschool": "PurpleSchool", "netology": "Нетология", "stepik": "Stepik", "otus": "OTUS", "yandex": "Яндекс Практикум", "hexlet": "Хекслет", "codebasics": "CodeBasics"}
 
 func candidateEndpoint(c Candidate) string {
 	if c.Adapter == "stepik" {
 		return "https://stepik.org/api/courses/" + c.ExternalID
 	}
-	if c.Adapter == "skillbox" || c.Adapter == "otus" || c.Adapter == "yandex" {
+	if c.Adapter == "skillbox" || c.Adapter == "otus" || c.Adapter == "yandex" || c.Adapter == "learnpython" {
 		return c.URL + "/"
 	}
 	return c.URL
@@ -22,6 +22,12 @@ func candidateEndpoint(c Candidate) string {
 func collectCandidateRecord(data []byte, c Candidate, now time.Time) (catalog.Course, Observation, error) {
 	if identity, ok := candidateURL(c.Adapter, c.URL, c.FeedID); !ok || identity.ExternalID != c.ExternalID {
 		return catalog.Course{}, Observation{}, rejection("identity_mismatch")
+	}
+	if c.Adapter == "codechick" {
+		return collectCodeChick(data, c, now)
+	}
+	if c.Adapter == "learnpython" {
+		return collectLearnPython(data, c, now)
 	}
 	if c.Adapter == "javarush" {
 		return catalog.Course{}, Observation{}, rejection("invalid_javarush_contract")

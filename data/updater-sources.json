@@ -65,6 +65,8 @@
       "adapter": "rsschool",
       "url": "https://rs.school/courses",
       "kind": "catalog"
-    }
+    },
+    {"id":"codechick-catalog","adapter":"codechick","url":"https://codechick.io/","kind":"catalog"},
+    {"id":"learnpython-catalog","adapter":"learnpython","url":"https://www.learnpython.org/ru/","kind":"catalog"}
   ]
 }

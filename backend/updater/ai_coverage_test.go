@@ -15,7 +15,7 @@ func TestAIExpansionCoverageAndSharedBudget(t *testing.T) {
 	db := postgresFixture(t)
 	ctx := context.Background()
 	coverage, e := aiCoverage(ctx, db)
-	if e != nil || len(coverage) != 13 {
+	if e != nil || len(coverage) != len(aiProviders) {
 		t.Fatal(coverage, e)
 	}
 	for _, v := range coverage {
