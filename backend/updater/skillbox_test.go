@@ -42,6 +42,24 @@ func TestSkillboxRejectsConflictsAndExpiredSale(t *testing.T) {
 		t.Fatal("expired sale accepted")
 	}
 }
+
+func TestSkillboxMonthlyLabelPunctuationKeepsFullPayment(t *testing.T) {
+	b, c := skillboxFixture(t)
+	withPeriod := strings.ReplaceAll(string(b), "₽/мес", "₽/мес.")
+	if withPeriod == string(b) {
+		t.Fatal("monthly-label fixture missing")
+	}
+	r, _, err := collectSkillbox([]byte(withPeriod), c, time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC))
+	if err != nil || len(r.Offers) != 3 || *r.Offers[0].Price != 13373500 {
+		t.Fatal("full-payment price lost for typographic variant", r, err)
+	}
+	for _, currency := range []string{"₽/нед.", "USD/мес.", "₽/мес.."} {
+		bad := strings.ReplaceAll(withPeriod, "₽/мес.", currency)
+		if _, _, err := collectSkillbox([]byte(bad), c, time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC)); err == nil {
+			t.Fatal("different unit/currency accepted", currency)
+		}
+	}
+}
 func TestSkillboxLiveVerification(t *testing.T) {
 	if os.Getenv("SKILLBOX_LIVE_CHECK") != "1" {
 		t.Skip("opt-in official reads")

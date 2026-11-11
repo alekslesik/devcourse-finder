@@ -84,13 +84,30 @@ func TestPurpleSchoolRejectsUnboundOrStalePrices(t *testing.T) {
 		func(p map[string]any) { p["tariffs"].([]any)[1].(map[string]any)["price"] = 0 },
 		func(p map[string]any) { p["tariffs"].([]any)[1].(map[string]any)["courseId"] = 20 },
 		func(p map[string]any) { p["tariffs"].([]any)[1].(map[string]any)["status"] = "INACTIVE" },
-		func(p map[string]any) { p["tariffs"].([]any)[1].(map[string]any)["tariffInSubscription"] = []any{1} },
+		func(p map[string]any) {
+			p["tariffs"].([]any)[1].(map[string]any)["properties"] = map[string]any{"buy": map[string]any{"options": []any{"SUBSCRIPTION"}}}
+		},
 		func(p map[string]any) { p["tariffs"].([]any)[3].(map[string]any)["features"] = []any{} },
 	} {
 		bad := purpleMutate(t, b, change)
 		if _, _, err := collectPurpleSchool(bad, c, netologyNow()); err == nil {
 			t.Fatal("unsafe contract accepted")
 		}
+	}
+}
+
+func TestPurpleSchoolOptionalSubscriptionDoesNotReplaceStandalonePrice(t *testing.T) {
+	b, c := purpleFixture(t, "go-basics")
+	b = purpleMutate(t, b, func(p map[string]any) {
+		p["tariffs"].([]any)[1].(map[string]any)["tariffInSubscription"] = []any{map[string]any{"price": 1, "billingMonths": 12}}
+	})
+	r, _, err := collectPurpleSchool(b, c, netologyNow())
+	if err != nil || len(r.Offers) != 3 || *r.Offers[0].Price != 399900 || r.Offers[0].PriceKind != "exact" {
+		t.Fatal("subscription price became full-course price", r, err)
+	}
+	bad := []byte(strings.ReplaceAll(string(b), "3 999 ₽", "1 999 ₽"))
+	if _, _, err := collectPurpleSchool(bad, c, netologyNow()); err == nil {
+		t.Fatal("optional subscription bypassed independent standalone price check")
 	}
 }
 func TestPurpleSchoolFreeRequiresCompleteCurriculum(t *testing.T) {

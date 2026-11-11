@@ -105,7 +105,7 @@ func collectSkillboxRecord(data []byte, c Candidate, now time.Time) (catalog.Cou
 				} `json:"autopayment"`
 			} `json:"payments"`
 		}
-		if decodeJSON([]byte(nodeAttr(card, "data-tariff-data")), &t) != nil || t.ID <= 0 || seen[t.ID] || t.Title == "" || t.Price.Currency != "₽/мес" || !strings.Contains(nodeText(card), t.Title) {
+		if decodeJSON([]byte(nodeAttr(card, "data-tariff-data")), &t) != nil || t.ID <= 0 || seen[t.ID] || t.Title == "" || strings.TrimSuffix(t.Price.Currency, ".") != "₽/мес" || !strings.Contains(nodeText(card), t.Title) {
 			return reject()
 		}
 		switch t.Label {

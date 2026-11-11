@@ -100,11 +100,20 @@ func normalizedRecord(candidate Candidate, title, summary, provider string, o Ob
 	if len(id) > 70 {
 		id = candidate.Adapter + "-" + fingerprint([]byte(candidate.ExternalID))[:24]
 	}
-	direction := "unknown"
-	if strings.Contains(strings.ToLower(title), "backend") || strings.Contains(strings.ToLower(title), "бэкенд") {
-		direction = "backend"
+	// The audience is not the subject: "Бэкенд на Node.js для фронтенд-
+	// разработчиков" teaches backend. Conflicting subjects remain unknown.
+	subject := strings.ToLower(title)
+	for _, separator := range []string{" для ", " for "} {
+		if before, _, found := strings.Cut(subject, separator); found {
+			subject = before
+		}
 	}
-	if strings.Contains(strings.ToLower(title), "frontend") || strings.Contains(strings.ToLower(title), "фронтенд") {
+	backend := strings.Contains(subject, "backend") || strings.Contains(subject, "бэкенд")
+	frontend := strings.Contains(subject, "frontend") || strings.Contains(subject, "фронтенд")
+	direction := "unknown"
+	if backend && !frontend {
+		direction = "backend"
+	} else if frontend && !backend {
 		direction = "frontend"
 	}
 	unknownSupport := false

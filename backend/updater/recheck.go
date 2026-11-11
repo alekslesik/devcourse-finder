@@ -34,12 +34,22 @@ func ScheduleRecheck(ctx context.Context, db *store.DB, adapter, id string) erro
 	}
 	// queueWork puts null attempts first within the existing published lane.
 	// Merely making the candidate due could leave it behind the lane cap.
-	result, err := tx.Exec(ctx, `UPDATE catalog_candidates SET attempted_at=NULL,next_attempt_at=now() WHERE adapter=$1 AND external_id=$2 AND state='published'`, adapter, id)
+	result, err := tx.Exec(ctx, `UPDATE catalog_candidates AS candidate SET attempted_at=NULL,next_attempt_at=now()
+ WHERE adapter=$1 AND external_id=$2 AND (
+   state='published' OR (
+     state='rejected' AND code=ANY($3::text[]) AND EXISTS (
+       SELECT 1 FROM catalog_identities i JOIN courses c ON c.id=i.course_id
+       WHERE i.adapter=candidate.adapter AND i.external_id=candidate.external_id
+         AND i.canonical_url=candidate.canonical_url AND c.source=i.canonical_url
+         AND c.status='published' AND NOT c.demo
+     )
+   )
+ )`, adapter, id, []string{"source_unavailable", "invalid_purpleschool_contract", "invalid_skillbox_contract", "invalid_netology_payload", "invalid_netology_price", "unverified_netology_payment"})
 	if err != nil {
 		return err
 	}
 	if result.RowsAffected() != 1 {
-		return errors.New("recheck requires one existing published candidate")
+		return errors.New("recheck requires one published candidate or retryable source failure mapped to a published course")
 	}
 	return tx.Commit(ctx)
 }

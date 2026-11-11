@@ -157,7 +157,7 @@ func TestAINetologyCurrentRegistrationOnlyTemplateStaysUnverified(t *testing.T) 
 	if _, err := aiNetologyDocuments(raw, c, current, binding, fingerprint(raw), time.Now().UTC()); err == nil {
 		t.Fatal("registration-only page guessed product/tariff identity")
 	}
-	if candidateEndpoint(c) != "https://netology.ru/programs/go/" || c.URL != "https://netology.ru/programs/go" {
+	if candidateEndpoint(c) != "https://netology.ru/programs/go" || c.URL != "https://netology.ru/programs/go" {
 		t.Fatal("fetch/canonical URL contract changed", c)
 	}
 }

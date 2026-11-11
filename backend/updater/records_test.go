@@ -35,6 +35,21 @@ func TestIncompleteOrMixedLanguageRecordsAreNotPublished(t *testing.T) {
 		}
 	}
 }
+
+func TestRecordDirectionDescribesSubjectRatherThanAudience(t *testing.T) {
+	for _, tc := range []struct{ title, direction string }{
+		{"Бэкенд на Node.js для фронтенд-разработчиков", "backend"},
+		{"Frontend на JavaScript для backend-разработчиков", "frontend"},
+		{"JavaScript Backend for Frontend developers", "backend"},
+		{"JavaScript Frontend for Backend developers", "frontend"},
+		{"Backend и Frontend на JavaScript", "unknown"},
+	} {
+		c, err := normalizedRecord(Candidate{Adapter: "otus", ExternalID: "javascript", URL: "https://otus.ru/lessons/javascript"}, tc.title, "Разработка приложений на JavaScript.", "OTUS", Observation{Enrollment: "open"}, time.Now())
+		if err != nil || c.Direction != tc.direction {
+			t.Fatal(tc.title, c.Direction, err)
+		}
+	}
+}
 func TestKnownPaidUnknownPriceDoesNotMatchBudgetOrFree(t *testing.T) {
 	c, err := normalizedRecord(Candidate{Adapter: "otus", ExternalID: "python-basic", URL: "https://otus.ru/lessons/python-basic"}, "Python", "Курс Python", "OTUS", Observation{PriceUnknown: true, Enrollment: "open"}, time.Now())
 	if err != nil || c.Offers[0].Free || c.Offers[0].Price != nil {

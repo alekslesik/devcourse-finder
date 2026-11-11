@@ -2,6 +2,7 @@ package updater
 
 import (
 	"context"
+	"devcourse-finder/catalog"
 	"errors"
 	"fmt"
 	"testing"
@@ -57,5 +58,52 @@ func TestScheduleRecheckPreservesProtectedCandidatesAndWorkerLock(t *testing.T) 
 		if due != (state == "published") {
 			t.Fatal("changed another candidate", state, due)
 		}
+	}
+}
+
+func TestScheduleRecheckRetriesMappedSourceFailureWithoutUnprotectingIdentity(t *testing.T) {
+	db := postgresFixture(t)
+	ctx := context.Background()
+	raw, candidate := purpleFixture(t, "go-basics")
+	course, _, err := collectPurpleSchool(raw, candidate, netologyNow())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = db.Import(ctx, catalog.Dataset{Domains: []string{"purpleschool.ru"}, Courses: []catalog.Course{course}}, "operator", false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.Pool.Exec(ctx, `INSERT INTO catalog_identities(adapter,external_id,canonical_url,course_id,offer_id) VALUES($1,$2,$3,$4,$5)`, candidate.Adapter, candidate.ExternalID, candidate.URL, course.ID, course.Offers[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.Pool.Exec(ctx, `INSERT INTO catalog_candidates(adapter,external_id,canonical_url,feed_id,state,code,attempted_at,next_attempt_at) VALUES($1,$2,$3,'purple','rejected','source_unavailable',now(),now()+interval '1 day')`, candidate.Adapter, candidate.ExternalID, candidate.URL); err != nil {
+		t.Fatal(err)
+	}
+	for _, code := range []string{"source_unavailable", "invalid_purpleschool_contract"} {
+		if _, err = db.Pool.Exec(ctx, `UPDATE catalog_candidates SET code=$1`, code); err != nil {
+			t.Fatal(err)
+		}
+		if err = ScheduleRecheck(ctx, db, candidate.Adapter, candidate.ExternalID); err != nil {
+			t.Fatal("mapped source failure cannot recover", code, err)
+		}
+	}
+	for _, code := range []string{"protected_identity", "identity_mismatch", "pending", "unknown_failure"} {
+		if _, err = db.Pool.Exec(ctx, `UPDATE catalog_candidates SET code=$1,next_attempt_at=now()+interval '1 day'`, code); err != nil {
+			t.Fatal(err)
+		}
+		if err = ScheduleRecheck(ctx, db, candidate.Adapter, candidate.ExternalID); err == nil {
+			t.Fatal("identity guard or unknown failure bypassed", code)
+		}
+	}
+	if _, err = db.Pool.Exec(ctx, `UPDATE catalog_candidates SET state='protected',code='source_unavailable'`); err != nil {
+		t.Fatal(err)
+	}
+	if err = ScheduleRecheck(ctx, db, candidate.Adapter, candidate.ExternalID); err == nil {
+		t.Fatal("protected candidate reopened")
+	}
+	if _, err = db.Pool.Exec(ctx, `UPDATE catalog_candidates SET state='rejected'; DELETE FROM catalog_identities`); err != nil {
+		t.Fatal(err)
+	}
+	if err = ScheduleRecheck(ctx, db, candidate.Adapter, candidate.ExternalID); err == nil {
+		t.Fatal("unmapped rejected candidate reopened")
 	}
 }
