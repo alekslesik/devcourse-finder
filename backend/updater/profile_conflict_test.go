@@ -54,3 +54,22 @@ func TestNativeProfileConflictPreservesCuratedProfileAndOtherFields(t *testing.T
 		t.Fatal("incoming conflict damaged curated facts", course)
 	}
 }
+
+func TestAIProfileConflictRetainsOwnershipAcrossLaterNativeRefresh(t *testing.T) {
+	for _, partial := range []bool{false, true} {
+		proof := learningProof([]byte("official course"), "https://otus.ru/lessons/python", "course.requirements", time.Now().UTC())
+		course := catalog.Course{Audience: []string{"basics"}, ProfileOwnership: profileAudience | profileAudience<<aiOwnershipShift, Profile: &catalog.CourseProfile{
+			Prerequisites: &catalog.ProfileRequirement{Level: "basics", Scope: "programming", Evidence: proof},
+			Audience:      &catalog.ProfileTags{Values: []string{"basics"}, Evidence: proof},
+		}}
+		before := course
+		applyAIProfile(&course, &catalog.CourseProfile{Audience: &catalog.ProfileTags{Values: []string{"none"}, Evidence: proof}}, partial)
+		if !reflect.DeepEqual(before, course) {
+			t.Fatal("conflicting AI update changed ownership", partial, before, course)
+		}
+		applyCourseProfile(&course, nil)
+		if !reflect.DeepEqual(before, course) {
+			t.Fatal("later native refresh erased protected AI fact", partial, course)
+		}
+	}
+}

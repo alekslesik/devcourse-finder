@@ -10,6 +10,15 @@ spec.loader.exec_module(rotation)
 
 
 class RotationTests(unittest.TestCase):
+    def test_served_trust_and_fingerprint_are_independent_of_warning_threshold(self):
+        for status in ('ok', 'warning', 'critical'):
+            with self.subTest(status=status):
+                report = {'status': status, 'sha256': 'expected'}
+                self.assertEqual(rotation.verify_served('devcoursefinder.ru', 'expected', inspect=lambda *a, **kw: report), report)
+        for report in ({'status': 'error'}, {'status': 'warning', 'sha256': 'other'}):
+            with self.subTest(report=report), self.assertRaises(RuntimeError):
+                rotation.verify_served('devcoursefinder.ru', 'expected', inspect=lambda *a, **kw: report)
+
     def test_reload_forces_manual_certificate_reload_with_unchanged_caddyfile(self):
         with patch.object(rotation, 'run') as run:
             rotation.activate(Path('/srv/devcourse-finder/ingress'))

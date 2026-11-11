@@ -86,12 +86,14 @@ def activate(directory):
         run(*command, action, *flags, '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile')
 
 
-def verify_served(host, expected):
-    spec = importlib.util.spec_from_file_location('tls_expiry', Path(__file__).with_name('check-tls-expiry.py'))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    result = module.inspect_certificate(host, connect_address='127.0.0.1')
-    if result['status'] != 'ok' or result.get('sha256') != expected:
+def verify_served(host, expected, *, inspect=None):
+    if inspect is None:
+        spec = importlib.util.spec_from_file_location('tls_expiry', Path(__file__).with_name('check-tls-expiry.py'))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        inspect = module.inspect_certificate
+    result = inspect(host, connect_address='127.0.0.1')
+    if result['status'] not in ('ok', 'warning', 'critical') or result.get('sha256') != expected:
         raise RuntimeError('Caddy did not serve the expected trusted certificate')
     return result
 
@@ -152,8 +154,9 @@ def main():
             result = install_pair(ingress, tls, chain, key, metadata, args.host) if args.apply else {'action': 'validated_only', 'certificate': metadata}
         print(json.dumps(result, indent=2))
         return 0
-    except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired):
-        print(json.dumps({'status': 'error', 'message': 'Certificate validation or rotation failed; inspect protected local state. No key material logged.'}), file=sys.stderr)
+    except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
+        message = str(error) if isinstance(error, (ValueError, RuntimeError)) else 'Certificate validation or rotation failed; inspect protected local state. No key material logged.'
+        print(json.dumps({'status': 'error', 'message': message}), file=sys.stderr)
         return 1
 
 
