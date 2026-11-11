@@ -3,6 +3,12 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.37.4] - 2026-11-11
+
+- Keep contradictory framework-audience wording from blocking native course refreshes, and isolate Netology tariff learning features from payment periods.
+- Add an identity-checked, audited correction for the legacy Node.js course direction without changing prices or existing recommendations.
+- Monitor the retained GlobalSign certificate daily with deduplicated expiry alerts, and validate paid certificate rotations with protected backups, Caddy reload verification and rollback.
+
 ## [0.37.3] - 2026-11-11
 
 - Restore verified PurpleSchool standalone purchases, Skillbox monthly-label parsing and Netology's current canonical request path; safely retry mapped source failures and keep course subjects separate from audience wording.

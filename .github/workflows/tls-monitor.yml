@@ -1,0 +1,54 @@
+name: TLS certificate monitoring
+on:
+  schedule:
+    - cron: '20 6 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - scripts/check-tls-expiry.py
+      - scripts/test_tls_expiry.py
+      - scripts/rotate-paid-tls.py
+      - scripts/test_tls_rotation.py
+      - .github/workflows/tls-monitor.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tls-certificate-monitor-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  expiry-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s scripts -p 'test_tls*.py' -v
+  origin-certificate:
+    if: github.event_name != 'pull_request' && github.repository == 'alekslesik/devcourse-finder'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify origin TLS and track renewal warnings
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check-tls-expiry.py --host devcoursefinder.ru --warning-days 45 --critical-days 14 --notify --output tls-expiry.json
+      - name: Save certificate status
+        if: always()
+        run: |
+          if test -f tls-expiry.json; then
+            printf '### TLS certificate status\n\n```json\n' >> "$GITHUB_STEP_SUMMARY"
+            cat tls-expiry.json >> "$GITHUB_STEP_SUMMARY"
+            printf '\n```\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tls-certificate-status
+          path: tls-expiry.json
+          if-no-files-found: ignore
+          retention-days: 30

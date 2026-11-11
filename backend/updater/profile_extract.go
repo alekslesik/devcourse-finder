@@ -95,6 +95,35 @@ func profileDirection(raw string, proof catalog.LearningEvidence) *catalog.Profi
 	return &catalog.ProfileValue{Value: values[0], Evidence: proof}
 }
 func profileAttach(r catalog.Course, o Observation, p *catalog.CourseProfile) (catalog.Course, Observation) {
+	if p != nil {
+		// Being new to a framework does not mean no programming experience.
+		// Keep independently supported fields when a broad audience phrase
+		// conflicts with an explicit prerequisite or exclusion.
+		if p.Audience != nil {
+			conflict := false
+			for _, audience := range p.Audience.Values {
+				if p.ExcludedAudience != nil {
+					for _, excluded := range p.ExcludedAudience.Values {
+						conflict = conflict || audience == excluded
+					}
+				}
+				if p.Prerequisites != nil && profileExperienceRank(audience) >= 0 && profileExperienceRank(audience) < profileExperienceRank(p.Prerequisites.Level) {
+					conflict = true
+				}
+			}
+			if conflict {
+				p.Audience = nil
+			}
+		}
+		if p.Prerequisites != nil && p.TargetLevel != nil && profileExperienceRank(p.TargetLevel.Value) < profileExperienceRank(p.Prerequisites.Level) {
+			p.TargetLevel = nil
+		}
+		if !p.Valid() {
+			// An invalid extraction is not evidence that old facts disappeared.
+			r.Profile, o.Profile, o.ProfileObserved = nil, nil, false
+			return r, o
+		}
+	}
 	if len(p.Evidence()) == 0 {
 		p = nil
 	}
@@ -102,6 +131,15 @@ func profileAttach(r catalog.Course, o Observation, p *catalog.CourseProfile) (c
 	o.ProfileObserved = true
 	o.Profile = p
 	return r, o
+}
+
+func profileExperienceRank(value string) int {
+	for rank, level := range []string{"none", "basics", "projects", "working"} {
+		if value == level {
+			return rank
+		}
+	}
+	return -1
 }
 func stepikProfile(data []byte, course stepikCourse, c Candidate, now time.Time) *catalog.CourseProfile {
 	source := candidateEndpoint(c)

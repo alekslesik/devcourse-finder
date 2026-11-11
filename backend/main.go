@@ -165,6 +165,14 @@ func run() error {
 			}
 			return json.NewEncoder(os.Stdout).Encode(result)
 		case "catalog-update":
+			if len(args) == 2 && args[1] == "repair-node-direction" {
+				bounded, done := context.WithTimeout(ctx, 90*time.Second)
+				defer done()
+				if err := updater.RepairNodeDirection(bounded, db, nil, os.Stdout); err != nil {
+					return commandFailure("profile_repair", "profile_repair_failed", "Verified direction repair did not pass; catalog unchanged", err)
+				}
+				return nil
+			}
 			if len(args) == 4 && args[1] == "recheck" {
 				bounded, done := context.WithTimeout(ctx, 10*time.Minute)
 				defer done()
