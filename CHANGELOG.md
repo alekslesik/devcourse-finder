@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.37.2] - 2026-11-11
+
+- Show combined matching-course totals in filter options without the AI suffix, preserving reviewed recommendations and their evidence in course cards.
+
 ## [0.37.1] - 2026-11-10
 
 - Fill filter gaps fairly across schools and include scoped course curricula in AI enrichment without relaxing matching, pricing or evidence safeguards.
