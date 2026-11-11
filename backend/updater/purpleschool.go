@@ -213,7 +213,10 @@ func collectPurpleSchoolRecord(data []byte, c Candidate, now time.Time) (catalog
 	ids := map[int64]bool{}
 	categories := map[string]bool{}
 	for _, t := range p.Tariffs {
-		if t.ID <= 0 || t.CourseID != p.ID || t.Status != "ACTIVE" || ids[t.ID] || categories[t.Type] || len(t.Properties.Buy.Options) != 1 || t.Properties.Buy.Options[0] != "SOLO" || len(t.Subscriptions) > 0 {
+		// An optional subscription is not the SOLO purchase. Its amounts and
+		// periods are ignored; the standalone checkout, schema and rendered
+		// card must still independently agree on the full one-time price below.
+		if t.ID <= 0 || t.CourseID != p.ID || t.Status != "ACTIVE" || ids[t.ID] || categories[t.Type] || len(t.Properties.Buy.Options) != 1 || t.Properties.Buy.Options[0] != "SOLO" {
 			return reject()
 		}
 		ids[t.ID] = true
