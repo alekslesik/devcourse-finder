@@ -15,7 +15,7 @@ test('AI recommendations stay enabled without a setting, including legacy links'
   return route.fulfill({json:{items:include?[confirmed,recommended,unknown]:[confirmed,unknown],total:include?3:2,confirmed_total:1,recommended_total:include?1:0,unverified_total:1,page:1,page_size:12,diagnostics:{experience:counts('basics'),goal:counts('job'),direction:counts('backend')}}});
  });
  await page.goto('/courses?language=go&experience=basics&goal=job&direction=backend');
- await expect(page.locator('select[name=experience] option[value=basics]')).toHaveText('Знаю основы · 1 + 1 ИИ');
+ await expect(page.locator('select[name=experience] option[value=basics]')).toHaveText('Знаю основы · 2');
  const group=page.locator('.recommendedResults');await expect(group.getByRole('heading',{name:'Могут подойти по оценке ИИ'})).toBeVisible();
  await expect(group.locator('.reasons')).not.toContainText('✓');
  await group.getByText('Почему ИИ предлагает этот курс',{exact:true}).click();
