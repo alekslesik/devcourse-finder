@@ -3,7 +3,7 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
-## [0.38.0] - 2026-11-11
+## [0.38.0] - 2026-11-12
 
 - Connect verified complete free programs from CodeChick and LearnPython.org through bounded discovery, evidence-based profiles and scoped AI recommendations.
 
