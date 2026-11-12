@@ -90,6 +90,10 @@ func TestAuditAllPagesAndUnknownMatches(t *testing.T) {
 			if got.Coverage["confirmed"].Experience != 8 || got.Coverage["with_recommendations"].Experience != 9 || got.Coverage["with_recommendations"].Goal != 1 || got.Coverage["with_recommendations"].Direction != 1 || got.Coverage["with_recommendations"].AllThree != 1 {
 				t.Fatal("coverage counted tags instead of distinct courses", got.Coverage)
 			}
+			partition := got.Completeness.Fields["experience"]
+			if !got.Completeness.Accounted || got.Completeness.Courses != 50 || len(partition.Confirmed) != 8 || len(partition.Recommended) != 1 || len(partition.Unclassified) != 41 || len(got.Completeness.Backlog) != 49 {
+				t.Fatal("completeness lost courses or double-counted tags", got.Completeness)
+			}
 			r := got.Rows[0]
 			if r.Confirmed != 4 || r.Unknown != 42 || r.Excluded != 4 || len(r.UnknownIDs) != 42 {
 				t.Fatal(r)

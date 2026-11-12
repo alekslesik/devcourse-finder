@@ -54,6 +54,7 @@ type report struct {
 	Providers    map[string]int             `json:"providers"`
 	Rows         []row                      `json:"rows"`
 	Coverage     map[string]profileCoverage `json:"coverage"`
+	Completeness completenessReport         `json:"completeness"`
 	Combinations []combination              `json:"combinations"`
 }
 type auditor struct {
@@ -139,6 +140,8 @@ func (a auditor) run(ctx context.Context) (out report, err error) {
 	out.Courses = len(courses)
 	out.Snapshot = digest
 	out.Coverage = summarizeCoverage(courses, out.Started)
+	out.Completeness = summarizeCompleteness(courses, out.Started)
+	out.Pass = out.Pass && out.Completeness.Accounted
 	for _, c := range courses {
 		u, _ := url.Parse(c.Source)
 		out.Providers[u.Hostname()]++
