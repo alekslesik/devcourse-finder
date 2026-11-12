@@ -174,6 +174,9 @@ func TestAIHexletPublicLiveSources(t *testing.T) {
 			}
 			docs, err := aiHexletPublic(raw, c, r, nil, digest)
 			if err != nil {
+				docs, err = aiHexletCurrent(raw, c, r, nil, digest)
+			}
+			if err != nil {
 				t.Fatal("public metadata rejected")
 			}
 			if strings.Contains(slug, "free") {

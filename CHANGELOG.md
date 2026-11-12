@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.38.1] - 2026-11-12
+
+- Restore current identity-bound Hexlet suitability evidence and scoped Skillfactory Python curriculum without changing financial facts.
+- Preserve Hexlet tariff-bundle identity when recommendation-only analysis keeps the course document, while still rejecting incomplete literal-fact bundles.
+
 ## [0.38.0] - 2026-11-12
 
 - Connect verified complete free programs from CodeChick and LearnPython.org through bounded discovery, evidence-based profiles and scoped AI recommendations.
