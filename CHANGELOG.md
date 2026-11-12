@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.39.1] - 2026-11-12
+
+- Review curriculum recommendations with explicit learner and subject definitions, independently of strict literal-fact verification.
+
 ## [0.39.0] - 2026-11-12
 
 - Account for every visible course in disjoint filter-coverage partitions and export a provider-level completeness backlog.
