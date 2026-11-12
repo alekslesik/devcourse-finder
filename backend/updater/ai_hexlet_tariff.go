@@ -20,6 +20,14 @@ func aiHexletPaymentVariant(raw string, c Candidate) string {
 	if e != nil {
 		return ""
 	}
+	// The current official CTA adds this fixed first-party source marker.
+	// It never identifies a different program/variant or changes a payment mode.
+	if marker, present := q["from"]; present {
+		if len(marker) != 1 || marker[0] != "tilda_page" {
+			return ""
+		}
+		q.Del("from")
+	}
 	if u.Path == "/payments/new" && len(q) == 2 && len(q["program"]) == 1 && len(q["variant"]) == 1 && q.Get("program") == c.ExternalID {
 		switch q.Get("variant") {
 		case "standard":
