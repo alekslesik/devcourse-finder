@@ -173,5 +173,6 @@ func aiBundleDigest(docs []AIDocument) string {
 func aiEffectivePolicy() string {
 	schema, _ := json.Marshal(aiExtractionSchema())
 	compact := aiDeepSeekOutputInstructions(nil) + aiDeepSeekOutputInstructions(map[string]any{"proposed_claims": true})
-	return aiPolicyVersion + "-" + fingerprint(append([]byte(aiExtractionPrompt+aiRecommendationExtractionPrompt+aiVerificationPrompt+compact), schema...))[:12]
+	compact += aiDeepSeekOutputInstructions(map[string]any{"proposed_claims": true, "recommendations_only": true})
+	return aiPolicyVersion + "-" + fingerprint(append([]byte(aiExtractionPrompt+aiRecommendationExtractionPrompt+aiVerificationPrompt+aiRecommendationVerificationPrompt+compact), schema...))[:12]
 }

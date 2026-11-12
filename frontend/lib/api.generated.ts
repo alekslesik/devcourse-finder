@@ -451,7 +451,7 @@ export interface operations {
         parameters: {
             query?: {
                 language?: "go" | "python" | "java" | "javascript";
-                direction?: "basics" | "backend" | "frontend" | "fullstack" | "automation" | "data" | "algorithms" | "testing";
+                direction?: "basics" | "backend" | "frontend" | "fullstack" | "automation" | "data" | "algorithms" | "testing" | "games";
                 experience?: "none" | "basics" | "projects" | "working" | "switch" | "experienced";
                 goal?: "try" | "job" | "switch" | "deepen";
                 budget?: "free" | "paid";

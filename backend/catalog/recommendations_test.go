@@ -2,10 +2,52 @@ package catalog
 
 import (
 	"encoding/json"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestGameDevelopmentIsAnAdvisoryDirectionWithNormalHardFilters(t *testing.T) {
+	now := time.Now().UTC()
+	c := recommendationFixture(now)
+	c.Language = "python"
+	c.Title = "Создание игр на Python с PyGame"
+	c.Recommendations.Directions.Values = []string{"games"}
+	c.Recommendations.Directions.Quote = "Создадите игровые окна, спрайты, обработку ввода и столкновений, пять собственных 2D игр."
+	if !c.Recommendations.Valid() {
+		t.Fatal("games rejected by recommendation contract")
+	}
+	f, err := Parse(url.Values{"direction": {"games"}, "language": {"python"}, "include_recommendations": {"true"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := Search([]Course{c}, f, now)
+	if len(got) != 1 || got[0].ProfileMatch != "recommended" {
+		t.Fatal("game course disappeared", got)
+	}
+	counts := ProfileFacets([]Course{c}, f, now)["direction"]
+	if counts.Counts["games"] != 0 || counts.RecommendedCounts["games"] != len(got) {
+		t.Fatal("game facet differs from actual matching courses", counts)
+	}
+	f.IncludeRecommendations = false
+	if len(Search([]Course{c}, f, now)) != 0 {
+		t.Fatal("advice became a confirmed school fact")
+	}
+	f.IncludeRecommendations = true
+	f.Max = new(int64)
+	if len(Search([]Course{c}, f, now)) != 0 {
+		t.Fatal("games bypassed price constraint")
+	}
+	f.Max = nil
+	f.Direction = "frontend"
+	if len(Search([]Course{c}, f, now)) != 0 {
+		t.Fatal("game development leaked into web frontend")
+	}
+	if RecommendationLabel("direction", "games") != "разработка игр" {
+		t.Fatal("missing public label")
+	}
+}
 
 func recommendationFixture(now time.Time) Course {
 	tags := func(values ...string) *RecommendationTags {

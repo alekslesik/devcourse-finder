@@ -11,6 +11,9 @@ import (
 func aiDeepSeekOutputInstructions(input any) string {
 	if m, ok := input.(map[string]any); ok {
 		if _, verifying := m["proposed_claims"]; verifying {
+			if m["recommendations_only"] == true {
+				return aiRecommendationReviewOutputInstructions
+			}
 			return `JSON output contract: {"complete":true,"verified_claim_ids":[zero-based integer indices]}. Shape example with two hypothetical supported claims: {"complete":true,"verified_claim_ids":[0,2]}; if none are supported, return an empty array. These example indices are not decisions about the input. Evaluate each claim independently. Values are internal classification codes, not words that must appear literally in Russian text: prerequisites=none with scope=programming means no programming experience is required; audience=["none"] means explicitly suitable for people who have never programmed. For example, an explicit statement that no special skills or experience are needed can establish prerequisites=none; a generic beginner title alone cannot. Do not require the English code "none" in the source. Return the explicit claim_index values, never a quote_id segment number or a one-based row number. Apply each supplied evaluation_rule: curriculum_interpretation permits grounded suitability inference; literal_fact requires explicit school evidence. Include every supported index and no unsupported index. For recommended_* fields, evaluate a cautious curriculum-based advisory interpretation, not a school-confirmed claim; substantive taught content can support an estimate, but titles alone, contradictions and employment promises cannot. Other fields still require exact factual entailment. Never approve a claim just to make a nonempty result. No other keys.`
 		}
 	}

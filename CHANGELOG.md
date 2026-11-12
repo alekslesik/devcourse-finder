@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.40.0] - 2026-11-12
+
+- Add evidence-based game-development discovery and a dedicated independent advisory review rubric with explicit learner and subject semantics.
+- Allow up to fifteen minutes for the mandatory pre-deployment database backup after the growing audit history exceeded the previous five-minute limit; failed backups still stop deployment before application changes.
+
 ## [0.39.0] - 2026-11-12
 
 - Account for every visible course in disjoint filter-coverage partitions and export a provider-level completeness backlog.
