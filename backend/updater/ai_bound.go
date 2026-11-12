@@ -64,8 +64,9 @@ func aiBoundEventIdentityValid(ctx context.Context, tx pgx.Tx, e AIEvent) (bool,
 			return false, err
 		}
 		digest := aiHexletPublicDigest(e.Candidate, e.CourseID, e.IdentityDigest, binding)
-		if len(e.Documents) > 1 {
-			digest = aiHexletPublicTariffDigest(e.Candidate, e.CourseID, e.IdentityDigest, binding)
+		tariffDigest := aiHexletPublicTariffDigest(e.Candidate, e.CourseID, e.IdentityDigest, binding)
+		if len(e.Documents) > 1 || e.RecommendationsOnly && len(e.Documents) == 1 && e.Documents[0].BindingDigest == tariffDigest {
+			digest = tariffDigest
 		}
 		for _, d := range e.Documents {
 			if d.BindingDigest != digest {
@@ -170,6 +171,9 @@ func aiFetchBoundDocuments(ctx context.Context, db *store.DB, client *http.Clien
 			return c, nil, e
 		}
 		if docs, err := aiHexletPublic(raw, c, current, binding, digest); err == nil {
+			return c, docs, nil
+		}
+		if docs, err := aiHexletCurrent(raw, c, current, binding, digest); err == nil {
 			return c, docs, nil
 		}
 	}

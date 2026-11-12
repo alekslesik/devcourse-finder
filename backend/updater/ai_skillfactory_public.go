@@ -87,7 +87,7 @@ func aiSkillfactoryPublic(raw, pricing []byte, c Candidate, current catalog.Cour
 	if !bound {
 		return nil, ErrAI
 	}
-	text := aiNormalize(aiPublicText(description) + "\n" + aiCourseSections(raw, c))
+	text := aiNormalize(aiPublicText(description) + "\n" + aiCourseSections(raw, c) + "\n" + aiSkillfactoryCurrentSections(raw, c))
 	if len(text) < 80 {
 		return nil, ErrAI
 	}
