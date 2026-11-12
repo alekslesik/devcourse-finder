@@ -66,7 +66,6 @@ jobs:
       - run: go run ./backend catalog validate ./data/real-catalog.json
 
   frontend:
-    # Keep Playwright system packages on its supported Ubuntu LTS image.
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -90,14 +89,12 @@ jobs:
       - run: npm run typecheck
       - run: npm run build:test
       - run: npm run test:routes
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
-      - name: Install WebKit for cross-engine acceptance
-        run: npx playwright install --with-deps webkit
+      - name: Run Chromium acceptance with the locked Playwright image
+        run: ../scripts/run-browser-tests.sh
       - name: Verify touch, keyboard, navigation and dialog behaviour in WebKit
         env:
           E2E_BROWSER: webkit
-        run: npm run test:e2e -- catalog-ux.spec.ts dialog.spec.ts device-acceptance.spec.ts course-passport.spec.ts --output=test-results/webkit
+        run: ../scripts/run-browser-tests.sh catalog-ux.spec.ts dialog.spec.ts device-acceptance.spec.ts course-passport.spec.ts --output=test-results/webkit
       - name: Save frontend visual checks and failure traces
         if: always()
         uses: actions/upload-artifact@v4
@@ -139,9 +136,9 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
         working-directory: frontend
-      - run: npx playwright install --with-deps chromium
-        working-directory: frontend
       - name: Browser acceptance with production frontend, Go API and PostgreSQL
+        env:
+          E2E_CONTAINER_BROWSER: "1"
         run: ./scripts/e2e-real.sh
       - name: Save browser failure traces
         if: failure()

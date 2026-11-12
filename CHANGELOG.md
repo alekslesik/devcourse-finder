@@ -3,9 +3,9 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
-## [0.37.4] - 2026-11-11
+## [0.37.4] - 2026-11-12
 
-- Pin browser acceptance jobs to Playwright-supported Ubuntu 24.04 instead of a moving runner image.
+- Run Chromium, WebKit and real-stack browser acceptance in the exact locked official Playwright image, avoiding failing runtime APT downloads on hosted runners.
 - Keep contradictory framework-audience wording from blocking native course refreshes, and isolate Netology tariff learning features from payment periods.
 - Add an identity-checked, audited correction for the legacy Node.js course direction without changing prices or existing recommendations.
 - Monitor the retained GlobalSign certificate daily with deduplicated expiry alerts, and validate paid certificate rotations with protected backups, Caddy reload verification and rollback.

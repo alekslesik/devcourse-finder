@@ -38,4 +38,8 @@ for attempt in {1..60}; do
   sleep 1
 done
 cd frontend
-npm run test:e2e
+if [[ "${E2E_CONTAINER_BROWSER:-}" == "1" ]]; then
+  "$root/scripts/run-browser-tests.sh"
+else
+  npm run test:e2e
+fi
