@@ -13,6 +13,12 @@ decorator practice requiring Python/OOP, and explicit JavaScript object exercise
 These demonstrate why one rejected direction must not suppress other fields and
 why missing categories cannot be fixed by approving an unrelated label.
 
+The existing direction selector gains `games` (Разработка игр), backed by the
+same search enum, OpenAPI contract, UI evidence labels and advisory model schema.
+It requires substantive game-development content, not merely playful exercises.
+The ordinary price/offer/experience constraints and confirmed-versus-advisory
+groups still apply. No current course is assigned this new tag by deployment.
+
 Recommendation-only analysis now uses a dedicated independent review rubric with
 complete audience, goal and direction semantics. It distinguishes learner entry
 experience from course difficulty, web frontend from games, both sides of

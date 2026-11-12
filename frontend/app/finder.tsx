@@ -13,7 +13,7 @@ class SearchError extends Error {}
 const languages:Record<string,string>={python:'Python',javascript:'JavaScript',java:'Java',go:'Go'};
 const experience:Record<string,string>={none:'Начинаю с нуля',basics:'Знаю основы',projects:'Пишу свои проекты',working:'Работаю разработчиком',switch:'Перехожу с другого языка'};
 const goals:Record<string,string>={try:'Попробовать программирование',job:'Подготовиться к первой работе',switch:'Сменить язык / направление',deepen:'Углубить знания'};
-const directions:Record<string,string>={basics:'Основы',backend:'Backend',frontend:'Frontend',fullstack:'Fullstack',automation:'Автоматизация',data:'Данные и машинное обучение',algorithms:'Алгоритмы',testing:'Тестирование'};
+const directions:Record<string,string>={basics:'Основы',backend:'Backend',frontend:'Frontend',fullstack:'Fullstack',automation:'Автоматизация',data:'Данные и машинное обучение',algorithms:'Алгоритмы',testing:'Тестирование',games:'Разработка игр'};
 function Select({label,name,values,defaultValue,counts,recommendedCounts}:{label:string;name:string;values:Record<string,string>;defaultValue?:string;counts?:Record<string,number>;recommendedCounts?:Record<string,number>}){return <label>{label}<select name={name} defaultValue={defaultValue||''}><option value="">Не важно</option>{Object.entries(values).map(([v,t])=><option value={v} key={v}>{t}{counts ? ` · ${(counts[v]??0)+(recommendedCounts?.[v]??0)}` : ''}</option>)}</select></label>}
 const searchParameterNames=new Set(['language','direction','experience','goal','support','schedule','sort','min','max','hours','page','page_size']);
 const defaultSort='recent',defaultPageSize=18;

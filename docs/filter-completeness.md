@@ -37,7 +37,7 @@ The baseline on 12 November 2026, v0.38.1, contains 897 visible courses. With
 current recommendations, 444 match an experience, 301 a goal, 361 a direction,
 and 222 all three. Thus the initial missing counts are 453, 596 and 536.
 Option totals need not equal 897 because categories overlap; the unique-course
-partitions must. Unknowns never count as classified. The existing 90 facet rows,
+partitions must. Unknowns never count as classified. The existing facet rows (95 after adding game development),
 four modes, 50 combinations, pagination and stable-snapshot checks still run.
 
 This diagnostic reads official public application endpoints only. It performs

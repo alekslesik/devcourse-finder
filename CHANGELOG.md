@@ -3,9 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
-## [0.39.1] - 2026-11-12
+## [0.40.0] - 2026-11-12
 
-- Review curriculum recommendations with explicit learner and subject definitions, independently of strict literal-fact verification.
+- Add evidence-based game-development discovery and a dedicated independent advisory review rubric with explicit learner and subject semantics.
+- Allow up to fifteen minutes for the mandatory pre-deployment database backup after the growing audit history exceeded the previous five-minute limit; failed backups still stop deployment before application changes.
 
 ## [0.39.0] - 2026-11-12
 

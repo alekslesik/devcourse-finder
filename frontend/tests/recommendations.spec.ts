@@ -2,6 +2,21 @@ import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {readFileSync} from 'node:fs';
 const base=JSON.parse(readFileSync('../data/demo-catalog.json','utf8')).courses[0];
+test('game development uses the existing direction filter and shows its source evidence',async({page})=>{
+ const quote='Создадите пять 2D игр: спрайты, игровой цикл, ввод и столкновения.';
+ await page.route('**/api/v1/courses*',route=>route.fulfill({json:{
+  items:[{course:{...base,id:'pygame',slug:'pygame',title:'Создание игр на Python',language:'python',recommendations:{directions:{values:['games'],quote,evidence:{source:base.source,locator:'curriculum',digest:'a'.repeat(64),checked_at:new Date().toISOString()}}}},offer:base.offers[0],effective_price:0,reasons:[],profile_match:'recommended',recommendation_fields:['direction']}],
+  total:1,confirmed_total:0,recommended_total:1,unverified_total:0,page:1,page_size:18,
+  diagnostics:{experience:{},goal:{},direction:{games:{confirmed:0,recommended:1,unknown:0}}}
+ }}));
+ await page.goto('/courses?direction=games');
+ await expect(page.locator('select[name=direction]')).toHaveValue('games');
+ await expect(page.locator('select[name=direction] option[value=games]')).toHaveText(/Разработка игр/);
+ await page.getByText('Почему ИИ предлагает этот курс',{exact:true}).click();
+ await expect(page.locator('.recommendedResults blockquote')).toContainText(quote);
+ await page.getByRole('button',{name:'Найти обучение'}).click();
+ await expect(page).toHaveURL(/direction=games/);
+});
 test('AI recommendations stay enabled without a setting, including legacy links',async({page})=>{
  await page.setViewportSize({width:360,height:800});
  const quote='Программа включает основы Go, HTTP, API и практический проект для освоения нового языка.';

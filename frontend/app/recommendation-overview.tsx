@@ -3,7 +3,7 @@ import RecommendationEvidence from './recommendation-evidence';
 const labels:Record<string,Record<string,string>>={
  audience:{none:'Начинающим с нуля',basics:'Тем, кто знает основы',projects:'Тем, кто уже пишет проекты',working:'Работающим разработчикам',switch:'Программистам с другим языком'},
  goals:{try:'Попробовать программирование',job:'Подготовиться к первой работе',switch:'Сменить язык или направление',deepen:'Углубить знания'},
- directions:{basics:'Основы',backend:'Backend',frontend:'Frontend',fullstack:'Fullstack',automation:'Автоматизация',data:'Данные и машинное обучение',algorithms:'Алгоритмы',testing:'Тестирование'}
+ directions:{basics:'Основы',backend:'Backend',frontend:'Frontend',fullstack:'Fullstack',automation:'Автоматизация',data:'Данные и машинное обучение',algorithms:'Алгоритмы',testing:'Тестирование',games:'Разработка игр'}
 };
 export default function RecommendationOverview({course}:{course:Pick<Course,'source'|'recommendations'>}){
  const r=course.recommendations;if(!r)return null;

@@ -84,7 +84,7 @@ func TestAuditAllPagesAndUnknownMatches(t *testing.T) {
 				}
 				return
 			}
-			if err != nil || !got.Pass || !got.Stable || got.Courses != 50 || len(got.Rows) != 90 || len(got.Combinations) != 50 {
+			if err != nil || !got.Pass || !got.Stable || got.Courses != 50 || len(got.Rows) != 5*(6+4+len(catalog.SearchDirections())) || len(got.Combinations) != 50 {
 				t.Fatal(got, err)
 			}
 			if got.Coverage["confirmed"].Experience != 8 || got.Coverage["with_recommendations"].Experience != 9 || got.Coverage["with_recommendations"].Goal != 1 || got.Coverage["with_recommendations"].Direction != 1 || got.Coverage["with_recommendations"].AllThree != 1 {

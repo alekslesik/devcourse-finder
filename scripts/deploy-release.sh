@@ -62,7 +62,7 @@ echo '[STEP] Backing up the existing database before migrations'
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 backup="$base/backups/before-$tag-$stamp-$$.dump"
 partial="$backup.partial"
-timeout --kill-after=5s 300 "${old_compose[@]}" exec --interactive=false -T db sh -c \
+timeout --kill-after=5s 900 "${old_compose[@]}" exec --interactive=false -T db sh -c \
   'PGCONNECT_TIMEOUT=5 pg_dump --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --format=custom' </dev/null > "$partial"
 test -s "$partial"
 mv "$partial" "$backup"

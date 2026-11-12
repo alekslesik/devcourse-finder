@@ -24,7 +24,7 @@ type CourseRecommendations struct {
 	Directions *RecommendationTags `json:"directions,omitempty"`
 }
 
-var recommendationDirections = []string{"basics", "backend", "frontend", "fullstack", "automation", "data", "algorithms", "testing"}
+var recommendationDirections = []string{"basics", "backend", "frontend", "fullstack", "automation", "data", "algorithms", "testing", "games"}
 
 func SearchDirections() []string { return append([]string(nil), recommendationDirections...) }
 func (r *CourseRecommendations) Valid() bool {
@@ -115,7 +115,7 @@ func RecommendationLabel(field, value string) string {
 	labels := map[string]map[string]string{
 		"experience": {"none": "старт с нуля", "basics": "развитие базовых знаний", "projects": "практика своих проектов", "working": "развитие навыков разработчика", "switch": "переход с другого языка", "experienced": "обучение с опытом"},
 		"goal":       {"try": "первое знакомство с программированием", "job": "подготовка к первой работе", "switch": "смена языка или направления", "deepen": "углубление знаний"},
-		"direction":  {"basics": "основы", "backend": "backend", "frontend": "frontend", "fullstack": "fullstack", "automation": "автоматизация", "data": "данные и машинное обучение", "algorithms": "алгоритмы", "testing": "тестирование"},
+		"direction":  {"basics": "основы", "backend": "backend", "frontend": "frontend", "fullstack": "fullstack", "automation": "автоматизация", "data": "данные и машинное обучение", "algorithms": "алгоритмы", "testing": "тестирование", "games": "разработка игр"},
 	}
 	return strings.TrimSpace(labels[field][value])
 }
