@@ -205,7 +205,7 @@ func aiBuildBoundDocuments(raw []byte, c Candidate, current, remote catalog.Cour
 		return nil, ErrAI
 	}
 	binding := aiBoundDigest(c, current.ID, b)
-	docs := []AIDocument{{ID: "course", Source: c.URL, Scope: "course", Text: aiNormalize(text), Digest: digest, BindingDigest: binding}}
+	docs := []AIDocument{{ID: "course", Source: c.URL, Scope: "course", Partial: c.Adapter == "skypro", Text: aiNormalize(text), Digest: digest, BindingDigest: binding}}
 	for _, offer := range remote.Offers {
 		if text := aiNormalize(offers[offer.ID]); text != "" {
 			docs = append(docs, AIDocument{ID: "offer:" + offer.ID, Source: c.URL, Scope: "offer", OfferID: offer.ID, Text: text, Digest: digest, BindingDigest: binding})
