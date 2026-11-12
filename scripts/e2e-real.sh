@@ -39,7 +39,7 @@ for attempt in {1..60}; do
 done
 cd frontend
 if [[ "${E2E_CONTAINER_BROWSER:-}" == "1" ]]; then
-  "$root/scripts/run-browser-tests.sh"
+  "$root/scripts/run-browser-tests.sh" "$@"
 else
-  npm run test:e2e
+  npm run test:e2e -- "$@"
 fi
