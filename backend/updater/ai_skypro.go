@@ -38,19 +38,19 @@ func aiSkyproCurrentCurriculum(doc *html.Node, c Candidate) string {
 	var scope *html.Node
 	ambiguous := false
 	visitNodes(doc, func(n *html.Node) {
-		if n.Data != "h2" || normalizeTitle(nodeText(n)) != normalizeTitle("Программа курса") || profileBlockedNode(n) {
+		if n.Data != "h2" || normalizeTitle(nodeText(n)) != normalizeTitle("Программа курса") || skyproCurriculumBlocked(n) {
 			return
 		}
 		root := n.Parent
 		for root != nil && root.Data != "body" && root.Data != "html" && !classToken(root, "t-rec") {
 			root = root.Parent
 		}
-		if root == nil || !classToken(root, "t-rec") || profileBlockedNode(root) {
+		if root == nil || !classToken(root, "t-rec") || skyproCurriculumBlocked(root) {
 			return
 		}
 		headings := 0
 		visitNodes(root, func(x *html.Node) {
-			if x.Data == "h2" && !profileBlockedNode(x) {
+			if x.Data == "h2" && !skyproCurriculumBlocked(x) {
 				headings++
 			}
 		})
@@ -66,7 +66,7 @@ func aiSkyproCurrentCurriculum(doc *html.Node, c Candidate) string {
 	var text strings.Builder
 	var walk func(*html.Node)
 	walk = func(n *html.Node) {
-		if profileBlockedNode(n) || n.Data == "form" || n.Data == "input" || n.Data == "button" {
+		if skyproCurriculumBlocked(n) || n.Data == "form" || n.Data == "input" || n.Data == "button" {
 			return
 		}
 		if n.Type == html.TextNode {
@@ -84,7 +84,7 @@ func aiSkyproCurrentCurriculum(doc *html.Node, c Candidate) string {
 		if block.Type != html.ElementNode {
 			continue
 		}
-		if profileBlockedNode(block) {
+		if skyproCurriculumBlocked(block) {
 			if block.Data == "script" || block.Data == "style" {
 				continue
 			}
@@ -96,7 +96,7 @@ func aiSkyproCurrentCurriculum(doc *html.Node, c Candidate) string {
 		records++
 		end := false
 		visitNodes(block, func(n *html.Node) {
-			if profileBlockedNode(n) {
+			if skyproCurriculumBlocked(n) {
 				return
 			}
 			if block != scope && n.Data == "h2" {
@@ -111,7 +111,7 @@ func aiSkyproCurrentCurriculum(doc *html.Node, c Candidate) string {
 			break
 		}
 		visitNodes(block, func(n *html.Node) {
-			if n.Data == "h3" && !profileBlockedNode(n) && strings.HasPrefix(nodeText(n), "Модуль ") {
+			if n.Data == "h3" && !skyproCurriculumBlocked(n) && strings.HasPrefix(nodeText(n), "Модуль ") {
 				modules++
 			}
 		})
@@ -125,4 +125,17 @@ func aiSkyproCurrentCurriculum(doc *html.Node, c Candidate) string {
 		return ""
 	}
 	return result
+}
+
+// Boundaries and text traversal use the same ancestor-aware exclusions.
+func skyproCurriculumBlocked(n *html.Node) bool {
+	if profileBlockedNode(n) {
+		return true
+	}
+	for p := n; p != nil; p = p.Parent {
+		if p.Data == "form" || p.Data == "input" || p.Data == "button" || nodeAttr(p, "data-tariff-data") != "" || classToken(p, "payment-plan-card") || classToken(p, "intensive-weeks-section") || classPrefix(p, "styles_prices__") {
+			return true
+		}
+	}
+	return false
 }

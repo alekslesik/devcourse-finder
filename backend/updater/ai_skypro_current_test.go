@@ -41,7 +41,7 @@ func TestSkyproCurrentCurriculumKeepsNestedLessonsAndExcludesOtherScopes(t *test
 			t.Fatal("another scope entered course document", foreign)
 		}
 	}
-	injected := strings.Replace(string(raw), "</h3>", `</h3><form><p>FOREIGN_FORM: 36 месяцев рассрочки и личный наставник.</p></form><aside class="related-course"><h2>Программа курса</h2><p>FOREIGN_COURSE: учитесь Python за 6 месяцев.</p></aside>`, 1)
+	injected := strings.Replace(string(raw), "</h3>", `</h3><form><p>FOREIGN_FORM: 36 месяцев рассрочки и личный наставник.</p></form><aside class="related-course"><h2>Программа курса</h2><p>FOREIGN_COURSE: учитесь Python за 6 месяцев.</p></aside><div class="payment-plan-card"><h2>Программа курса</h2><p>FOREIGN_PAYMENT: 36 месяцев и поддержка.</p></div>`, 1)
 	if injected == string(raw) {
 		t.Fatal("ineffective fixture mutation")
 	}
