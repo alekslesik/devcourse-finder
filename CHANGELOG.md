@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.40.1] - 2026-11-12
+
+- Restore identity-bound Skypro React curriculum across adjacent Tilda module records while preserving partial-source and financial safeguards.
+
 ## [0.40.0] - 2026-11-12
 
 - Add evidence-based game-development discovery and a dedicated independent advisory review rubric with explicit learner and subject semantics.
