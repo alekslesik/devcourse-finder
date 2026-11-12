@@ -259,6 +259,9 @@ func (m *OpenAIModel) Extract(ctx context.Context, c Candidate, docs []AIDocumen
 
 func (m *OpenAIModel) Verify(ctx context.Context, c Candidate, docs []AIDocument, extraction AIExtraction) (AIVerification, AIUsage, error) {
 	if m.recommendationsOnly {
+		if !aiOnlyRecommendations(extraction.Claims) {
+			return AIVerification{}, AIUsage{}, ErrAI
+		}
 		docs = aiRecommendationDocuments(docs)
 	}
 	var out AIVerification
@@ -267,7 +270,15 @@ func (m *OpenAIModel) Verify(ctx context.Context, c Candidate, docs []AIDocument
 	if m.VerifyModel != "" {
 		reviewer.Model = m.VerifyModel
 	}
-	usage, err := reviewer.request(ctx, aiVerificationPrompt, map[string]any{"course_url": c.URL, "documents": aiPromptDocuments(docs), "proposed_claims": aiVerificationClaims(extraction.Claims)}, schema, &out)
+	prompt := aiVerificationPrompt
+	if m.recommendationsOnly {
+		prompt = aiRecommendationVerificationPrompt
+	}
+	input := map[string]any{"course_url": c.URL, "documents": aiPromptDocuments(docs), "proposed_claims": aiVerificationClaims(extraction.Claims)}
+	if m.recommendationsOnly {
+		input["recommendations_only"] = true
+	}
+	usage, err := reviewer.request(ctx, prompt, input, schema, &out)
 	return out, usage, err
 }
 func (u AIUsage) valid() bool {
