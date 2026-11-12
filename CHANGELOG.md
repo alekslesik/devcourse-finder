@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.38.0] - 2026-11-12
+
+- Connect verified complete free programs from CodeChick and LearnPython.org through bounded discovery, evidence-based profiles and scoped AI recommendations.
+
 ## [0.37.4] - 2026-11-12
 
 - Run Chromium, WebKit and real-stack browser acceptance in the exact locked official Playwright image, avoiding failing runtime APT downloads on hosted runners.

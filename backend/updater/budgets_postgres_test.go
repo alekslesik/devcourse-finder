@@ -127,7 +127,7 @@ func TestAllProviderQueuesRotateUnderTruncatedRounds(t *testing.T) {
 	}
 	s := Service{DB: db, Config: cfg}
 	work, err := s.queueWork(ctx)
-	if err != nil || len(work) != 294 {
+	if err != nil || len(work) != stepikNewLimit+stepikRefreshLimit+(len(providerHosts)-1)*2*providerLaneLimit {
 		t.Fatal(len(work), err)
 	}
 	first := work[0]
