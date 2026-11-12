@@ -136,7 +136,10 @@ func applyAIProfile(c *catalog.Course, incoming *catalog.CourseProfile, partial 
 		next.ExcludedAudience = old.ExcludedAudience
 	}
 	c.ProfileOwnership &^= aiProfileMask << aiOwnershipShift
-	applyCourseProfile(c, &next)
+	if !applyCourseProfile(c, &next) {
+		c.ProfileOwnership = previousOwnership
+		return
+	}
 	if c.Profile == nil || incoming == nil {
 		return
 	}

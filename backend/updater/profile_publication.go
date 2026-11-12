@@ -26,7 +26,8 @@ func knownProfileTags(v []string) bool {
 
 // Collector ownership is per field. Missing evidence clears collector-owned facts,
 // while an explicit operator import (ownership zero) remains authoritative.
-func applyCourseProfile(c *catalog.Course, incoming *catalog.CourseProfile) {
+func applyCourseProfile(c *catalog.Course, incoming *catalog.CourseProfile) bool {
+	before := *c
 	old, next := catalog.CourseProfile{}, catalog.CourseProfile{}
 	if c.Profile != nil {
 		old = *c.Profile
@@ -90,6 +91,13 @@ func applyCourseProfile(c *catalog.Course, incoming *catalog.CourseProfile) {
 	if len(old.Evidence()) > 0 {
 		c.Profile = &old
 	}
+	if !c.Profile.Valid() {
+		// Do not replace curated facts or reject unrelated verified prices
+		// merely because a new profile contradicts the existing profile.
+		*c = before
+		return false
+	}
+	return true
 }
 func applyPublishedProfile(result []catalog.Course, old []catalog.Course, o Observation) {
 	if !o.ProfileObserved {

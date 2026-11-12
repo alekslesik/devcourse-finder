@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"regexp"
 	"strings"
 	"time"
 
@@ -75,7 +76,7 @@ func aiNetologyDocuments(raw []byte, c Candidate, current catalog.Course, bindin
 	}
 	var docs []AIDocument
 	if scope := netologyLearningScope(doc, plans, c, boundOffer.Name); scope != nil {
-		text := nodeText(scope)
+		text := aiNetologyOfferLearningText(scope)
 		if text != "" {
 			docs = append(docs, AIDocument{ID: "offer:" + boundOffer.ID, Source: c.URL, Scope: "offer", OfferID: boundOffer.ID, Text: text, Digest: digest})
 		}
@@ -117,6 +118,29 @@ func aiNetologyDocuments(raw []byte, c Candidate, current catalog.Course, bindin
 		return nil, ErrAI
 	}
 	return docs, nil
+}
+
+// The payment contract has already proved this card's identity. Give the model
+// only its learning features, not installment periods, prices or order controls.
+func aiNetologyOfferLearningText(scope *html.Node) string {
+	titles := learningNodes(scope, func(n *html.Node) bool {
+		return n.Data == "p" && cardField.MatchString(nodeAttr(n, "name"))
+	})
+	if len(titles) != 1 {
+		return ""
+	}
+	prefix := strings.TrimSuffix(nodeAttr(titles[0], "name"), ".title") + ".features["
+	featureField := regexp.MustCompile("^" + regexp.QuoteMeta(prefix) + `[0-9]+\]\.title$`)
+	texts := []string{nodeText(titles[0])}
+	for _, node := range learningNodes(scope, func(n *html.Node) bool {
+		return n.Data == "p" && featureField.MatchString(nodeAttr(n, "name"))
+	}) {
+		texts = append(texts, aiOfferText(node))
+	}
+	if len(texts) == 1 {
+		return ""
+	}
+	return aiNormalize(strings.Join(texts, "\n"))
 }
 
 func aiNetologyCardRoot(title *html.Node) *html.Node {

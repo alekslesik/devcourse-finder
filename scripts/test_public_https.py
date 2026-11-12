@@ -47,6 +47,14 @@ class PublicHTTPSTests(unittest.TestCase):
     def test_valid_tls_permanent_redirect_metadata_and_live_detail(self):
         self.run_check()
         self.run_check(redirect_status=308)
+        self.run_check(sitemap=check.ORIGIN)
+
+    def test_invalid_hostname_never_requests_a_url(self):
+        with patch.object(check.urllib.request, 'urlopen') as request:
+            for host in ['https://example.com', 'localhost', 'example.com/private']:
+                with self.subTest(host=host), self.assertRaises(ValueError):
+                    check.check(host)
+            request.assert_not_called()
 
     def test_temporary_redirect_and_lost_query_are_rejected(self):
         for options in [{'redirect_status': 302}, {'location': check.ORIGIN + '/'},
