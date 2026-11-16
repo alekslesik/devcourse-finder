@@ -9,6 +9,7 @@ const result=(course,offer=course.offers[0])=>({course,offer,effective_price:off
 createServer((req,res)=>{res.setHeader('Content-Type','application/json');const url=new URL(req.url,'http://localhost');
  if(url.pathname==='/api/v1/courses'){
  let selected=courses.filter(c=>!url.searchParams.get('language')||c.language===url.searchParams.get('language'));
+ if(url.searchParams.get('budget')==='free')selected=selected.filter(c=>c.offers[0].free&&c.offers[0].price_kind==='exact'&&c.offers[0].price===0);
  if(url.searchParams.get('goal'))selected=selected.filter(c=>c.goals.includes(url.searchParams.get('goal')));
  if(url.searchParams.has('min'))selected=selected.filter(c=>c.offers[0].price!==null&&c.offers[0].price>=Number(url.searchParams.get('min')));
  if(url.searchParams.has('max'))selected=selected.filter(c=>c.offers[0].price!==null&&c.offers[0].price<=Number(url.searchParams.get('max')));
