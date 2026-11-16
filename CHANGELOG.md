@@ -5,7 +5,7 @@ Merged pull requests receive the matching Git tag and GitHub Release.
 
 ## [0.41.0] - 2026-11-16
 
-- Add a free-only course filter beside the budget, disable inactive price bounds, and retain entered prices when switching back.
+- Add a free-only course filter beside the budget, disable inactive price bounds, retain entered prices when switching back, and keep legacy paid-only URL opt-ins disabled.
 
 ## [0.40.1] - 2026-11-12
 
