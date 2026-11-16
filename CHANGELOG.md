@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.41.0] - 2026-11-16
+
+- Add a free-only course filter beside the budget, disable inactive price bounds, and retain entered prices when switching back.
+
 ## [0.40.1] - 2026-11-12
 
 - Restore identity-bound Skypro React curriculum across adjacent Tilda module records while preserving partial-source and financial safeguards.
