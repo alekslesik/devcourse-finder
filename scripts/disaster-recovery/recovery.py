@@ -110,6 +110,38 @@ def copy_path(source, root):
         shutil.copy2(source, dest)
 
 
+def source_paths(directory):
+    if not directory.is_relative_to(BASE):
+        raise RuntimeError('Unexpected deployment path')
+    if directory != BASE:
+        return {directory}
+    # Legacy containers may have been created before immutable releases existed.
+    # Never recurse into BASE: it includes dumps, releases and runtime files.
+    names = ['backend', 'frontend', 'data', 'scripts', 'docs', 'compose.yaml',
+             'compose.production.yaml', 'VERSION', 'CHANGELOG.md', 'README.md',
+             'go.mod', 'go.sum', '.dockerignore', '.release-commit']
+    return {BASE / name for name in names if (BASE / name).exists()}
+
+
+def pin_services(config, captured):
+    active = []
+    for name, svc in list(config['services'].items()):
+        if name not in captured:
+            if svc.get('profiles'):
+                del config['services'][name]
+                continue
+            raise RuntimeError('Required service has no captured image')
+        c = captured[name]
+        svc.pop('build', None)
+        svc['image'] = c['Image']
+        svc['pull_policy'] = 'never'
+        svc['environment'] = dict(item.split('=', 1) for item in c['Config']['Env'])
+        svc.pop('profiles', None)
+        if c['State']['Running']:
+            active.append(name)
+    return active
+
+
 def backup():
     STATE.mkdir(parents=True, exist_ok=True)
     with (BASE / '.deploy.lock').open('a') as deploy:
@@ -118,7 +150,7 @@ def backup():
         shutil.rmtree(bundle, ignore_errors=True)
         bundle.mkdir(mode=0o700)
         try:
-            release = (BASE / 'current').resolve(strict=True)
+            release = (BASE / 'current').resolve(strict=True) if (BASE / 'current').is_symlink() else BASE
             ids = run(['docker', 'ps', '-aq', '--filter', 'label=com.docker.compose.project=devcourse-finder']).decode().split()
             ids += run(['docker', 'ps', '-aq', '--filter', 'label=com.docker.compose.project=devcourse-ingress']).decode().split()
             records = js(['docker', 'inspect', *ids])
@@ -131,19 +163,17 @@ def backup():
             if not app['db']['State']['Running']:
                 raise RuntimeError('Production database is not running')
             # Never recursively copy the base directory: it contains old dumps.
-            paths = {release, BASE / '.env', BASE / 'DEPLOYED_VERSION', BASE / 'ingress'}
+            paths = source_paths(release) | {BASE / '.env', BASE / 'DEPLOYED_VERSION', BASE / 'ingress'}
             for c in records:
                 wd = Path(c['Config']['Labels']['com.docker.compose.project.working_dir'])
-                if not wd.is_relative_to(BASE):
-                    raise RuntimeError('Unexpected deployment path')
-                paths.add(wd)
+                paths |= source_paths(wd)
             binds = set()
             volumes = {}
             for c in records:
                 for m in c['Mounts']:
                     if m['Type'] == 'bind':
                         source = Path(m['Source'])
-                        if not source.is_relative_to(BASE) or m['RW']:
+                        if source == BASE or not source.is_relative_to(BASE) or source.is_relative_to(BASE / 'backups') or m['RW']:
                             raise RuntimeError('Unreviewed writable or external bind mount')
                         binds.add(source)
                     elif m['Type'] == 'volume':
@@ -159,7 +189,8 @@ def backup():
             rootfs = bundle / 'rootfs'
             for p in roots:
                 copy_path(p, rootfs)
-            (rootfs / 'srv/devcourse-finder/current').symlink_to(release)
+            if release != BASE:
+                (rootfs / 'srv/devcourse-finder/current').symlink_to(release)
             shutil.copytree(Path(__file__).parent, bundle / 'tools')
             print('Creating consistent PostgreSQL dump', flush=True)
             dump(app['db']['Name'].lstrip('/'), bundle / 'database.dump')
@@ -184,19 +215,7 @@ def backup():
                 for f in files:
                     cmd += ['-f', f]
                 config = js([*cmd, 'config', '--format', 'json'])
-                active[project] = []
-                for name, svc in config['services'].items():
-                    if name not in services:
-                        raise RuntimeError('Configured service has no captured image')
-                    c = services[name]
-                    svc.pop('build', None)
-                    svc.pop('pull_policy', None)
-                    svc['image'] = c['Image']
-                    svc['pull_policy'] = 'never'
-                    svc['environment'] = dict(item.split('=', 1) for item in c['Config']['Env'])
-                    svc.pop('profiles', None)
-                    if c['State']['Running']:
-                        active[project].append(name)
+                active[project] = pin_services(config, services)
                 write(bundle / f'{project}.json', config)
             metadata = {'format': 1, 'created_at': dt.datetime.now(dt.timezone.utc).isoformat(),
                         'deployment': (BASE / 'DEPLOYED_VERSION').read_text(), 'postgres': dbversion,

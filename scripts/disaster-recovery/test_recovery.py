@@ -12,6 +12,29 @@ spec.loader.exec_module(r)
 
 
 class RecoverySafetyTests(unittest.TestCase):
+    def test_legacy_source_selection_never_includes_backup_tree(self):
+        with tempfile.TemporaryDirectory() as d, patch.object(r, 'BASE', Path(d)):
+            base = Path(d)
+            for name in ['backend', 'data', 'backups', 'releases', 'incoming']:
+                (base / name).mkdir()
+            (base / 'compose.yaml').write_text('services: {}')
+            (base / 'current').symlink_to(base / 'releases')
+            paths = r.source_paths(base)
+            self.assertEqual(paths, {base / 'backend', base / 'data', base / 'compose.yaml'})
+            self.assertNotIn(base, paths)
+
+    def test_optional_uncaptured_service_removed_but_required_fails(self):
+        config = {'services': {'db': {'build': '.'}, 'ai': {'profiles': ['ai']}}}
+        captured = {'db': {'Image': 'sha256:actual', 'Config': {'Env': ['KEY=value=extra']}, 'State': {'Running': True}}}
+        self.assertEqual(r.pin_services(config, captured), ['db'])
+        self.assertNotIn('ai', config['services'])
+        self.assertEqual(config['services']['db']['image'], 'sha256:actual')
+        self.assertEqual(config['services']['db']['environment'], {'KEY': 'value=extra'})
+        self.assertEqual(config['services']['db']['pull_policy'], 'never')
+        self.assertNotIn('build', config['services']['db'])
+        with self.assertRaisesRegex(RuntimeError, 'Required'):
+            r.pin_services({'services': {'db': {}}}, {})
+
     def test_drill_cannot_publish_ports_mount_production_or_start_workers(self):
         original = {'name': 'devcourse-finder', 'networks': {'default': {'name': 'production'}},
                     'volumes': {'postgres-data': {'name': 'devcourse-finder_postgres-data'}},
