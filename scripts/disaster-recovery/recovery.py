@@ -49,7 +49,9 @@ def restic(*args, output=None):
                RCLONE_CONFIG=str(CONFIG / 'rclone.conf'),
                RESTIC_CACHE_DIR=str(STATE / 'cache'))
     return run(['restic', '--limit-upload', '8192', '--limit-download', '16384',
-                '--option', 'rclone.connections=2', *args], env=env, output=output)
+                '--option', 'rclone.connections=32',
+                '--option', 'rclone.args=serve restic --stdio --timeout=20m --contimeout=20s --low-level-retries=2 --tpslimit=4',
+                *args], env=env, output=output)
 
 
 def dbexec(name, command, *, data=None, output=None):
@@ -226,24 +228,31 @@ def backup():
                         'symlinks': {str(p.relative_to(bundle)): os.readlink(p) for p in bundle.rglob('*') if p.is_symlink()},
                         'sha256': {str(p.relative_to(bundle)): checksum(p) for p in sorted(bundle.rglob('*')) if p.is_file() and not p.is_symlink()}}
             write(bundle / 'manifest.json', metadata)
-            print('Uploading encrypted snapshot', flush=True)
-            report = restic('backup', '--json', '--host', 'devcourse-finder-production', '--tag', TAG, bundle)
-            summaries = [json.loads(line) for line in report.splitlines() if line.strip()]
-            summary = next(x for x in summaries if x.get('message_type') == 'summary')
-            snapshot = summary['snapshot_id']
-            # Retention only after a successful snapshot; restrict to our host/tag/path.
-            restic('forget', '--host', 'devcourse-finder-production', '--tag', TAG, '--path', bundle,
-                   '--keep-daily', '7', '--keep-weekly', '4', '--keep-monthly', '6')
-            status('last-success', snapshot=snapshot, postgres=dbversion, deployment=metadata['deployment'])
-            (STATE / 'last-failure.json').unlink(missing_ok=True)
-            print('Backup successful: ' + snapshot, flush=True)
-            if (CONFIG / 'email.json').exists():
-                run(['python3', Path(__file__).with_name('notify.py'), 'recovered'])
+            upload_bundle(bundle)
+
         except Exception as e:
             status('last-failure', error=str(e))
             raise
         finally:
             shutil.rmtree(bundle, ignore_errors=True)
+
+
+def upload_bundle(bundle):
+    if bundle != STATE / 'bundle':
+        raise RuntimeError('Upload staging path must be /var/lib/devcourse-backup/bundle')
+    metadata = check_bundle(bundle)
+    print('Uploading encrypted snapshot (Yandex WebDAV may defer PUT responses)', flush=True)
+    report = restic('backup', '--pack-size', '4', '--json', '--host', 'devcourse-finder-production', '--tag', TAG, bundle)
+    summaries = [json.loads(line) for line in report.splitlines() if line.strip()]
+    summary = next(x for x in summaries if x.get('message_type') == 'summary')
+    snapshot = summary['snapshot_id']
+    restic('forget', '--host', 'devcourse-finder-production', '--tag', TAG, '--path', bundle,
+           '--keep-daily', '7', '--keep-weekly', '4', '--keep-monthly', '6')
+    status('last-success', snapshot=snapshot, postgres=metadata['postgres'], deployment=metadata['deployment'])
+    (STATE / 'last-failure.json').unlink(missing_ok=True)
+    print('Backup successful: ' + snapshot, flush=True)
+    if (CONFIG / 'email.json').exists():
+        run(['python3', Path(__file__).with_name('notify.py'), 'recovered'])
 
 
 def compose(bundle, project, *args, file=None):
@@ -270,11 +279,11 @@ def wait_db(name):
     raise RuntimeError('Database readiness timeout')
 
 
-def verify(bundle, project='devcourse-finder', file=None):
-    name = compose(bundle, project, 'ps', '-q', 'db', file=file).decode().strip()
+def verify(bundle=None, project='devcourse-finder', file=None):
+    name = compose(bundle, project, 'ps', '-q', 'db', file=file).decode().strip() if bundle else 'devcourse-finder-db-1'
     wait_db(name)
     result = dbexec(name, 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SELECT count(*) FROM courses"').decode().strip()
-    api = compose(bundle, project, 'ps', '-q', 'api', file=file).decode().strip()
+    api = compose(bundle, project, 'ps', '-q', 'api', file=file).decode().strip() if bundle else 'devcourse-finder-api-1'
     for _ in range(90):
         try:
             run(['docker', 'exec', api, 'wget', '-Y', 'off', '-qO-', 'http://127.0.0.1:8080/health/ready'])
@@ -283,7 +292,7 @@ def verify(bundle, project='devcourse-finder', file=None):
             time.sleep(2)
     else:
         raise RuntimeError('Restored API readiness timeout')
-    front = compose(bundle, project, 'ps', '-q', 'frontend', file=file).decode().strip()
+    front = compose(bundle, project, 'ps', '-q', 'frontend', file=file).decode().strip() if bundle else 'devcourse-finder-frontend-1'
     for _ in range(90):
         try:
             # Frontend container has Node; this probes both HTML and the real API proxy.
@@ -422,7 +431,7 @@ def restore(bundle):
 def main():
     os.umask(0o077)
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=['backup', 'drill', 'restore', 'restore-db', 'verify', 'status', 'check', 'prune'])
+    p.add_argument('action', choices=['backup', 'upload', 'drill', 'restore', 'restore-db', 'verify', 'status', 'check', 'prune'])
     p.add_argument('source', nargs='?', default='latest')
     p.add_argument('--confirm', default='')
     a = p.parse_args()
@@ -441,13 +450,14 @@ def main():
     with (STATE / 'operation.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if a.action == 'backup': backup()
+        elif a.action == 'upload': upload_bundle(Path(a.source).resolve(strict=True))
         elif a.action == 'drill': drill(a.source)
         elif a.action == 'restore': restore(Path(a.source).resolve())
         elif a.action == 'restore-db':
             with (BASE / '.deploy.lock').open('a') as deploy:
                 fcntl.flock(deploy, fcntl.LOCK_EX)
                 restore_db(Path(a.source).resolve(strict=True), a.confirm)
-        elif a.action == 'verify': verify(Path(a.source).resolve(), file=BASE / 'recovery/devcourse-finder.json')
+        elif a.action == 'verify': verify()
         elif a.action == 'check': restic('check', '--read-data-subset=10%'); print('Repository check passed')
         elif a.action == 'prune': restic('prune'); print('Repository prune passed')
 

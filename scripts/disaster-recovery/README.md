@@ -43,6 +43,12 @@ from older releases. Saved resolved Compose configurations use those same IDs,
 actual container environment and `pull_policy: never`. No registry, mutable tag,
 build tooling, or source repository availability is required for recovery.
 
+Yandex WebDAV can defer successful PUT responses by about a minute per MiB.
+Uploads therefore use 4 MiB restic packs, 32 connections, a 20-minute idle timeout
+and a 4-request/second request limit. The 8 MiB/s upload ceiling also protects the
+host uplink. This is measured provider behavior, not a credential failure. Allow
+several hours for the initial snapshot and verify completion, not just login.
+
 The manifest records UTC time, deployed version/commit, PostgreSQL version,
 image IDs, active services, volume names, consistency rules and SHA-256 hashes.
 Secrets and resolved configurations enter only the encrypted repository; staging
@@ -61,6 +67,12 @@ references; a Sunday 04:00 Moscow `prune` timer reclaims unreferenced encrypted
 chunks. You can also run `recovery.py prune` during a maintenance window. It does not affect old local database dumps.
 A failed upload never applies retention. Keep enough disk space (approximately
 4 GB for staging and at least another 4 GB for a recovery drill, growing with DB).
+
+For a validated retained staging bundle after an interrupted initial upload,
+`recovery.py upload /var/lib/devcourse-backup/bundle` can retry without repeating
+the dump. It validates manifest hashes first; remove the plaintext staging bundle
+manually after confirmed success. Normal daily runs remove their staging data
+on success or failure.
 
 ## Scheduling and monitoring
 
@@ -163,5 +175,5 @@ backup-operation lock. It stops app writers, makes a fresh safety dump under
 restores the application DB with `pg_restore --exit-on-error`. A failure leaves
 writers stopped and preserves the safety dump. Recover the safety dump or fix
 the issue before restarting services. Choose a compatible application version
-first; no automatic upgrades or migrations run. `verify.sh BUNDLE_DIRECTORY`
-checks the stack restored using the saved pinned Compose file.
+first; no automatic upgrades or migrations run. `verify.sh` checks database access, API readiness, frontend and catalog in the
+running production application, including after a database-only restore.
