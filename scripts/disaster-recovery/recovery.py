@@ -12,6 +12,7 @@ import shutil
 import subprocess as sp
 import sys
 import tarfile
+import tempfile
 import time
 
 BASE = Path('/srv/devcourse-finder')
@@ -42,16 +43,41 @@ def write(path, value):
     tmp.replace(path)
 
 
-def restic(*args, output=None):
+def restic(*args, output=None, progress=False):
     cfg = json.loads((CONFIG / 'config.json').read_text())
     env = dict(os.environ, RESTIC_REPOSITORY=cfg['repository'],
                RESTIC_PASSWORD_FILE=str(CONFIG / 'password'),
                RCLONE_CONFIG=str(CONFIG / 'rclone.conf'),
                RESTIC_CACHE_DIR=str(STATE / 'cache'))
-    return run(['restic', '--limit-upload', '8192', '--limit-download', '16384',
-                '--option', 'rclone.connections=32',
-                '--option', 'rclone.args=serve restic --stdio --timeout=20m --contimeout=20s --low-level-retries=2 --tpslimit=4',
-                *args], env=env, output=output)
+    command = ['restic', '--limit-upload', '8192', '--limit-download', '16384',
+               '--option', 'rclone.connections=32',
+               '--option', 'rclone.args=serve restic --stdio --streaming-upload-cutoff=64M --disable-http2 --timeout=20m --contimeout=20s --low-level-retries=2 --tpslimit=4',
+               *args]
+    if not progress:
+        return run(command, env=env, output=output)
+    summaries = []
+    last_print = 0
+    with tempfile.TemporaryFile() as errors:
+        with sp.Popen([str(x) for x in command], stdout=sp.PIPE, stderr=errors, env=env) as child:
+            for line in child.stdout:
+                record = json.loads(line)
+                if record.get('message_type') == 'summary':
+                    summaries.append(line)
+                elif record.get('message_type') == 'status':
+                    counters = {k: record[k] for k in ['percent_done', 'bytes_done', 'total_bytes', 'files_done', 'total_files'] if k in record}
+                    write(STATE / 'upload-progress.json', {'at': dt.datetime.now(dt.timezone.utc).isoformat(), **counters})
+                    if time.monotonic() - last_print > 60:
+                        print('Archive processing: ' + str(counters.get('bytes_done', 0)) + '/' + str(counters.get('total_bytes', 0)) + ' bytes', flush=True)
+                        last_print = time.monotonic()
+            code = child.wait()
+        if code:
+            errors.seek(0)
+            path = STATE / 'last-upload-error.log'
+            path.write_bytes(errors.read())
+            path.chmod(0o600)
+            raise RuntimeError(f'restic upload failed (exit {code}); root-only diagnostics saved')
+    return b''.join(summaries)
+
 
 
 def dbexec(name, command, *, data=None, output=None):
@@ -242,7 +268,7 @@ def upload_bundle(bundle):
         raise RuntimeError('Upload staging path must be /var/lib/devcourse-backup/bundle')
     metadata = check_bundle(bundle)
     print('Uploading encrypted snapshot (Yandex WebDAV may defer PUT responses)', flush=True)
-    report = restic('backup', '--pack-size', '4', '--json', '--host', 'devcourse-finder-production', '--tag', TAG, bundle)
+    report = restic('backup', '--pack-size', '4', '--json', '--host', 'devcourse-finder-production', '--tag', TAG, bundle, progress=True)
     summaries = [json.loads(line) for line in report.splitlines() if line.strip()]
     summary = next(x for x in summaries if x.get('message_type') == 'summary')
     snapshot = summary['snapshot_id']

@@ -44,7 +44,9 @@ actual container environment and `pull_policy: never`. No registry, mutable tag,
 build tooling, or source repository availability is required for recovery.
 
 Yandex WebDAV can defer successful PUT responses by about a minute per MiB.
-Uploads therefore use 4 MiB restic packs, 32 connections, a 20-minute idle timeout
+Uploads use HTTP/1.1 and buffer complete small packs before WebDAV PUT, avoiding
+streaming/HTTP2 interoperability hangs observed with the packaged client. They
+use 4 MiB restic packs, 32 connections, a 20-minute idle timeout
 and a 4-request/second request limit. The 8 MiB/s upload ceiling also protects the
 host uplink. This is measured provider behavior, not a credential failure. Allow
 several hours for the initial snapshot and verify completion, not just login.
@@ -93,7 +95,10 @@ systemctl list-timers 'devcourse-*'
 `/var/lib/devcourse-backup/last-success.json` stores the last successful external
 snapshot. A failed backup writes `last-failure.json`; success clears it. Hourly
 monitoring exits nonzero after failure or if success is older than 30 hours.
-Systemd records failures, including process kills/timeouts. Failure hooks call
+Systemd records failures, including process kills/timeouts. Numeric archive
+progress is written to `upload-progress.json`; this measures archive processing,
+not proof of cloud completion. Failed uploads preserve root-only transport
+diagnostics in `last-upload-error.log`. Failure hooks call
 `notify.py failure` when `/etc/devcourse-backup/email.json` exists. Configure SMTP
 fields `host`, `port`, `ssl`, `user`, `password`, `from`, `to` in that root-only
 file, then run `python3 /opt/devcourse-backup/notify.py test`. TLS verification
