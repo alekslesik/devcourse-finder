@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.42.0] - 2026-11-17
+
+- Add encrypted full deployment backups to Yandex Disk, pinned-image recovery, isolated restore drills, retention, monitoring and SMTP alerts.
+
 ## [0.41.0] - 2026-11-16
 
 - Add a free-only course filter beside the budget, disable inactive price bounds, retain entered prices when switching back, and keep legacy paid-only URL opt-ins disabled.

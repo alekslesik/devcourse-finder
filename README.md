@@ -521,3 +521,9 @@ four comma-separated course IDs. It uses the existing shared budget and deployed
 keys, reports source/extraction/review/publication evidence, and stops on the
 first failure. It does not run a general catalog backfill. See
 [AI provider acceptance](docs/ai-provider-expansion.md#bound-hexlet-tiers-and-addressable-real-model-acceptance-133).
+
+### Encrypted full deployment recovery
+
+For Yandex Disk backups, retention, exact-image recovery, independent recovery
+credentials, monitoring and isolated restore drills, see
+[the disaster recovery runbook](scripts/disaster-recovery/README.md).
