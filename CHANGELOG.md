@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.42.1] - 2026-11-17
+
+- Fix Yandex Disk OAuth backups with a reproducible access-token-compatible client, safe retry diagnostics and independent recovery packaging.
+
 ## [0.42.0] - 2026-11-17
 
 - Add encrypted full deployment backups to Yandex Disk, pinned-image recovery, isolated restore drills, retention, monitoring and SMTP alerts.

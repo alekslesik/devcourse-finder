@@ -49,3 +49,6 @@ __pycache__/
 
 .load-results/
 scripts/load/__pycache__/
+
+# Generated dedicated backup client (reproducible from pinned sources)
+/scripts/disaster-recovery/bin/

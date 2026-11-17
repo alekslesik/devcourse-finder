@@ -1,0 +1,11 @@
+--- a/backend/yandex/yandex.go
++++ b/backend/yandex/yandex.go
+@@ -311,7 +311,7 @@
+ 	if err != nil {
+ 		return nil, fmt.Errorf("couldn't read OAuth token: %w", err)
+ 	}
+-	if token.RefreshToken == "" {
++	if token.RefreshToken == "" && token.AccessToken == "" {
+ 		return nil, errors.New("unable to get RefreshToken. If you are upgrading from older versions of rclone, please run `rclone config` and re-configure this backend")
+ 	}
+ 	if token.TokenType != "OAuth" {
