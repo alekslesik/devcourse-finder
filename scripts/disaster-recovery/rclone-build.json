@@ -1,0 +1,11 @@
+{
+  "upstream_tag": "v1.76.0",
+  "upstream_commit": "e982ff36668f5130d94b4f70409babb3d964df42",
+  "source_url": "https://codeload.github.com/rclone/rclone/tar.gz/e982ff36668f5130d94b4f70409babb3d964df42",
+  "source_sha256": "8846fd686bca91a5208287ba673c0f044183618ec630ac112d470c241354e882",
+  "binary_sha256": "a85c7f9516fb9b061b8294e1a3562ae521f547d90c0a719e61ce6c89be4fb7ab",
+  "change": "Accept an existing access token when no refresh token was issued. OAuth server still validates the token; no substitute refresh credential is created. Raw tokens cannot be automatically renewed.",
+  "go_url": "https://go.dev/dl/go1.27.4.linux-amd64.tar.gz",
+  "go_sha256": "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840",
+  "go_version": "go1.27.4"
+}

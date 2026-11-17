@@ -10,12 +10,26 @@ They never read credentials from Git. All working files are mode 0700/0600.
 `/etc/devcourse-backup/config.json` contains:
 
 ```json
-{"repository":"rclone:yandex:backups/devcourse-finder"}
+{"repository":"rclone:yandex-api:backups/devcourse-finder"}
 ```
 
-`/etc/devcourse-backup/rclone.conf` is a root-only rclone WebDAV configuration:
-remote `yandex`, vendor `yandex`, URL `https://webdav.yandex.ru`, username and
-an rclone-obscured app password. Obscuring is NOT encryption; protect this file.
+`/etc/devcourse-backup/rclone.conf` stores the root-only native `yandex-api`
+OAuth configuration. `configure-yandex-api.py` accepts a hidden token or rclone
+OAuth JSON, checks access to the existing path and repository identity, tests
+upload, then switches configuration. It resumes a pending initial bundle, starts
+a normal backup after credential renewal, or saves credentials without launching
+application jobs on a clean recovery server. Initial setup without a staging
+bundle makes a fresh backup before its remote drill. On validation
+failure the active credentials remain unchanged; a root-only candidate file
+allows `--retry` without repeated input. The pinned repository ID permits later
+authorization renewal even if the old token has expired. Tokens from the Yandex
+API playground may have no refresh token: they must be reauthorized when revoked
+or expired; no automatic renewal is claimed for such tokens.
+
+The optional legacy `yandex` WebDAV profile uses `https://webdav.yandex.ru`,
+a username and an rclone-obscured app password. Obscuring is NOT encryption.
+Native API is preferred because full WebDAV writes failed on the deployed host.
+Both profiles address the same encrypted repository, not separate copies.
 `/etc/devcourse-backup/password` contains a separate randomly generated restic
 password. Keep the independent recovery kit in a password manager, alongside
 Yandex access and this runbook. Never upload the recovery password into its own
@@ -24,10 +38,32 @@ repository or commit it. Losing all independent copies prevents recovery.
 For direct restic commands (root shell):
 
 ```bash
+export PATH=/opt/devcourse-backup/bin:$PATH
 export RCLONE_CONFIG=/etc/devcourse-backup/rclone.conf
 export RESTIC_PASSWORD_FILE=/etc/devcourse-backup/password
-export RESTIC_REPOSITORY=rclone:yandex:backups/devcourse-finder
+export RESTIC_REPOSITORY=rclone:yandex-api:backups/devcourse-finder
 restic snapshots --tag devcourse-full-v1
+```
+
+## Pinned backup client
+
+Upstream rclone rejects access tokens without a refresh token before contacting
+Yandex. `rclone-build.json` pins the source commit, archive SHA-256, Go toolchain,
+and binary SHA-256. `build-rclone.py` reproducibly builds a dedicated Linux amd64
+client with the one-line `rclone-access-token.patch`: require a usable access or
+refresh token rather than always requiring refresh. Server-side token validation
+and token expiry remain enforced. No dummy refresh credential is fabricated.
+
+The client, upstream MIT license, patch and provenance are packaged under
+`tools/bin` in the independent recovery kit and copied into encrypted snapshots.
+The scripts prepend their own `bin` directory to PATH. Keep the recovery kit
+independently of the VDS; it is necessary for direct native-API recovery without
+first compiling the client. `bootstrap.sh` verifies the packaged binary against
+the pinned checksum, or builds the pinned source when absent, then installs the
+client for recovery. It never follows mutable upstream release tags at restore time.
+
+```bash
+python3 /opt/devcourse-backup/build-rclone.py --ensure
 ```
 
 ## Daily backup
@@ -93,7 +129,9 @@ systemctl list-timers 'devcourse-*'
 ```
 
 `/var/lib/devcourse-backup/last-success.json` stores the last successful external
-snapshot. A failed backup writes `last-failure.json`; success clears it. Hourly
+snapshot and the timestamp of the captured data. Freshness is measured from
+that data timestamp, so a recently uploaded old staging bundle cannot appear
+current. A failed backup writes `last-failure.json`; success clears it. Hourly
 monitoring exits nonzero after failure or if success is older than 30 hours.
 Systemd records failures, including process kills/timeouts. Numeric archive
 progress is written to `upload-progress.json`; this measures archive processing,

@@ -6,6 +6,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import shutil
@@ -43,12 +44,21 @@ def write(path, value):
     tmp.replace(path)
 
 
+def redact_diagnostics(payload):
+    text = payload.decode(errors='replace')
+    text = re.sub(r'https?://[^\s]+', '<URL omitted>', text)
+    return '\n'.join('<credential detail omitted>' if any(word in line.lower() for word in
+                     ['authorization', 'access_token', 'refresh_token', 'access token', 'refresh token', 'oauth token', 'password']) else line
+                     for line in text.splitlines()).encode()
+
+
 def restic(*args, output=None, progress=False):
     cfg = json.loads((CONFIG / 'config.json').read_text())
     env = dict(os.environ, RESTIC_REPOSITORY=cfg['repository'],
                RESTIC_PASSWORD_FILE=str(CONFIG / 'password'),
                RCLONE_CONFIG=str(CONFIG / 'rclone.conf'),
                RESTIC_CACHE_DIR=str(STATE / 'cache'))
+    env['PATH']=str(Path(__file__).parent/'bin')+os.pathsep+env.get('PATH','/usr/bin:/bin')
     command = ['restic', '--limit-upload', '8192', '--limit-download', '16384',
                '--option', 'rclone.connections=32',
                '--option', 'rclone.args=serve restic --stdio --streaming-upload-cutoff=64M --disable-http2 --timeout=20m --contimeout=20s --low-level-retries=2 --tpslimit=4',
@@ -73,7 +83,7 @@ def restic(*args, output=None, progress=False):
         if code:
             errors.seek(0)
             path = STATE / 'last-upload-error.log'
-            path.write_bytes(errors.read())
+            path.write_bytes(redact_diagnostics(errors.read()))
             path.chmod(0o600)
             raise RuntimeError(f'restic upload failed (exit {code}); root-only diagnostics saved')
     return b''.join(summaries)
@@ -267,14 +277,14 @@ def upload_bundle(bundle):
     if bundle != STATE / 'bundle':
         raise RuntimeError('Upload staging path must be /var/lib/devcourse-backup/bundle')
     metadata = check_bundle(bundle)
-    print('Uploading encrypted snapshot (Yandex WebDAV may defer PUT responses)', flush=True)
+    print('Uploading encrypted snapshot', flush=True)
     report = restic('backup', '--pack-size', '4', '--json', '--host', 'devcourse-finder-production', '--tag', TAG, bundle, progress=True)
     summaries = [json.loads(line) for line in report.splitlines() if line.strip()]
     summary = next(x for x in summaries if x.get('message_type') == 'summary')
     snapshot = summary['snapshot_id']
     restic('forget', '--host', 'devcourse-finder-production', '--tag', TAG, '--path', bundle,
            '--keep-daily', '7', '--keep-weekly', '4', '--keep-monthly', '6')
-    status('last-success', snapshot=snapshot, postgres=metadata['postgres'], deployment=metadata['deployment'])
+    status('last-success', snapshot=snapshot, data_created_at=metadata['created_at'], postgres=metadata['postgres'], deployment=metadata['deployment'])
     (STATE / 'last-failure.json').unlink(missing_ok=True)
     print('Backup successful: ' + snapshot, flush=True)
     if (CONFIG / 'email.json').exists():
@@ -480,7 +490,7 @@ def main():
         if not path.exists(): raise RuntimeError('No successful external backup')
         state = json.loads(path.read_text())
         print(json.dumps(state))
-        age = dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(state['at'])
+        age = dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(state.get('data_created_at', state['at']))
         if age.total_seconds() > 30 * 3600 or (STATE / 'last-failure.json').exists():
             raise RuntimeError('Backup is stale or last operation failed')
         return
@@ -488,7 +498,11 @@ def main():
         verify()
         return
     with (STATE / 'operation.lock').open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print('Waiting for the active backup/recovery operation', flush=True)
+            fcntl.flock(lock, fcntl.LOCK_EX)
         if a.action == 'backup': backup()
         elif a.action == 'upload': upload_bundle(Path(a.source).resolve(strict=True))
         elif a.action == 'drill': drill(a.source)
