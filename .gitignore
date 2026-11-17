@@ -52,3 +52,8 @@ scripts/load/__pycache__/
 
 # Generated dedicated backup client (reproducible from pinned sources)
 /scripts/disaster-recovery/bin/
+
+# Runtime password keys and recovery probes (outside immutable releases)
+/secrets/
+**/password-keyring*.json
+**/password-recovery*.json

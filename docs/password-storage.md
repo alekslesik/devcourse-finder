@@ -3,8 +3,9 @@
 Tracking: [epic #207](https://github.com/alekslesik/devcourse-finder/issues/207),
 [foundation #208](https://github.com/alekslesik/devcourse-finder/issues/208).
 
-This phase adds `backend/auth/password` as a library. It does not create users,
-database tables, production keys, registration routes or login routes. Public
+The initial foundation adds `backend/auth/password` as a library. Phase 2 below
+adds protected key files and recovery tools. Neither phase creates users,
+database tables, registration routes or login routes. Public
 authentication must remain disabled until the integration and recovery requirements
 below are implemented.
 
@@ -125,3 +126,93 @@ Checks: `go test -race ./backend/auth/password` and
 `go vet ./backend/auth/password`. Tests cover exact input bytes, independent salts,
 wrong passwords/keys, key rotation, cost preservation, unsafe PHC rejection,
 overload, cancellation, concurrent access, input policy and redaction.
+
+## Administrative keyring files (phase 2)
+
+Commands below use the release binary `devcourse-finder` on a trusted Linux host,
+as root for the production path. They execute without database access and print
+only success/failure, never keys or credential contents. Use a private directory
+outside Git and Docker build contexts:
+
+```sh
+install -d -m 0700 /srv/devcourse-finder/secrets
+devcourse-finder password-keyring init /srv/devcourse-finder/secrets/password-keyring.json pepper-2026-01
+devcourse-finder password-keyring check /srv/devcourse-finder/secrets/password-keyring.json
+devcourse-finder password-keyring probe /srv/devcourse-finder/secrets/password-keyring.json /srv/devcourse-finder/secrets/password-recovery.json
+devcourse-finder password-keyring verify /srv/devcourse-finder/secrets/password-keyring.json /srv/devcourse-finder/secrets/password-recovery.json
+```
+
+Keyring JSON has exactly `version` (1), `active_key_id`, and `keys` (ID to canonical
+standard-base64 key bytes). Duplicate/unknown fields, oversized input, symlinks,
+non-regular files, permissions for group/others and unexpected file owners are
+rejected. Files must be owned by root or the invoking user, mode 0600 or 0400.
+Parent directories must be trusted. Generation publishes a completed, fsynced file
+without replacing any existing path; startup never generates keys. A failed
+post-publication directory fsync can leave a complete file: inspect with `check`
+before retrying, rather than deleting it.
+
+`PASSWORD_STORAGE_ENABLED` accepts only absent/`false` or `true`.
+When false no key is required. When true, API startup validates
+`PASSWORD_KEYRING_FILE` before opening the database and fails closed on an error.
+This is a configuration preflight, **not registration/login activation**. No
+public authentication routes exist yet. Future API integration must retain the
+shared hasher, mount a key file readable by the non-root service account, and
+remap that mount to restored snapshot files in the isolated application drill.
+Do not enable the production flag before that integration is accepted.
+
+### Rotation
+
+`password-keyring rotate SOURCE NEW_PATH NEW_ID` generates a new 32-byte key,
+retains all historical keys and writes a new candidate file without changing the
+active source. It refuses duplicate IDs, overwrite or more than eight keys.
+Generate a new probe for the candidate; it includes a synthetic credential for
+**every** retained key. Test verification and historical credential upgrades
+before activation. Probe passwords are public synthetic fixtures, never user
+passwords. Probe hashes still belong in protected files and encrypted snapshots.
+
+Serialize activation with `/srv/devcourse-finder/.deploy.lock`, the same lock used
+by deployment and full backups. Move the validated candidate keyring and probe
+into the two canonical paths while holding that lock. Update the service only
+after both files are installed. Retain a protected copy of the previous pair.
+Make an encrypted checkpoint and test restore before retiring anything. Never
+remove a historical key merely because live credentials have migrated: older
+database snapshots can still require it. Compromise of a pepper also requires an
+incident response and possibly password resets; rotation alone does not repair
+already-stolen data.
+
+### Encrypted recovery
+
+The full backup explicitly captures the canonical keyring/probe pair, validates
+it using the pinned API image in a network-disabled, read-only container, and
+includes both files in the same checksummed manifest as the database dump.
+Partial, unsafe or unverified pairs fail the backup. Isolated and clean-server
+recovery validate restored keys/probes before starting the application. Existing
+snapshots without password secrets remain compatible.
+
+For a small independent recovery proof, run as root:
+
+```sh
+python3 /opt/devcourse-backup/recovery.py password-checkpoint
+```
+
+This uploads the keyring, all-key probe, compatible verifier binary and a
+checksummed deployment manifest to the existing encrypted restic repository
+under `devcourse-password-keys-v1`, then downloads that exact snapshot and verifies
+every key. It records `/var/lib/devcourse-backup/last-password-checkpoint.json`.
+It **does not contain a database dump**, replace the full backup, advance its
+freshness status, or apply full-snapshot retention. Keep checkpoints needed by
+historical database backups. Temporary restored plaintext is removed afterwards.
+
+To recover such a checkpoint independently, use the recovery kit's compatible
+restic/rclone setup and backup encryption password. List snapshots with tag
+`devcourse-password-keys-v1`, restore the chosen ID into a private directory,
+validate the manifest checksums, then run the included verifier with
+`password-keyring verify KEYRING PROBE` against the restored pair. Preserve mode
+0600 and root ownership when installing production files. The full application's
+database must come from a matching full snapshot and compatible release.
+
+The password-manager/off-VDS copy must be updated after key creation/rotation;
+the old recovery kit alone does not contain newly created pepper keys. Access to
+Yandex, restic encryption credentials and this instruction must remain available
+independently of the VDS. SMTP notification setup and confirmation of independent
+secret storage are still requirements before public registration is activated.

@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.44.0] - 2026-11-17
+
+- Add protected pepper keyring files, non-overwriting generation and rotation commands, and fail-closed password-storage configuration preflight.
+- Capture password keys and recovery probes in full backups and verify an independent encrypted key checkpoint through upload and restore.
+
 ## [0.43.0] - 2026-11-17
 
 - Add a bounded Argon2id password-storage foundation with separate pepper keys, safe rotation and credential redaction.

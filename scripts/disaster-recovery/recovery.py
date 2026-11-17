@@ -9,6 +9,7 @@ import os
 import re
 from pathlib import Path
 import secrets
+import stat
 import shutil
 import subprocess as sp
 import sys
@@ -139,7 +140,7 @@ def status(kind, **extra):
 
 def copy_path(source, root):
     dest = root / source.relative_to('/')
-    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     if source.is_symlink():
         dest.symlink_to(os.readlink(source))
     elif source.is_dir():
@@ -180,6 +181,36 @@ def pin_services(config, captured):
     return active
 
 
+def password_secret_paths(base=None):
+    directory = (base if base is not None else BASE) / 'secrets'
+    names = ['password-keyring.json', 'password-recovery.json']
+    if not directory.exists() and not directory.is_symlink():
+        return set()
+    if directory.is_symlink() or not directory.is_dir() or directory.stat().st_mode & 0o077 or directory.stat().st_uid != os.geteuid():
+        raise RuntimeError('Password secret directory must be private and regular')
+    paths = {directory / name for name in names}
+    for path in paths:
+        try:
+            info = path.lstat()
+        except OSError:
+            raise RuntimeError('Password secret pair is incomplete') from None
+        if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077 or info.st_uid != os.geteuid() or info.st_size > 16384:
+            raise RuntimeError('Password secret file is unsafe')
+    return paths
+
+
+def verify_password_secrets(bundle, image):
+    directory = bundle / 'rootfs/srv/devcourse-finder/secrets'
+    if not directory.resolve().is_relative_to(bundle.resolve()) or not password_secret_paths(directory.parent):
+        raise RuntimeError('Snapshot password secret pair is missing or unsafe')
+    run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+         '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true',
+         '--memory', '384m', '--cpus', '1', '--user', '0:0',
+         '--mount', f'type=bind,source={directory},target=/run/password-secrets,readonly',
+         image, 'password-keyring', 'verify',
+         '/run/password-secrets/password-keyring.json', '/run/password-secrets/password-recovery.json'])
+
+
 def backup():
     STATE.mkdir(parents=True, exist_ok=True)
     with (BASE / '.deploy.lock').open('a') as deploy:
@@ -201,7 +232,8 @@ def backup():
             if not app['db']['State']['Running']:
                 raise RuntimeError('Production database is not running')
             # Never recursively copy the base directory: it contains old dumps.
-            paths = source_paths(release) | {BASE / '.env', BASE / 'DEPLOYED_VERSION', BASE / 'ingress'}
+            password_paths = password_secret_paths()
+            paths = source_paths(release) | {BASE / '.env', BASE / 'DEPLOYED_VERSION', BASE / 'ingress'} | password_paths
             for c in records:
                 wd = Path(c['Config']['Labels']['com.docker.compose.project.working_dir'])
                 paths |= source_paths(wd)
@@ -232,6 +264,8 @@ def backup():
             if (CONFIG / 'email.json').exists():
                 copy_path(CONFIG / 'email.json', rootfs)
             shutil.copytree(Path(__file__).parent, bundle / 'tools')
+            if password_paths:
+                verify_password_secrets(bundle, app['api']['Image'])
             print('Creating consistent PostgreSQL dump', flush=True)
             dump(app['db']['Name'].lstrip('/'), bundle / 'database.dump')
             dbversion = dbexec(app['db']['Name'].lstrip('/'), 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "show server_version"').decode().strip()
@@ -260,6 +294,7 @@ def backup():
             metadata = {'format': 1, 'created_at': dt.datetime.now(dt.timezone.utc).isoformat(),
                         'deployment': (BASE / 'DEPLOYED_VERSION').read_text(), 'postgres': dbversion,
                         'images': images, 'active_services': active, 'root_paths': [str(p) for p in roots],
+                        'password_storage': {'format': 1, 'files': sorted(str(p.relative_to('/')) for p in password_paths)} if password_paths else None,
                         'volumes': list(volumes), 'consistency': 'pg_dump MVCC; deployment lock; application binds read-only; Caddy volumes copied separately',
                         'symlinks': {str(p.relative_to(bundle)): os.readlink(p) for p in bundle.rglob('*') if p.is_symlink()},
                         'sha256': {str(p.relative_to(bundle)): checksum(p) for p in sorted(bundle.rglob('*')) if p.is_file() and not p.is_symlink()}}
@@ -393,7 +428,10 @@ def drill(snapshot):
         bundle = fetch_snapshot(snapshot, dest)
         manifest = check_bundle(bundle)
         run(['docker', 'image', 'load', '-i', bundle / 'images.tar'])
-        config = isolated_config(json.loads((bundle / 'devcourse-finder.json').read_text()))
+        saved_config = json.loads((bundle / 'devcourse-finder.json').read_text())
+        if manifest.get('password_storage'):
+            verify_password_secrets(bundle, saved_config['services']['api']['image'])
+        config = isolated_config(saved_config)
         file = bundle / 'drill.json'
         write(file, config)
         started = True
@@ -411,6 +449,54 @@ def drill(snapshot):
         if started:
             compose(bundle, project, 'down', '--volumes', '--remove-orphans', file=bundle / 'drill.json')
         shutil.rmtree(dest, ignore_errors=True)
+
+
+def password_checkpoint():
+    # Separate, small recovery proof. It never replaces the full database backup
+    # or updates last-success/freshness. Keep its tag outside full-snapshot retention.
+    with (BASE / '.deploy.lock').open('a') as deploy:
+        fcntl.flock(deploy, fcntl.LOCK_EX)
+        paths = password_secret_paths()
+        if not paths:
+            raise RuntimeError('Password secret pair is not configured')
+        stage = STATE / 'password-checkpoint'
+        shutil.rmtree(stage, ignore_errors=True)
+        stage.mkdir(mode=0o700)
+        dest = Path(tempfile.mkdtemp(prefix='password-restore-', dir=STATE))
+        try:
+            for path in paths:
+                copy_path(path, stage / 'rootfs')
+            api = run(['docker', 'ps', '-q', '--filter', 'label=com.docker.compose.project=devcourse-finder',
+                       '--filter', 'label=com.docker.compose.service=api']).decode().strip()
+            if not api or '\n' in api:
+                raise RuntimeError('Exactly one production API is required')
+            run(['docker', 'cp', f'{api}:/usr/local/bin/devcourse-finder', stage / 'verifier'])
+            (stage / 'verifier').chmod(0o700)
+            pair = stage / 'rootfs' / str(BASE).lstrip('/') / 'secrets'
+            run([stage / 'verifier', 'password-keyring', 'verify', pair / 'password-keyring.json', pair / 'password-recovery.json'])
+            metadata = {'format': 1, 'kind': 'password-keys-only-not-a-database-backup',
+                        'deployment': (BASE / 'DEPLOYED_VERSION').read_text(),
+                        'sha256': {str(p.relative_to(stage)): checksum(p) for p in stage.rglob('*') if p.is_file()},
+                        'created_at': dt.datetime.now(dt.timezone.utc).isoformat()}
+            write(stage / 'manifest.json', metadata)
+            result = restic('backup', '--json', '--host', 'devcourse-finder-production',
+                            '--tag', 'devcourse-password-keys-v1', stage)
+            summaries = [json.loads(line) for line in result.splitlines() if line.strip()]
+            snapshot = next((x['snapshot_id'] for x in summaries if x.get('message_type') == 'summary'), None)
+            if not snapshot:
+                raise RuntimeError('Password checkpoint snapshot ID unavailable')
+            restic('restore', snapshot, '--target', dest, '--tag', 'devcourse-password-keys-v1', '--host', 'devcourse-finder-production')
+            restored = dest / str(stage).lstrip('/')
+            check_bundle(restored)
+            pair = restored / 'rootfs' / str(BASE).lstrip('/') / 'secrets'
+            if not password_secret_paths(pair.parent):
+                raise RuntimeError('Restored password secret pair missing')
+            run([restored / 'verifier', 'password-keyring', 'verify', pair / 'password-keyring.json', pair / 'password-recovery.json'])
+            status('last-password-checkpoint', snapshot=snapshot, deployment=metadata['deployment'])
+            print('Encrypted password-key checkpoint restored and verified; full database backup remains separate', flush=True)
+        finally:
+            shutil.rmtree(stage, ignore_errors=True)
+            shutil.rmtree(dest, ignore_errors=True)
 
 
 def restore_db(source, confirmation):
@@ -446,6 +532,9 @@ def restore(bundle):
         raise RuntimeError('Recovery volumes already exist; refusing to overwrite')
     # Install Docker with bootstrap.sh first. No migrations or builds during recovery.
     run(['docker', 'image', 'load', '-i', bundle / 'images.tar'])
+    if manifest.get('password_storage'):
+        config = json.loads((bundle / 'devcourse-finder.json').read_text())
+        verify_password_secrets(bundle, config['services']['api']['image'])
     rootfs = bundle / 'rootfs'
     if not (rootfs / 'srv/devcourse-finder/.env').is_file():
         raise RuntimeError('Missing production configuration')
@@ -478,7 +567,7 @@ def restore(bundle):
 def main():
     os.umask(0o077)
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=['backup', 'upload', 'drill', 'restore', 'restore-db', 'verify', 'status', 'check', 'prune'])
+    p.add_argument('action', choices=['backup', 'upload', 'drill', 'restore', 'restore-db', 'verify', 'status', 'check', 'prune', 'password-checkpoint'])
     p.add_argument('source', nargs='?', default='latest')
     p.add_argument('--confirm', default='')
     a = p.parse_args()
@@ -504,6 +593,7 @@ def main():
             print('Waiting for the active backup/recovery operation', flush=True)
             fcntl.flock(lock, fcntl.LOCK_EX)
         if a.action == 'backup': backup()
+        elif a.action == 'password-checkpoint': password_checkpoint()
         elif a.action == 'upload': upload_bundle(Path(a.source).resolve(strict=True))
         elif a.action == 'drill': drill(a.source)
         elif a.action == 'restore': restore(Path(a.source).resolve())

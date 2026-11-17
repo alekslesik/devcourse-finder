@@ -3,3 +3,6 @@
 coverage.*
 *.coverprofile
 profile.cov
+secrets
+**/password-keyring*.json
+**/password-recovery*.json

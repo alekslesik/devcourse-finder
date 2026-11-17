@@ -2,6 +2,7 @@ import copy
 import datetime as dt
 import importlib.util
 import json
+import shutil
 from pathlib import Path
 import tempfile
 import unittest
@@ -13,6 +14,77 @@ spec.loader.exec_module(r)
 
 
 class RecoverySafetyTests(unittest.TestCase):
+    def test_password_secret_pair_is_explicit_private_and_complete(self):
+        with tempfile.TemporaryDirectory() as d, patch.object(r, 'BASE', Path(d)):
+            self.assertEqual(r.password_secret_paths(), set())
+            directory = Path(d) / 'secrets'
+            directory.mkdir(mode=0o700)
+            key = directory / 'password-keyring.json'
+            probe = directory / 'password-recovery.json'
+            key.write_text('synthetic'); key.chmod(0o600)
+            with self.assertRaisesRegex(RuntimeError, 'incomplete'):
+                r.password_secret_paths()
+            probe.write_text('synthetic'); probe.chmod(0o600)
+            self.assertEqual(r.password_secret_paths(), {key, probe})
+            probe.chmod(0o644)
+            with self.assertRaisesRegex(RuntimeError, 'unsafe'):
+                r.password_secret_paths()
+            probe.unlink(); probe.symlink_to(key)
+            with self.assertRaisesRegex(RuntimeError, 'unsafe'):
+                r.password_secret_paths()
+            directory.chmod(0o755)
+            with self.assertRaisesRegex(RuntimeError, 'private'):
+                r.password_secret_paths()
+
+    def test_encrypted_password_checkpoint_restores_checksums_and_keeps_full_backup_status(self):
+        for corrupt in [False, True]:
+            with self.subTest(corrupt=corrupt), tempfile.TemporaryDirectory() as d:
+                base = Path(d) / 'app'; state = Path(d) / 'state'
+                base.mkdir(); state.mkdir()
+                directory = base / 'secrets'; directory.mkdir(mode=0o700)
+                for name in ['password-keyring.json', 'password-recovery.json']:
+                    path = directory / name; path.write_text('synthetic'); path.chmod(0o600)
+                (base / 'DEPLOYED_VERSION').write_text('version=v-test')
+                def command(args, **kwargs):
+                    if args[:3] == ['docker', 'ps', '-q']:
+                        return b'fixture-container'
+                    if args[:2] == ['docker', 'cp']:
+                        Path(args[-1]).write_bytes(b'synthetic-verifier')
+                    return b''
+                def archive(*args, **kwargs):
+                    if args[0] == 'backup':
+                        self.assertIn('devcourse-password-keys-v1', args)
+                        return b'{"message_type":"summary","snapshot_id":"fixture-snapshot"}\n'
+                    self.assertEqual(args[:2], ('restore', 'fixture-snapshot'))
+                    dest = Path(args[args.index('--target') + 1])
+                    restored = dest / str(state / 'password-checkpoint').lstrip('/')
+                    shutil.copytree(state / 'password-checkpoint', restored)
+                    if corrupt:
+                        (restored / 'verifier').write_bytes(b'corrupt')
+                    return b''
+                with patch.object(r, 'BASE', base), patch.object(r, 'STATE', state), patch.object(r, 'run', side_effect=command), patch.object(r, 'restic', side_effect=archive), patch.object(r, 'status') as status:
+                    if corrupt:
+                        with self.assertRaisesRegex(RuntimeError, 'checksum'):
+                            r.password_checkpoint()
+                        status.assert_not_called()
+                    else:
+                        r.password_checkpoint()
+                        self.assertEqual(status.call_args.args, ('last-password-checkpoint',))
+                        self.assertEqual(status.call_args.kwargs['snapshot'], 'fixture-snapshot')
+                self.assertEqual(list(state.iterdir()), [])
+
+    @patch.object(r, 'password_secret_paths', return_value={Path('/fixture')})
+    @patch.object(r, 'run')
+    def test_password_recovery_verifies_only_snapshot_keys_in_isolated_container(self, run, paths):
+        r.verify_password_secrets(Path('/isolated/snapshot'), 'sha256:pinned')
+        args = run.call_args.args[0]
+        self.assertIn('none', args)
+        self.assertIn('--read-only', args)
+        self.assertIn('384m', args)
+        self.assertIn('sha256:pinned', args)
+        self.assertIn('type=bind,source=/isolated/snapshot/rootfs/srv/devcourse-finder/secrets,target=/run/password-secrets,readonly', args)
+        self.assertEqual(args[-4:], ['password-keyring', 'verify', '/run/password-secrets/password-keyring.json', '/run/password-secrets/password-recovery.json'])
+
     @patch.object(r, 'check_bundle', return_value={'postgres': '17.11', 'deployment': 'v-test'})
     @patch.object(r, 'restic', side_effect=RuntimeError('upload failed'))
     def test_failed_upload_never_applies_retention(self, restic, bundle):

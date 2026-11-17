@@ -18,6 +18,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"devcourse-finder/auth/password"
 	"devcourse-finder/catalog"
 	"devcourse-finder/store"
 	"devcourse-finder/updater"
@@ -53,6 +54,14 @@ func main() {
 func run() error {
 	ctx := context.Background()
 	args := os.Args[1:]
+	if len(args) > 0 && args[0] == "password-keyring" {
+		return passwordKeyringCommand(args[1:])
+	}
+	if len(args) == 0 {
+		if err := password.LoadConfigured(os.Getenv("PASSWORD_STORAGE_ENABLED"), os.Getenv("PASSWORD_KEYRING_FILE")); err != nil {
+			return commandFailure("password_storage", "password_storage_config_failed", "Password storage configuration is unavailable or invalid", nil)
+		}
+	}
 	if len(args) > 0 && args[0] == "catalog" && len(args) >= 3 && args[1] == "validate" {
 		f, e := os.Open(args[2])
 		if e != nil {
