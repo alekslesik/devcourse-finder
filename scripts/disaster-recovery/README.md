@@ -119,7 +119,8 @@ python3 /opt/devcourse-backup/recovery.py drill SNAPSHOT_ID
 Downloads the encrypted remote snapshot, checks every file hash, loads the exact
 images, and restores into a unique Compose project, internal network and fresh
 PostgreSQL volume. No host ports, workers, migration service or Caddy are started.
-The restored stack cannot contact the internet. Verifies SQL access/course row
+The restored stack cannot contact the internet. Caddy validates its saved
+configuration/TLS in a separate container with networking disabled. Verifies SQL access/course row
 count, API readiness, frontend HTML and its real catalog API proxy, then deletes
 only its own containers/network/volume and downloaded bundle. Production is
 unmodified. Initial and scheduled drills validate DB/application recovery on the

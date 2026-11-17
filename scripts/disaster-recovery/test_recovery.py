@@ -12,6 +12,15 @@ spec.loader.exec_module(r)
 
 
 class RecoverySafetyTests(unittest.TestCase):
+    @patch.object(r, 'check_bundle', return_value={'postgres': '17.11', 'deployment': 'v-test'})
+    @patch.object(r, 'restic', side_effect=RuntimeError('upload failed'))
+    def test_failed_upload_never_applies_retention(self, restic, bundle):
+        with self.assertRaisesRegex(RuntimeError, 'upload failed'):
+            r.upload_bundle(r.STATE / 'bundle')
+        self.assertEqual(restic.call_count, 1)
+        self.assertEqual(restic.call_args.args[0], 'backup')
+        self.assertNotIn('forget', restic.call_args.args)
+
     def test_legacy_source_selection_never_includes_backup_tree(self):
         with tempfile.TemporaryDirectory() as d, patch.object(r, 'BASE', Path(d)):
             base = Path(d)

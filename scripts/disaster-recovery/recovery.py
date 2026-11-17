@@ -307,6 +307,16 @@ def verify(bundle=None, project='devcourse-finder', file=None):
     return result
 
 
+def verify_ingress(bundle):
+    image = json.loads((bundle / 'devcourse-ingress.json').read_text())['services']['proxy']['image']
+    ingress = bundle / 'rootfs/srv/devcourse-finder/ingress'
+    run(['docker', 'run', '--rm', '--network', 'none', '--entrypoint', 'caddy',
+         '--mount', f'type=bind,src={ingress}/Caddyfile,dst=/etc/caddy/Caddyfile,readonly',
+         '--mount', f'type=bind,src={ingress}/tls,dst=/etc/caddy/tls,readonly', image,
+         'validate', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile'])
+    print('Saved Caddy configuration and TLS files validated', flush=True)
+
+
 def fetch_snapshot(snapshot, dest):
     if dest.exists():
         raise RuntimeError('Restore destination must not exist')
@@ -358,6 +368,7 @@ def drill(snapshot):
         restore_dump(name, bundle / 'database.dump')
         compose(bundle, project, 'up', '-d', '--no-build', '--pull', 'never', '--no-deps', 'api', 'frontend', file=file)
         rows = verify(bundle, project, file)
+        verify_ingress(bundle)
         status('last-drill', snapshot=snapshot, course_rows=rows, deployment=manifest['deployment'])
         print('Isolated restore successful', flush=True)
     finally:
