@@ -458,6 +458,9 @@ def main():
         if age.total_seconds() > 30 * 3600 or (STATE / 'last-failure.json').exists():
             raise RuntimeError('Backup is stale or last operation failed')
         return
+    if a.action == 'verify':
+        verify()
+        return
     with (STATE / 'operation.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if a.action == 'backup': backup()
@@ -468,7 +471,6 @@ def main():
             with (BASE / '.deploy.lock').open('a') as deploy:
                 fcntl.flock(deploy, fcntl.LOCK_EX)
                 restore_db(Path(a.source).resolve(strict=True), a.confirm)
-        elif a.action == 'verify': verify()
         elif a.action == 'check': restic('check', '--read-data-subset=10%'); print('Repository check passed')
         elif a.action == 'prune': restic('prune'); print('Repository prune passed')
 
