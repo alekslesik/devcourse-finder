@@ -272,7 +272,7 @@ def restore_dump(name, source):
 def wait_db(name):
     for _ in range(90):
         try:
-            dbexec(name, 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"')
+            dbexec(name, 'PGPASSWORD="$POSTGRES_PASSWORD" PGCONNECT_TIMEOUT=2 psql -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -Atc "SELECT 1"')
             return
         except RuntimeError:
             time.sleep(2)
