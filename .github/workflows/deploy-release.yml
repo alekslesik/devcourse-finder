@@ -9,6 +9,11 @@ on:
         required: true
         type: string
 
+      target_host:
+        description: Optional explicit VDS host; its SSH key must already be pinned
+        required: false
+        type: string
+
 permissions:
   contents: read
 
@@ -50,7 +55,7 @@ jobs:
       - name: Upload and deploy the selected release
         env:
           SSHPASS: ${{ secrets.VDS_PASS }}
-          VDS_HOST: ${{ vars.VDS_HOST || '83.220.174.166' }}
+          VDS_HOST: ${{ inputs.target_host || vars.VDS_HOST || '83.220.174.166' }}
           VDS_USER: ${{ vars.VDS_USER || 'root' }}
           TAG: ${{ steps.release.outputs.tag }}
           SHA: ${{ steps.release.outputs.sha }}

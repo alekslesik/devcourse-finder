@@ -177,3 +177,9 @@ writers stopped and preserves the safety dump. Recover the safety dump or fix
 the issue before restarting services. Choose a compatible application version
 first; no automatic upgrades or migrations run. `verify.sh` checks database access, API readiness, frontend and catalog in the
 running production application, including after a database-only restore.
+
+The current VDS was verified through Tailscale and has a different public address
+from the legacy host. The Deploy release workflow accepts an optional
+`target_host` override so an explicitly selected, pinned host can be deployed
+without silently relying on legacy repository variables. Both public host keys
+are retained; never associate one server's key with another address.
