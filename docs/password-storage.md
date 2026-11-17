@@ -198,7 +198,8 @@ python3 /opt/devcourse-backup/recovery.py password-checkpoint
 This uploads the keyring, all-key probe, compatible verifier binary and a
 checksummed deployment manifest to the existing encrypted restic repository
 under `devcourse-password-keys-v1`, then downloads that exact snapshot and verifies
-every key. It records `/var/lib/devcourse-backup/last-password-checkpoint.json`.
+every key. It refreshes the private `/var/lib/devcourse-backup/recovery-kit.zip` with current
+pepper files and records `/var/lib/devcourse-backup/last-password-checkpoint.json`.
 It **does not contain a database dump**, replace the full backup, advance its
 freshness status, or apply full-snapshot retention. Keep checkpoints needed by
 historical database backups. Temporary restored plaintext is removed afterwards.

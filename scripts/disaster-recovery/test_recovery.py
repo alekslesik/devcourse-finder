@@ -3,6 +3,7 @@ import datetime as dt
 import importlib.util
 import json
 import shutil
+import zipfile
 from pathlib import Path
 import tempfile
 import unittest
@@ -62,16 +63,35 @@ class RecoverySafetyTests(unittest.TestCase):
                     if corrupt:
                         (restored / 'verifier').write_bytes(b'corrupt')
                     return b''
-                with patch.object(r, 'BASE', base), patch.object(r, 'STATE', state), patch.object(r, 'run', side_effect=command), patch.object(r, 'restic', side_effect=archive), patch.object(r, 'status') as status:
+                with patch.object(r, 'BASE', base), patch.object(r, 'STATE', state), patch.object(r, 'run', side_effect=command), patch.object(r, 'restic', side_effect=archive), patch.object(r, 'refresh_recovery_kit') as kit, patch.object(r, 'status') as status:
                     if corrupt:
                         with self.assertRaisesRegex(RuntimeError, 'checksum'):
                             r.password_checkpoint()
                         status.assert_not_called()
+                        kit.assert_not_called()
                     else:
                         r.password_checkpoint()
+                        kit.assert_called_once_with()
                         self.assertEqual(status.call_args.args, ('last-password-checkpoint',))
                         self.assertEqual(status.call_args.kwargs['snapshot'], 'fixture-snapshot')
                 self.assertEqual(list(state.iterdir()), [])
+
+    def test_independent_recovery_kit_includes_pepper_and_repository_access(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d) / 'app'; config = Path(d) / 'config'; state = Path(d) / 'state'
+            base.mkdir(); config.mkdir(); state.mkdir()
+            directory = base / 'secrets'; directory.mkdir(mode=0o700)
+            for name in ['password-keyring.json', 'password-recovery.json']:
+                path = directory / name; path.write_text('synthetic-pepper'); path.chmod(0o600)
+            (config / 'password').write_text('synthetic-backup-key')
+            with patch.object(r, 'BASE', base), patch.object(r, 'STATE', state), patch.object(r, 'CONFIG', config):
+                r.refresh_recovery_kit()
+            kit = state / 'recovery-kit.zip'
+            self.assertEqual(kit.stat().st_mode & 0o777, 0o600)
+            with zipfile.ZipFile(kit) as archive:
+                self.assertEqual(archive.read('etc/devcourse-backup/password'), b'synthetic-backup-key')
+                self.assertEqual(archive.read(str((directory / 'password-keyring.json').relative_to('/'))), b'synthetic-pepper')
+                self.assertNotIn('recovery-kit.zip', archive.namelist())
 
     @patch.object(r, 'password_secret_paths', return_value={Path('/fixture')})
     @patch.object(r, 'run')

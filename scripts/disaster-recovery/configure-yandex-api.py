@@ -9,7 +9,6 @@ from pathlib import Path
 import secrets
 import subprocess as sp
 import time
-import zipfile
 import sys
 import urllib.request
 import urllib.error
@@ -129,16 +128,8 @@ def main():
         pending=C/'config.json.pending';pending.write_text(json.dumps(config)+'\n');pending.chmod(0o600);pending.replace(C/'config.json')
         committed=True
         candidate.unlink(missing_ok=True)
-        kit=Path('/var/lib/devcourse-backup/recovery-kit.zip')
-        replacement=kit.with_suffix('.pending.zip')
-        with zipfile.ZipFile(replacement,'w',zipfile.ZIP_DEFLATED) as z:
-            for name in ['config.json','rclone.conf','password','email.json','repository-id']:
-                if (C/name).is_file(): z.write(C/name,'etc/devcourse-backup/'+name)
-            for p in Path('/opt/devcourse-backup').rglob('*'):
-                if p.is_file() and '__pycache__' not in p.parts:
-                    z.write(p,'tools/'+str(p.relative_to('/opt/devcourse-backup')))
-            z.writestr('READ-ME-FIRST.txt','CONFIDENTIAL: encryption key and cloud access credentials. Store independently in your password manager. Never upload this archive into the backup repository. Follow tools/README.md.\n')
-        replacement.chmod(0o600);replacement.replace(kit)
+        from recovery import refresh_recovery_kit
+        refresh_recovery_kit()
         job=verification_job()
         if job is None:
             print('Native API credentials verified and saved. Restore the application before scheduling backups.',flush=True)

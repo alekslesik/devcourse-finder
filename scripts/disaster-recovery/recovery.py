@@ -16,6 +16,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import zipfile
 
 BASE = Path('/srv/devcourse-finder')
 STATE = Path('/var/lib/devcourse-backup')
@@ -451,6 +452,31 @@ def drill(snapshot):
         shutil.rmtree(dest, ignore_errors=True)
 
 
+def refresh_recovery_kit():
+    # Contains repository access/encryption credentials: NEVER include this kit
+    # in the restic snapshot. It is an independent password-manager export.
+    paths = password_secret_paths()
+    descriptor, temporary = tempfile.mkstemp(prefix='recovery-kit-', suffix='.zip', dir=STATE)
+    temporary = Path(temporary)
+    try:
+        with os.fdopen(descriptor, 'wb') as output:
+            with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
+                for name in ['config.json', 'rclone.conf', 'password', 'email.json', 'repository-id']:
+                    if (CONFIG / name).is_file():
+                        archive.write(CONFIG / name, 'etc/devcourse-backup/' + name)
+                for path in Path(__file__).parent.rglob('*'):
+                    if path.is_file() and '__pycache__' not in path.parts:
+                        archive.write(path, 'tools/' + str(path.relative_to(Path(__file__).parent)))
+                for path in paths:
+                    archive.write(path, str(path.relative_to('/')))
+                archive.writestr('READ-ME-FIRST.txt', 'CONFIDENTIAL: backup encryption key, cloud credentials and password pepper keys. Store independently in your password manager. Never upload this archive into the backup repository. Follow tools/README.md and tools/PASSWORD-STORAGE.md.\n')
+            output.flush()
+            os.fsync(output.fileno())
+        temporary.replace(STATE / 'recovery-kit.zip')
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def password_checkpoint():
     # Separate, small recovery proof. It never replaces the full database backup
     # or updates last-success/freshness. Keep its tag outside full-snapshot retention.
@@ -492,6 +518,7 @@ def password_checkpoint():
             if not password_secret_paths(pair.parent):
                 raise RuntimeError('Restored password secret pair missing')
             run([restored / 'verifier', 'password-keyring', 'verify', pair / 'password-keyring.json', pair / 'password-recovery.json'])
+            refresh_recovery_kit()
             status('last-password-checkpoint', snapshot=snapshot, deployment=metadata['deployment'])
             print('Encrypted password-key checkpoint restored and verified; full database backup remains separate', flush=True)
         finally:
