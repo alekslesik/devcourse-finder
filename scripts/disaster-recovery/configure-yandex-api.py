@@ -16,6 +16,8 @@ import urllib.error
 import urllib.parse
 
 C = Path('/etc/devcourse-backup')
+STATE = Path('/var/lib/devcourse-backup')
+BASE = Path('/srv/devcourse-finder')
 
 def call(args, *, data=None, repository=None, config_path=None, phase='command'):
     env = dict(os.environ, RCLONE_CONFIG=str(config_path or C/'rclone.conf'), RESTIC_PASSWORD_FILE=str(C/'password'))
@@ -69,6 +71,14 @@ def check_api(token):
         raise RuntimeError('API metadata: network or TLS connection failed') from None
 
 
+def verification_job():
+    if not (BASE/'.env').is_file():
+        return None
+    if not (STATE/'bundle/manifest.json').is_file() and (STATE/'last-drill.json').is_file():
+        return 'devcourse-full-backup.service'
+    return 'devcourse-initial-backup.service'
+
+
 def main():
     if os.geteuid() != 0: raise RuntimeError('Run as root')
     os.umask(0o077)
@@ -110,7 +120,8 @@ def main():
         call(['rclone','deletefile',path],config_path=candidate,phase='API test cleanup')
         print('Native API repository identity verified; 1MiB upload seconds:',elapsed,flush=True)
         # Do not change a live job's repository selection until validation is complete.
-        sp.run(['systemctl','stop','devcourse-initial-backup.service'],check=True)
+        for unit_name in ['devcourse-initial-backup.service','devcourse-full-backup.service']:
+            sp.run(['systemctl','stop',unit_name],check=False,stdout=sp.DEVNULL,stderr=sp.DEVNULL)
         conf.write_bytes(candidate.read_bytes());conf.chmod(0o600)
         active_swapped=True
         call(['restic','unlock'],repository=repo,config_path=candidate,phase='Remove stale repository locks')
@@ -128,12 +139,18 @@ def main():
                     z.write(p,'tools/'+str(p.relative_to('/opt/devcourse-backup')))
             z.writestr('READ-ME-FIRST.txt','CONFIDENTIAL: encryption key and cloud access credentials. Store independently in your password manager. Never upload this archive into the backup repository. Follow tools/README.md.\n')
         replacement.chmod(0o600);replacement.replace(kit)
-        unit=Path('/etc/systemd/system/devcourse-initial-backup.service')
-        unit.write_text('[Unit]\nDescription=Initial encrypted backup and remote recovery validation\nAfter=docker.service network-online.target\n[Service]\nType=oneshot\nExecStart=/opt/devcourse-backup/finish-first-backup.sh\nUMask=0077\nNice=10\nMemoryMax=700M\nTimeoutStartSec=8h\n')
-        sp.run(['systemctl','reset-failed','devcourse-initial-backup.service'],check=False,stdout=sp.DEVNULL,stderr=sp.DEVNULL)
+        job=verification_job()
+        if job is None:
+            print('Native API credentials verified and saved. Restore the application before scheduling backups.',flush=True)
+            return
+        if job=='devcourse-initial-backup.service':
+            unit=Path('/etc/systemd/system/devcourse-initial-backup.service')
+            unit.write_text('[Unit]\nDescription=Initial encrypted backup and remote recovery validation\nAfter=docker.service network-online.target\n[Service]\nType=oneshot\nExecStart=/opt/devcourse-backup/finish-first-backup.sh\nUMask=0077\nNice=10\nMemoryMax=700M\nTimeoutStartSec=8h\n')
+        sp.run(['systemctl','reset-failed',job],check=False,stdout=sp.DEVNULL,stderr=sp.DEVNULL)
         sp.run(['systemctl','daemon-reload'],check=True)
-        sp.run(['systemctl','start','--no-block','devcourse-initial-backup.service'],check=True)
-        print('Native API enabled; initial backup/drill resumed. Download the updated root-only recovery kit to your password manager.',flush=True)
+        sp.run(['systemctl','start','--no-block',job],check=True)
+        print('Native API credentials verified; '+job+' started. Download the updated recovery kit to your password manager.',flush=True)
+
     finally:
         if active_swapped and not committed:
             conf.write_bytes(previous);conf.chmod(0o600)

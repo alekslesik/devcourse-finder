@@ -32,6 +32,18 @@ class YandexSetupTests(unittest.TestCase):
                 process.assert_not_called()
             finally:os.umask(before)
 
+    def test_renewal_uses_normal_backup_and_clean_recovery_only_updates_credentials(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);base=root/'app';base.mkdir();state=root/'state';state.mkdir()
+            with patch.object(m,'BASE',base),patch.object(m,'STATE',state):
+                self.assertIsNone(m.verification_job())
+                (base/'.env').write_text('fixture configuration')
+                self.assertEqual(m.verification_job(),'devcourse-initial-backup.service')
+                (state/'last-drill.json').write_text('{}')
+                self.assertEqual(m.verification_job(),'devcourse-full-backup.service')
+                (state/'bundle').mkdir();(state/'bundle/manifest.json').write_text('{}')
+                self.assertEqual(m.verification_job(),'devcourse-initial-backup.service')
+
     def test_pinned_identity_allows_renewal_without_expired_old_auth(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)

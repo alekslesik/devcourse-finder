@@ -16,7 +16,10 @@ They never read credentials from Git. All working files are mode 0700/0600.
 `/etc/devcourse-backup/rclone.conf` stores the root-only native `yandex-api`
 OAuth configuration. `configure-yandex-api.py` accepts a hidden token or rclone
 OAuth JSON, checks access to the existing path and repository identity, tests
-upload, then switches configuration and resumes the initial job. On validation
+upload, then switches configuration. It resumes a pending initial bundle, starts
+a normal backup after credential renewal, or saves credentials without launching
+application jobs on a clean recovery server. Initial setup without a staging
+bundle makes a fresh backup before its remote drill. On validation
 failure the active credentials remain unchanged; a root-only candidate file
 allows `--retry` without repeated input. The pinned repository ID permits later
 authorization renewal even if the old token has expired. Tokens from the Yandex

@@ -48,7 +48,7 @@ def redact_diagnostics(payload):
     text = payload.decode(errors='replace')
     text = re.sub(r'https?://[^\s]+', '<URL omitted>', text)
     return '\n'.join('<credential detail omitted>' if any(word in line.lower() for word in
-                     ['authorization', 'access_token', 'refresh_token', 'password']) else line
+                     ['authorization', 'access_token', 'refresh_token', 'access token', 'refresh token', 'oauth token', 'password']) else line
                      for line in text.splitlines()).encode()
 
 
@@ -498,7 +498,11 @@ def main():
         verify()
         return
     with (STATE / 'operation.lock').open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print('Waiting for the active backup/recovery operation', flush=True)
+            fcntl.flock(lock, fcntl.LOCK_EX)
         if a.action == 'backup': backup()
         elif a.action == 'upload': upload_bundle(Path(a.source).resolve(strict=True))
         elif a.action == 'drill': drill(a.source)

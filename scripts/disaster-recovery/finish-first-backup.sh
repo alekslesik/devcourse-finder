@@ -4,7 +4,11 @@ set -Eeuo pipefail
 [[ $EUID -eq 0 ]] || { echo 'Run as root' >&2; exit 1; }
 tools=$(cd -- "$(dirname -- "$0")" && pwd)
 stage=/var/lib/devcourse-backup/bundle
-python3 "$tools/recovery.py" upload "$stage"
+if [[ -f "$stage/manifest.json" ]]; then
+    python3 "$tools/recovery.py" upload "$stage"
+else
+    bash "$tools/backup.sh"
+fi
 snapshot=$(python3 - <<'PY'
 import json
 from pathlib import Path
@@ -18,6 +22,6 @@ import shutil
 from pathlib import Path
 stage=Path('/var/lib/devcourse-backup/bundle')
 if stage.is_symlink(): raise SystemExit('Refusing unexpected staging symlink')
-shutil.rmtree(stage)
+if stage.exists(): shutil.rmtree(stage)
 PY
 printf 'Initial external backup and recovery drill completed: %s\n' "$snapshot"
