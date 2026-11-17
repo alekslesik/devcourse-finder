@@ -191,6 +191,8 @@ def backup():
                 copy_path(p, rootfs)
             if release != BASE:
                 (rootfs / 'srv/devcourse-finder/current').symlink_to(release)
+            if (CONFIG / 'email.json').exists():
+                copy_path(CONFIG / 'email.json', rootfs)
             shutil.copytree(Path(__file__).parent, bundle / 'tools')
             print('Creating consistent PostgreSQL dump', flush=True)
             dump(app['db']['Name'].lstrip('/'), bundle / 'database.dump')
@@ -392,6 +394,9 @@ def restore(bundle):
     if not (rootfs / 'srv/devcourse-finder/.env').is_file():
         raise RuntimeError('Missing production configuration')
     shutil.copytree(rootfs / 'srv/devcourse-finder', BASE, symlinks=True)
+    if (rootfs / 'etc/devcourse-backup/email.json').exists():
+        CONFIG.mkdir(mode=0o700, exist_ok=True)
+        shutil.copy2(rootfs / 'etc/devcourse-backup/email.json', CONFIG / 'email.json')
     for name in manifest['volumes']:
         run(['docker', 'volume', 'create', name])
         mount = js(['docker', 'volume', 'inspect', name])[0]['Mountpoint']

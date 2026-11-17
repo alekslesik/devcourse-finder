@@ -87,7 +87,14 @@ fields `host`, `port`, `ssl`, `user`, `password`, `from`, `to` in that root-only
 file, then run `python3 /opt/devcourse-backup/notify.py test`. TLS verification
 is mandatory (implicit TLS or STARTTLS). Repeated alerts are limited to one per
 12 hours; a successful backup sends recovery mail after an earlier alert. Check
-receipt of the test email before declaring notification delivery configured. Recovery verification is recorded separately
+receipt of the test email before declaring notification delivery configured.
+For Yandex Mail, run `python3 /opt/devcourse-backup/configure-email.py --to RECIPIENT_EMAIL`
+in an interactive root console. It asks for the sender address and a hidden
+**Mail-scoped** Yandex application password, tests SMTP with verified TLS at
+`smtp.yandex.ru:465`, and preserves the prior config if the test fails. A WebDAV
+application password is not a replacement for a Mail-scoped password. Automated
+setup can inherit `BACKUP_SMTP_USER` and `BACKUP_SMTP_PASSWORD` from managed
+secrets, without putting their values in command arguments. Recovery verification is recorded separately
 in `last-drill.json`. The monitor checks backup freshness, not full server outage;
 independent off-host monitoring is still necessary for a total VDS failure.
 
