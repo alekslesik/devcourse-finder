@@ -1,4 +1,5 @@
 import copy
+import datetime as dt
 import importlib.util
 import json
 from pathlib import Path
@@ -20,6 +21,14 @@ class RecoverySafetyTests(unittest.TestCase):
         self.assertEqual(restic.call_count, 1)
         self.assertEqual(restic.call_args.args[0], 'backup')
         self.assertNotIn('forget', restic.call_args.args)
+
+    def test_recent_upload_of_stale_data_does_not_pass_freshness_monitor(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state=Path(directory)
+            now=dt.datetime.now(dt.timezone.utc)
+            (state/'last-success.json').write_text(json.dumps({'at':now.isoformat(),'data_created_at':(now-dt.timedelta(hours=31)).isoformat(),'snapshot':'fixture'}))
+            with patch.object(r,'STATE',state),patch.object(r.os,'geteuid',return_value=0),patch.object(r.sys,'argv',['recovery','status']):
+                with self.assertRaisesRegex(RuntimeError,'stale'):r.main()
 
     def test_diagnostics_never_persist_signed_urls_or_auth_fields(self):
         result=r.redact_diagnostics(b'HTTP 500 at https://upload.example.invalid/file?capability=PRIVATE_VALUE\nAuthorization: PRIVATE_HEADER\naccess_token=PRIVATE_ACCESS\nnetwork timed out')

@@ -129,7 +129,9 @@ systemctl list-timers 'devcourse-*'
 ```
 
 `/var/lib/devcourse-backup/last-success.json` stores the last successful external
-snapshot. A failed backup writes `last-failure.json`; success clears it. Hourly
+snapshot and the timestamp of the captured data. Freshness is measured from
+that data timestamp, so a recently uploaded old staging bundle cannot appear
+current. A failed backup writes `last-failure.json`; success clears it. Hourly
 monitoring exits nonzero after failure or if success is older than 30 hours.
 Systemd records failures, including process kills/timeouts. Numeric archive
 progress is written to `upload-progress.json`; this measures archive processing,

@@ -284,7 +284,7 @@ def upload_bundle(bundle):
     snapshot = summary['snapshot_id']
     restic('forget', '--host', 'devcourse-finder-production', '--tag', TAG, '--path', bundle,
            '--keep-daily', '7', '--keep-weekly', '4', '--keep-monthly', '6')
-    status('last-success', snapshot=snapshot, postgres=metadata['postgres'], deployment=metadata['deployment'])
+    status('last-success', snapshot=snapshot, data_created_at=metadata['created_at'], postgres=metadata['postgres'], deployment=metadata['deployment'])
     (STATE / 'last-failure.json').unlink(missing_ok=True)
     print('Backup successful: ' + snapshot, flush=True)
     if (CONFIG / 'email.json').exists():
@@ -490,7 +490,7 @@ def main():
         if not path.exists(): raise RuntimeError('No successful external backup')
         state = json.loads(path.read_text())
         print(json.dumps(state))
-        age = dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(state['at'])
+        age = dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(state.get('data_created_at', state['at']))
         if age.total_seconds() > 30 * 3600 or (STATE / 'last-failure.json').exists():
             raise RuntimeError('Backup is stale or last operation failed')
         return
