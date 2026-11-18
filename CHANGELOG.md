@@ -6,6 +6,7 @@ Merged pull requests receive the matching Git tag and GitHub Release.
 ## [0.45.0] - 2026-11-18
 
 - Clarify tariff comparison and progressively disclose advanced filters; align sitemap and robots and measure successful course views and comparisons.
+- Restore focus to invalid advanced inputs after disclosure in WebKit.
 
 ## [0.44.0] - 2026-11-17
 

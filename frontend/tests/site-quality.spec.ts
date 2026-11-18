@@ -71,15 +71,13 @@ test('advanced filters retain closed drafts, reopen applied URL values and reset
  await expect(details).toHaveAttribute('open','');
  expect(new URL(page.url()).searchParams.get('support')).toBe('mentor');
  await expect(page.getByLabel('Часов в неделю, не больше')).toHaveValue('12');
+ await page.goBack();await expect(details).not.toHaveAttribute('open');
+ await page.goForward();await expect(details).toHaveAttribute('open','');
  await page.reload();
  await expect(details).toHaveAttribute('open','');
  await page.getByRole('button',{name:'Сбросить',exact:true}).click();
  await expect(details).not.toHaveAttribute('open');
  await expect(page).toHaveURL(/\/courses$/);
- await summary.click();await page.getByLabel('Часов в неделю, не больше').fill('169');await summary.click();
- await page.getByRole('button',{name:'Найти обучение'}).click();
- await expect(details).toHaveAttribute('open','');
- await expect(page.getByLabel('Часов в неделю, не больше')).toBeFocused();
 });
 
 for(const width of [390,1440])for(const theme of ['light','dark'] as const){
@@ -104,7 +102,7 @@ for(const width of [390,1440])for(const theme of ['light','dark'] as const){
  test('invalid workload expands its closed filters so validation can focus the input',async({page})=>{
   await page.goto('/courses');
   const details=page.locator('.advancedFilters'),hours=page.getByLabel('Часов в неделю, не больше');
-  await details.locator('summary').click();await hours.fill('200');
+  await details.locator('summary').click();await hours.fill('169');
   await details.locator('summary').click();
   await page.getByRole('button',{name:'Найти обучение'}).click();
   await expect(details).toHaveAttribute('open','');await expect(hours).toBeFocused();
