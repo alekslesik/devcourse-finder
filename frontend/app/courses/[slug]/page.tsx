@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import CoursePassport from '../../course-passport';
 import {socialMetadata} from '../../../lib/social-metadata';
 import {course} from '../../../lib/api';
+import ActivityEvent from '../../activity-event';
 type Props={params:Promise<{slug:string}>;searchParams?:Promise<{offer?:string|string[]}>};
 export const dynamic='force-dynamic';
 export async function generateMetadata({params}:Props):Promise<Metadata>{
@@ -16,5 +17,5 @@ export default async function CoursePage({params,searchParams}:Props){
  const c=d.course;
  const summary={title:c.title,provider:c.provider,language:c.language,summary:c.summary,audience:c.audience,profile:c.profile,recommendations:c.recommendations,topics:c.topics,source:c.source,checked_at:c.checked_at,demo:c.demo};
  const offers=d.offers.map(({offer,effective_price})=>({offer,effective_price}));
- return <main className="document coursePage"><CoursePassport course={summary} offers={offers} initialOfferId={initialOfferId}/></main>;
+ return <main className="document coursePage"><ActivityEvent kind="view" courseId={d.course.id} language={d.course.language}/><CoursePassport course={summary} offers={offers} initialOfferId={initialOfferId}/></main>;
 }

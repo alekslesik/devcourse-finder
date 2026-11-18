@@ -13,7 +13,7 @@ test('production routes: server HTML, unpublished 404, comparison URL, sitemap a
   res.setHeader('Content-Type','application/json');
   const url=new URL(req.url,'http://localhost');
   if(outage){res.writeHead(503);res.end('{}');return}
-  if(url.pathname==='/api/v1/courses')res.end(JSON.stringify({items:[result],total:1,page:1,page_size:48}));
+  if(url.pathname==='/api/v1/courses')res.end(JSON.stringify({items:[{...result,course:{...course,slug:'published-course',demo:false}},{...result,course:{...course,slug:'published-course',demo:false}},result,{...result,course:{...course,slug:'archived',demo:false,status:'archived'}}],total:4,page:1,page_size:48}));
   else if(url.pathname==='/api/v1/compare')res.end(JSON.stringify(url.searchParams.get('offer_ids').split(',').map(id=>id===result.offer.id?result:{id,unavailable:true})));
   else if(url.pathname==='/api/v1/courses/'+course.slug)res.end(JSON.stringify({course,offers:[result]}));
   else if(url.pathname==='/api/v1/courses/archived')res.end(JSON.stringify({course:{...course,status:'archived'},offers:[result]}));
@@ -70,7 +70,13 @@ test('production routes: server HTML, unpublished 404, comparison URL, sitemap a
  const atlas=Buffer.from(await glass.arrayBuffer());assert.equal(atlas.subarray(0,4).toString(),'RIFF');assert.equal(atlas.subarray(8,12).toString(),'WEBP');
  assert.ok(atlas.length>1000&&atlas.length<250000);
  const vector=await fetch(origin+'/favicon.svg');assert.equal(vector.status,200);assert.match(vector.headers.get('content-type'),/^image\/svg\+xml/);
- const sitemap=await (await fetch(origin+'/sitemap.xml')).text();assert.ok(sitemap.includes('https://courses.example/courses/'+course.slug));assert.ok(!sitemap.includes('/archived'));
+ const sitemapResponse=await fetch(origin+'/sitemap.xml');assert.equal(sitemapResponse.status,200);
+ const sitemap=await sitemapResponse.text();
+ const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match=>match[1]);
+ assert.deepEqual(urls,['https://courses.example/','https://courses.example/about','https://courses.example/courses/published-course']);
+ const robots=await fetch(origin+'/robots.txt');assert.equal(robots.status,200);assert.match(robots.headers.get('content-type'),/text\/plain/);
+ const rules=await robots.text();assert.match(rules,/User-Agent: \*/i);assert.match(rules,/Allow: \//);assert.match(rules,/Sitemap: https:\/\/courses\.example\/sitemap\.xml/);assert.doesNotMatch(rules,/Disallow: \/courses/);
+ const catalogHTML=await (await fetch(origin+'/courses')).text();assert.match(catalogHTML,/<meta name="robots" content="noindex, follow"/);
  outage=true;const failed=await fetch(origin+'/courses/'+course.slug);assert.equal(failed.status,500);
  }finally{child.kill();await new Promise(resolve=>child.once('close',resolve));await new Promise(resolve=>api.close(resolve))}
 });
