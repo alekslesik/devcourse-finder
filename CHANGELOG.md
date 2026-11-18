@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.46.0] - 2026-11-18
+
+- Add private PostgreSQL user and credential storage with canonical email uniqueness, transactional creation and compare-and-swap password/hash updates.
+- Verify old and current pepper credentials through pg_dump/pg_restore and remap restored key files for non-root isolated recovery.
+
 ## [0.45.1] - 2026-11-18
 
 - Remove the duplicate methodology link from the hero; keep About in the header navigation.

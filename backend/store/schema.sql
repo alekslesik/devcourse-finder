@@ -214,3 +214,26 @@ ALTER TABLE courses ADD COLUMN IF NOT EXISTS recommendation_identity text NOT NU
 
 ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS recommendation_claims integer NOT NULL DEFAULT 0;
 ALTER TABLE catalog_ai_runs ADD COLUMN IF NOT EXISTS factual_claims integer NOT NULL DEFAULT 0;
+
+-- Private authentication storage. No registration/login routes are enabled.
+CREATE TABLE IF NOT EXISTS auth_users (
+ id uuid PRIMARY KEY,
+ email text COLLATE "C" NOT NULL CONSTRAINT auth_users_email_key UNIQUE,
+ email_verified_at timestamptz,
+ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ CONSTRAINT auth_users_email_format CHECK (
+  octet_length(email) BETWEEN 3 AND 254 AND email=lower(email)
+  AND strpos(email,'@') BETWEEN 2 AND 65
+  AND email ~ '^[a-z0-9!#$%&''*+/=?^_`{|}~-]+([.][a-z0-9!#$%&''*+/=?^_`{|}~-]+)*@[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$'
+ )
+);
+CREATE TABLE IF NOT EXISTS auth_credentials (
+ user_id uuid PRIMARY KEY REFERENCES auth_users(id) ON DELETE CASCADE,
+ scheme text NOT NULL CHECK(scheme='argon2id-hmac-sha256-v1'),
+ phc text NOT NULL CHECK(octet_length(phc) BETWEEN 80 AND 256 AND phc LIKE '$argon2id$v=19$%' AND phc !~ '[[:space:][:cntrl:]]'),
+ pepper_key_id text NOT NULL CHECK(pepper_key_id ~ '^[A-Za-z0-9_-]{1,32}$'),
+ revision bigint NOT NULL DEFAULT 1 CHECK(revision>0),
+ password_version bigint NOT NULL DEFAULT 1 CHECK(password_version>0),
+ password_changed_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+CREATE INDEX IF NOT EXISTS auth_credentials_pepper ON auth_credentials(pepper_key_id);

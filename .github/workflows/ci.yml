@@ -66,6 +66,10 @@ jobs:
           cache-dependency-path: backend/go.sum
       - run: go test -race ./backend/...
       - run: go vet ./backend/...
+      - name: Restore user credentials with historical pepper keys
+        env:
+          TEST_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: ./scripts/test-user-recovery.sh
       - run: python3 -m unittest discover -s scripts/load -p 'test_*.py'
       - run: go run ./backend catalog validate ./data/demo-catalog.json
       - run: go run ./backend catalog validate ./data/real-catalog.json

@@ -212,6 +212,57 @@ def verify_password_secrets(bundle, image):
          '/run/password-secrets/password-keyring.json', '/run/password-secrets/password-recovery.json'])
 
 
+def password_runtime_file(bundle, image, destination):
+    # Canonical root-only keys remain untouched. Project a read-only copy for
+    # the image's actual non-root UID/GID; host parent directories stay 0700.
+    source = bundle / 'rootfs/srv/devcourse-finder/secrets/password-keyring.json'
+    if not password_secret_paths(source.parent.parent):
+        raise RuntimeError('Snapshot password key pair unavailable')
+    ids = []
+    for option in ['-u', '-g']:
+        value = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
+                     '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true',
+                     '--entrypoint', 'id', image, option]).decode().strip()
+        if not value.isascii() or not value.isdecimal() or not 1 <= int(value) <= 2147483647:
+            raise RuntimeError('Password storage requires a non-root image user/group')
+        ids.append(int(value))
+    destination = Path(destination)
+    destination.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if destination.parent.is_symlink() or destination.parent.stat().st_mode & 0o077:
+        raise RuntimeError('Runtime password directory is unsafe')
+    descriptor, name = tempfile.mkstemp(prefix='.keyring-', dir=destination.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(descriptor, 'wb') as output:
+            output.write(source.read_bytes())
+            output.flush()
+            os.fsync(output.fileno())
+            os.fchown(output.fileno(), *ids)
+            os.fchmod(output.fileno(), 0o400)
+        temporary.replace(destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return destination
+
+
+def verify_database_password_keys(container, bundle=None):
+    exists = dbexec(container, '''psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SELECT to_regclass('public.auth_credentials') IS NOT NULL"''').decode().strip()
+    if exists == 'f':
+        return False  # Compatible legacy snapshot, before the auth storage migration.
+    if exists != 't':
+        raise RuntimeError('Cannot determine credential schema')
+    ids = dbexec(container, 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SELECT DISTINCT pepper_key_id FROM auth_credentials LIMIT 9"').decode().splitlines()
+    if not ids:
+        return True
+    source = (bundle / 'rootfs/srv/devcourse-finder/secrets/password-keyring.json') if bundle is not None else BASE / 'secrets/password-keyring.json'
+    if not password_secret_paths(source.parent.parent):
+        raise RuntimeError('Database credentials require missing password secrets')
+    keys = json.loads(source.read_text())['keys']
+    if len(ids) > 8 or any(not re.fullmatch(r'[A-Za-z0-9_-]{1,32}', key) or key not in keys for key in ids):
+        raise RuntimeError('Database credentials reference an unavailable pepper')
+    return True
+
+
 def backup():
     STATE.mkdir(parents=True, exist_ok=True)
     with (BASE / '.deploy.lock').open('a') as deploy:
@@ -246,6 +297,10 @@ def backup():
                         source = Path(m['Source'])
                         if source == BASE or not source.is_relative_to(BASE) or source.is_relative_to(BASE / 'backups') or m['RW']:
                             raise RuntimeError('Unreviewed writable or external bind mount')
+                        if source.is_relative_to(BASE / 'secrets/runtime'):
+                            if not password_paths or source != BASE / 'secrets/runtime/password-keyring.json' or c['Id'] != app['api']['Id'] or m['Destination'] != '/run/secrets/password-keyring.json':
+                                raise RuntimeError('Unreviewed runtime password mount')
+                            continue
                         binds.add(source)
                     elif m['Type'] == 'volume':
                         if c['Id'] == app['db']['Id']:
@@ -267,6 +322,7 @@ def backup():
             shutil.copytree(Path(__file__).parent, bundle / 'tools')
             if password_paths:
                 verify_password_secrets(bundle, app['api']['Image'])
+            verify_database_password_keys(app['db']['Name'].lstrip('/'), bundle)
             print('Creating consistent PostgreSQL dump', flush=True)
             dump(app['db']['Name'].lstrip('/'), bundle / 'database.dump')
             dbversion = dbexec(app['db']['Name'].lstrip('/'), 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "show server_version"').decode().strip()
@@ -399,7 +455,7 @@ def fetch_snapshot(snapshot, dest):
     return bundle
 
 
-def isolated_config(config):
+def isolated_config(config, password_file=None):
     # Deep copy: callers may still need the original production config.
     config = json.loads(json.dumps(config))
     config.pop('name', None)
@@ -414,6 +470,18 @@ def isolated_config(config):
         if name == 'db':
             svc['mem_limit'] = '512m'
             svc['volumes'] = [{'type': 'volume', 'source': 'postgres-data', 'target': '/var/lib/postgresql/data'}]
+        if name == 'api':
+            environment = svc.setdefault('environment', {})
+            if password_file is not None:
+                if Path(password_file).resolve().is_relative_to(BASE.resolve()):
+                    raise RuntimeError('Isolated password mount cannot use production files')
+                environment['PASSWORD_STORAGE_ENABLED'] = 'true'
+                environment['PASSWORD_KEYRING_FILE'] = '/run/secrets/password-keyring.json'
+                svc['volumes'] = [{'type': 'bind', 'source': str(password_file),
+                                   'target': '/run/secrets/password-keyring.json', 'read_only': True,
+                                   'bind': {'create_host_path': False}}]
+            elif environment.get('PASSWORD_STORAGE_ENABLED') == 'true':
+                raise RuntimeError('Enabled password storage requires restored secret projection')
         selected[name] = svc
     config['services'] = selected
     return config
@@ -432,7 +500,10 @@ def drill(snapshot):
         saved_config = json.loads((bundle / 'devcourse-finder.json').read_text())
         if manifest.get('password_storage'):
             verify_password_secrets(bundle, saved_config['services']['api']['image'])
-        config = isolated_config(saved_config)
+        password_file = None
+        if manifest.get('password_storage'):
+            password_file = password_runtime_file(bundle, saved_config['services']['api']['image'], dest / 'runtime/password-keyring.json')
+        config = isolated_config(saved_config, password_file)
         file = bundle / 'drill.json'
         write(file, config)
         started = True
@@ -441,10 +512,12 @@ def drill(snapshot):
         wait_db(name)
         print('Restoring database in an isolated volume', flush=True)
         restore_dump(name, bundle / 'database.dump')
+        credential_schema = verify_database_password_keys(name, bundle)
         compose(bundle, project, 'up', '-d', '--no-build', '--pull', 'never', '--no-deps', 'api', 'frontend', file=file)
         rows = verify(bundle, project, file)
         verify_ingress(bundle)
-        status('last-drill', snapshot=snapshot, course_rows=rows, deployment=manifest['deployment'])
+        status('last-drill', snapshot=snapshot, course_rows=rows, deployment=manifest['deployment'],
+               credential_schema=credential_schema, password_storage_verified=bool(manifest.get('password_storage')))
         print('Isolated restore successful', flush=True)
     finally:
         if started:
@@ -545,6 +618,7 @@ def restore_db(source, confirmation):
     dump(db['Id'], safety)
     dbexec(db['Id'], 'dropdb --force -U "$POSTGRES_USER" "$POSTGRES_DB"; createdb -U "$POSTGRES_USER" -O "$POSTGRES_USER" "$POSTGRES_DB"')
     restore_dump(db['Id'], source)
+    verify_database_password_keys(db['Id'])
     if others:
         run(['docker', 'start', *others])
     print('Database restored; safety dump: ' + str(safety))
@@ -580,10 +654,19 @@ def restore(bundle):
     for project in ['devcourse-finder', 'devcourse-ingress']:
         shutil.copy2(bundle / f'{project}.json', recovery / f'{project}.json')
     appfile = recovery / 'devcourse-finder.json'
+    appconfig = json.loads(appfile.read_text())
+    api = appconfig['services']['api']
+    if api.get('environment', {}).get('PASSWORD_STORAGE_ENABLED') == 'true':
+        target = str(BASE / 'secrets/runtime/password-keyring.json')
+        matches = [v for v in api.get('volumes', []) if v.get('type') == 'bind' and v.get('source') == target and v.get('target') == '/run/secrets/password-keyring.json' and v.get('read_only') is True]
+        if len(matches) != 1 or api['environment'].get('PASSWORD_KEYRING_FILE') != '/run/secrets/password-keyring.json':
+            raise RuntimeError('Unsupported production password mount')
+        password_runtime_file(bundle, api['image'], Path(target))
     compose(bundle, 'devcourse-finder', 'up', '-d', '--no-build', '--pull', 'never', 'db', file=appfile)
     name = compose(bundle, 'devcourse-finder', 'ps', '-q', 'db', file=appfile).decode().strip()
     wait_db(name)
     restore_dump(name, bundle / 'database.dump')
+    verify_database_password_keys(name, bundle)
     active = [n for n in manifest['active_services']['devcourse-finder'] if n != 'db']
     compose(bundle, 'devcourse-finder', 'up', '-d', '--no-build', '--pull', 'never', '--no-deps', *active, file=appfile)
     verify(bundle, file=appfile)
@@ -622,7 +705,15 @@ def main():
         if a.action == 'backup': backup()
         elif a.action == 'password-checkpoint': password_checkpoint()
         elif a.action == 'upload': upload_bundle(Path(a.source).resolve(strict=True))
-        elif a.action == 'drill': drill(a.source)
+        elif a.action == 'drill':
+            # Loading pinned image archives can change local image tags. Serialize
+            # with deployment so an isolated drill cannot race a production build.
+            if BASE.exists():
+                with (BASE / '.deploy.lock').open('a') as deploy:
+                    fcntl.flock(deploy, fcntl.LOCK_EX)
+                    drill(a.source)
+            else:
+                drill(a.source)
         elif a.action == 'restore': restore(Path(a.source).resolve())
         elif a.action == 'restore-db':
             with (BASE / '.deploy.lock').open('a') as deploy:
