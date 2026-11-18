@@ -85,7 +85,7 @@ for(const width of [390,1440])for(const theme of ['light','dark'] as const){
   await page.setViewportSize({width,height:900});await page.emulateMedia({colorScheme:theme,reducedMotion:'reduce'});
   await page.goto('/');await expect(page.locator('.card').first()).toBeVisible();
   await expect(page.locator('.heroCopy')).toContainText('полную стоимость конкретных тарифов');
-  await expect(page.getByRole('link',{name:'Как проверяем цены и условия →'})).toHaveAttribute('href','/about');
+  await expect(page.getByRole('navigation',{name:'Основная навигация'}).getByRole('link',{name:'О сервисе',exact:true})).toHaveAttribute('href','/about');
   if(width===1440){
    const summary=(await page.locator('.advancedFilters summary').boundingBox())!;
    const submit=(await page.getByRole('button',{name:'Найти обучение'}).boundingBox())!;

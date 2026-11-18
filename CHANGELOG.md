@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.45.1] - 2026-11-18
+
+- Remove the duplicate methodology link from the hero; keep About in the header navigation.
+
 ## [0.45.0] - 2026-11-18
 
 - Clarify tariff comparison and progressively disclose advanced filters; align sitemap and robots and measure successful course views and comparisons.
