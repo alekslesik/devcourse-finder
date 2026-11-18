@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.45.0] - 2026-11-18
+
+- Clarify tariff comparison and progressively disclose advanced filters; align sitemap and robots and measure successful course views and comparisons.
+
 ## [0.44.0] - 2026-11-17
 
 - Add protected pepper keyring files, non-overwriting generation and rotation commands, and fail-closed password-storage configuration preflight.

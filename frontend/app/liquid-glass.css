@@ -91,6 +91,20 @@ header,main,footer{max-width:1320px}header{margin:30px auto 0;min-height:70px;bo
 .priceFilter .budgetNote {margin:8px 0 0; line-height:1.5;}
 .priceFilter input:disabled {color:var(--muted); opacity:.55; cursor:not-allowed; box-shadow:none;}
 .routeForm>.searchButton {grid-column:1/-1; grid-row:auto; justify-self:end; width:240px; margin:0;}
+.heroMethod {display:inline-block; margin-top:16px; min-height:44px; padding-block:10px; color:var(--accent); text-decoration:underline; text-underline-offset:4px;}
+.routeForm>.advancedFilters {grid-column:1/-1; margin:0; padding-top:16px;}
+.advancedFilters>summary {list-style:disclosure-closed inside; padding-block:10px; color:var(--accent);}
+.advancedFilters[open]>summary {list-style-type:disclosure-open;}
+.advancedFields {display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; padding-top:12px;}
+.advancedFields>label {min-width:0; margin:0; font-size:13px; font-weight:600;}
+.advancedFields .selectLabel {display:block; margin-bottom:8px;}
+.advancedFields input {display:block; margin-top:8px;}
+@media(min-width:1001px) {
+ .routeForm>.advancedFilters:not([open]) {grid-column:1/4; align-self:center; border:0; padding-top:0;}
+ .routeForm>.advancedFilters:not([open])~.searchButton {grid-column:4;}
+}
+@media(max-width:1000px) {.advancedFields {grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:700px) {.advancedFields {grid-template-columns:minmax(0,1fr); gap:20px;}}
 .resultHeading {scroll-margin-top:24px;}
 .brand {--logo-accent:var(--accent); --logo-path:#cba263;}
 @media(max-width:1000px) {
