@@ -290,3 +290,98 @@ are regenerated from canonical restored keys for the image UID/GID; they are not
 copied as root-owned files from a backup. Registration, mail confirmation, reset
 tokens, rate limits, sessions and 2FA remain subsequent epic tasks. SMTP backup
 notifications and independent recovery-kit storage remain activation gates.
+
+## Account actions and mail intents (phase 4 backend)
+
+This phase provides private backend APIs and a testable delivery step. It creates
+no public registration/reset endpoints, mail worker service, UI forms or production
+accounts. SMTP credentials are not provisioned and no real emails are sent during
+validation. Public activation still requires the remaining epic gates.
+
+`auth_action_tokens` stores only SHA-256 digests of CSPRNG-generated 32-byte bearer
+secrets, with a versioned purpose-specific digest domain. Tokens are bound to user,
+canonical email and password version. Confirmation lasts 24 hours; reset lasts
+15 minutes, using the database clock. Only confirmed addresses can request a
+reset. A token is consumed atomically with email confirmation or credential change.
+Failures roll back both changes. Concurrent/repeated/expired actions fail with a
+fixed internal error. Rehashing changes only the credential revision and leaves a
+valid password-version-bound token usable; a real password change invalidates it.
+
+All account actions and credential updates lock the user first, then credentials
+and associated jobs/tokens. This prevents lock-order inversion between delivery,
+reset, confirmation and pepper upgrades. `WithUsers` remains available for wider
+transactions. The future session implementation must enforce password versions;
+there are no live sessions to revoke in this phase.
+
+### Outbox without persisted bearer secrets
+
+`auth_mail_jobs` contains delivery intent, recipient, purpose, version, deadlines
+and lease metadata; never an email body, raw token or full link. Requests return
+the same success for unknown, ineligible, queued and rate-limited addresses.
+Per-account/purpose requests have a 60-second cooldown, at most five per hour and
+one active intent. Global/IP limits and public response timing remain requirements
+for HTTP integration; these repository semantics alone are not enumeration-proof.
+
+`accountmail.Service.SendOne` is an explicitly invoked worker step. It claims a
+two-minute lease, generates a fresh token in memory and stores its digest. Sending
+has a shorter deadline; completion is fenced by lease ID and digest. There are at
+most five attempts with bounded exponential backoff. Expired intents and crashed
+final attempts release their reservation. Unknown/changed user state supersedes
+the job without sending. Email-confirmation/reset requests expire if not delivered
+within their respective request lifetime.
+
+A retry replaces the token: the old link becomes unusable. SMTP is at-least-once:
+if DATA was accepted but the process died before database completion, a retry can
+send another email and invalidate the older link. If a send reports failure, its
+token is invalidated. DATA acceptance counts as success even if QUIT subsequently
+fails. Raw tokens are never persisted merely to make SMTP retries identical.
+Operators must monitor failed jobs and prune completed/expired intent history
+under an explicit retention policy when activating the worker.
+
+Links use a configured HTTPS origin and fixed paths with `#token=...`. Request
+Host headers never select the origin. SMTP revalidates the exact origin, path,
+purpose and token encoding. The future page must scrub the fragment before
+analytics, set `Referrer-Policy: no-referrer`, and require an explicit CSRF-protected
+POST. GET/prefetch must never confirm or reset an account. No such routes exist yet.
+
+### Password policy and SMTP
+
+`accountmail.Service.Reset` checks the token privately before the bounded KDF and
+applies the length/UTF-8 policy plus the embedded offline common-password blocklist.
+The list is a pinned MIT-licensed public SecLists baseline (10001 unique digests),
+not a complete breached-password corpus. Comparison case-folds/trims for rejection;
+accepted values are still hashed exactly. No user password or hash leaves the
+process for a breach-check service. License/provenance are included in the image;
+`devcourse-finder licenses` also prints the notice from standalone binaries.
+
+The optional canonical config is `/srv/devcourse-finder/secrets/auth-smtp.json`,
+owned by root, mode 0600, outside Git/build contexts. It has exactly these JSON
+fields (the password is added through secrets/local hidden input, never chat):
+
+- `version`: 1; `host`: `smtp.yandex.ru`; `port`: 465 or 587.
+- `username` and `from`: the same canonical Yandex sender email.
+- `password`: a distinct mail-scoped application password, never the Disk password.
+- `public_origin`: the trusted HTTPS site origin, normally `https://devcoursefinder.ru`.
+
+`devcourse-finder auth-mail check-config PATH` validates offline and sends nothing.
+The SMTP adapter requires verified TLS 1.2+, implicit TLS on 465 or mandatory
+STARTTLS on 587 before AUTH. Certificates/hostnames are checked; errors are fixed
+and omit provider responses, recipients, credentials and links. Tests use local
+TLS mail doubles only. A non-root production worker needs a reviewed private
+projection of this config; its deployment/activation is still pending.
+
+### Recovery and replay prevention
+
+The optional SMTP config is included only in the encrypted full snapshot and
+private independent recovery kit. Snapshot validation uses the pinned image's
+`auth-mail check-config` in a network-disabled container, without SMTP login.
+Older snapshots without SMTP config or action tables remain supported.
+
+After every database restore, including isolated drills and database-only restore,
+all restored action tokens are consumed and pending/sending mail intents are
+superseded **before** application startup. Recovery must not revive a previously
+used link or send stale emails from an older database state. Users must request
+new links after recovery. The actual pg_dump/pg_restore CI test verifies that a
+saved synthetic bearer is rejected after this recovery step and that queued mail
+cannot replay. Password/keyring verification still succeeds for old/current keys.
+Future sessions must receive equivalent recovery invalidation when implemented.

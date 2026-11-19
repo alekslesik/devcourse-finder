@@ -18,6 +18,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"devcourse-finder/auth/accountmail"
 	"devcourse-finder/auth/password"
 	"devcourse-finder/catalog"
 	"devcourse-finder/store"
@@ -54,6 +55,20 @@ func main() {
 func run() error {
 	ctx := context.Background()
 	args := os.Args[1:]
+	if len(args) == 1 && args[0] == "licenses" {
+		fmt.Print(password.BlocklistLicense())
+		return nil
+	}
+	if len(args) > 0 && args[0] == "auth-mail" {
+		if len(args) != 3 || args[1] != "check-config" {
+			return commandFailure("auth_mail", "invalid_arguments", "Usage: auth-mail check-config PATH", nil)
+		}
+		if _, err := accountmail.LoadSMTP(args[2]); err != nil {
+			return commandFailure("auth_mail", "invalid_mail_configuration", "Account mail configuration failed; values hidden", nil)
+		}
+		fmt.Println("Account mail configuration valid; no email sent")
+		return nil
+	}
 	if len(args) > 0 && args[0] == "password-keyring" {
 		return passwordKeyringCommand(args[1:])
 	}

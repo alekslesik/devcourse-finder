@@ -57,3 +57,5 @@ scripts/load/__pycache__/
 /secrets/
 **/password-keyring*.json
 **/password-recovery*.json
+
+**/auth-smtp*.json

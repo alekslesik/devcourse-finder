@@ -207,8 +207,22 @@ func (s *UserStore) replace(ctx context.Context, old UserCredential, next passwo
 	if !userIDPattern.MatchString(old.User.ID) || old.Revision < 1 || old.PasswordVersion < 1 || password.ValidateCredential(old.Credential) != nil || password.ValidateCredential(next) != nil {
 		return false, ErrUserInput
 	}
-	result, err := s.q.Exec(ctx, `UPDATE auth_credentials SET scheme=$1,phc=$2,pepper_key_id=$3,revision=revision+1,password_version=password_version+CASE WHEN $4 THEN 1 ELSE 0 END,password_changed_at=CASE WHEN $4 THEN clock_timestamp() ELSE password_changed_at END WHERE user_id=$5 AND revision=$6 AND password_version=$7 AND scheme=$8 AND phc=$9 AND pepper_key_id=$10`, next.Scheme, next.PHC, next.PepperKeyID, changed, old.User.ID, old.Revision, old.PasswordVersion, old.Credential.Scheme, old.Credential.PHC, old.Credential.PepperKeyID)
+	tx, err := s.q.Begin(ctx)
 	if err != nil {
+		return false, ErrUserStorage
+	}
+	defer tx.Rollback(ctx)
+	repo := &UserStore{q: tx}
+	if err = repo.lockUser(ctx, old.User.ID); errors.Is(err, ErrUserNotFound) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	result, err := tx.Exec(ctx, `UPDATE auth_credentials SET scheme=$1,phc=$2,pepper_key_id=$3,revision=revision+1,password_version=password_version+CASE WHEN $4 THEN 1 ELSE 0 END,password_changed_at=CASE WHEN $4 THEN clock_timestamp() ELSE password_changed_at END WHERE user_id=$5 AND revision=$6 AND password_version=$7 AND scheme=$8 AND phc=$9 AND pepper_key_id=$10`, next.Scheme, next.PHC, next.PepperKeyID, changed, old.User.ID, old.Revision, old.PasswordVersion, old.Credential.Scheme, old.Credential.PHC, old.Credential.PepperKeyID)
+	if err != nil {
+		return false, ErrUserStorage
+	}
+	if tx.Commit(ctx) != nil {
 		return false, ErrUserStorage
 	}
 	return result.RowsAffected() == 1, nil

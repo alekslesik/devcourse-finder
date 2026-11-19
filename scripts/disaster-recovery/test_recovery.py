@@ -154,6 +154,40 @@ class RecoverySafetyTests(unittest.TestCase):
                 self.assertEqual(lock.call_args_list[-1].args[1], r.fcntl.LOCK_EX)
                 drill.assert_called_once_with('latest')
 
+    def test_account_mail_secret_is_optional_private_and_restored_offline(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d); directory = base / 'secrets'; directory.mkdir(mode=0o700)
+            self.assertIsNone(r.account_mail_secret_path(base))
+            secret = directory / 'auth-smtp.json'; secret.write_text('synthetic'); secret.chmod(0o600)
+            self.assertEqual(r.account_mail_secret_path(base), secret)
+            secret.chmod(0o644)
+            with self.assertRaisesRegex(RuntimeError, 'unsafe'):
+                r.account_mail_secret_path(base)
+            secret.unlink(); secret.symlink_to(directory / 'missing')
+            with self.assertRaisesRegex(RuntimeError, 'unsafe'):
+                r.account_mail_secret_path(base)
+
+    @patch.object(r, 'account_mail_secret_path', return_value=Path('/fixture'))
+    @patch.object(r, 'run')
+    def test_smtp_restore_validation_has_no_network_or_email_send(self, run, path):
+        r.verify_account_mail_secret(Path('/isolated/snapshot'), 'sha256:pinned')
+        args=run.call_args.args[0]
+        self.assertIn('--read-only',args)
+        self.assertIn('none',args)
+        self.assertEqual(args[-3:],['auth-mail','check-config','/run/account-secrets/auth-smtp.json'])
+
+    @patch.object(r, 'run')
+    def test_restore_invalidates_bearers_and_pending_mail_in_one_database_statement(self, run):
+        r.invalidate_restored_account_actions('test-db','restored_test')
+        args=run.call_args.args[0]
+        self.assertIn('POSTGRES_DB=restored_test',args)
+        sql=run.call_args.kwargs['data']
+        self.assertIn(b'UPDATE auth_action_tokens SET consumed_at',sql)
+        self.assertIn(b"status='superseded'",sql)
+        self.assertIn(b"to_regclass('public.auth_action_tokens')",sql)
+        with self.assertRaisesRegex(RuntimeError,'Invalid recovery database'):
+            r.invalidate_restored_account_actions('test-db','unsafe; DROP DATABASE')
+
     @patch.object(r, 'password_secret_paths', return_value={Path('/fixture')})
     @patch.object(r, 'run')
     def test_password_recovery_verifies_only_snapshot_keys_in_isolated_container(self, run, paths):
