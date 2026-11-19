@@ -69,6 +69,9 @@ func (s *Service) Reset(ctx context.Context, raw, value string) error {
 // SendOne is an explicitly invoked worker step. It never runs on API startup.
 // The bounded send deadline is much shorter than the two-minute database lease.
 func (s *Service) SendOne(ctx context.Context) (bool, error) {
+	if s.sender == nil {
+		return false, ErrConfiguration
+	}
 	d, err := s.repo.ClaimDelivery(ctx)
 	if err != nil || d == nil {
 		return false, err
@@ -91,4 +94,29 @@ func (s *Service) SendOne(ctx context.Context) (bool, error) {
 		return true, ErrTransport
 	}
 	return true, nil
+}
+
+func NewHTTP(repo *store.UserStore, origin actiontoken.Origin, hasher *password.Hasher) (*Service, error) {
+	if repo == nil || hasher == nil {
+		return nil, ErrConfiguration
+	}
+	if _, err := origin.Link(actiontoken.ConfirmEmail, actiontoken.Secret{}); err != nil {
+		return nil, ErrConfiguration
+	}
+	return &Service{repo: repo, origin: origin, hasher: hasher, policy: password.DefaultPolicy()}, nil
+}
+func NewWorker(repo *store.UserStore, smtpPath, keyringPath string) (*Service, error) {
+	sender, err := LoadSMTP(smtpPath)
+	if err != nil {
+		return nil, err
+	}
+	ring, err := password.LoadKeyring(keyringPath)
+	if err != nil {
+		return nil, ErrConfiguration
+	}
+	hasher, err := ring.Hasher(password.DefaultParams(), 1)
+	if err != nil {
+		return nil, ErrConfiguration
+	}
+	return New(repo, sender, sender.origin, hasher)
 }

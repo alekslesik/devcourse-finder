@@ -8,7 +8,7 @@ digest=$3
 [[ $tag =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ && $sha =~ ^[a-f0-9]{40}$ && $digest =~ ^[a-f0-9]{64}$ ]] || {
   echo 'Invalid release identifiers.' >&2; exit 1;
 }
-for command in docker jq curl flock sha256sum tar; do
+for command in docker jq curl flock sha256sum tar stat; do
   command -v "$command" >/dev/null || { echo "Missing $command" >&2; exit 1; }
 done
 base=/srv/devcourse-finder
@@ -48,6 +48,18 @@ previous=$base
 if [[ -L "$base/current" ]]; then previous=$(readlink -f "$base/current"); fi
 old_compose=(docker compose --project-name devcourse-finder --env-file "$base/.env" -f "$previous/compose.yaml" -f "$previous/compose.production.yaml")
 compose=(docker compose --project-name devcourse-finder --env-file "$base/.env" -f "$release/compose.yaml" -f "$release/compose.production.yaml")
+
+
+# Explicit opt-in survives release updates; absence keeps every auth action off.
+marker="$base/.account-actions-enabled"
+if [[ -e $marker || -L $marker ]]; then
+  [[ -f $marker && ! -L $marker && $(stat -c '%u:%a' "$marker") == '0:600' && $(cat "$marker") == enabled ]] || {
+    echo 'Invalid account-action activation marker.' >&2; exit 1;
+  }
+  [[ -f "$release/compose.account-actions.yaml" ]] || { echo 'Release does not support account actions.' >&2; exit 1; }
+  if [[ -f "$previous/compose.account-actions.yaml" ]]; then old_compose+=(-f "$previous/compose.account-actions.yaml"); fi
+  compose+=(-f "$release/compose.account-actions.yaml")
+fi
 
 "${compose[@]}" config --format json | jq -e '
   (.services.frontend.ports | length == 1) and

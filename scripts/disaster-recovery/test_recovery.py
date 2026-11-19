@@ -128,6 +128,33 @@ class RecoverySafetyTests(unittest.TestCase):
         self.assertEqual(result['services']['api']['environment']['PASSWORD_KEYRING_FILE'], mount['target'])
         self.assertEqual(original['services']['api']['environment']['PASSWORD_KEYRING_FILE'], '/production/key')
 
+    def test_account_drill_disables_actions_and_omits_delivery_worker(self):
+        original = {'services': {name: {'image': 'sha256:pinned'} for name in ['db', 'api', 'frontend', 'auth-mail']}}
+        for name in ['api', 'frontend']:
+            original['services'][name]['environment'] = {'AUTH_ACTIONS_ENABLED': 'true', 'AUTH_GATEWAY_SECRET': 'synthetic'}
+        original['services']['auth-mail']['environment'] = {'AUTH_MAIL_ENABLED': 'true'}
+        result = r.isolated_config(original)
+        self.assertNotIn('auth-mail', result['services'])
+        for name in ['api', 'frontend']:
+            self.assertEqual(result['services'][name]['environment']['AUTH_ACTIONS_ENABLED'], 'false')
+            self.assertNotIn('AUTH_GATEWAY_SECRET', result['services'][name]['environment'])
+            self.assertEqual(original['services'][name]['environment']['AUTH_ACTIONS_ENABLED'], 'true')
+
+    def test_smtp_projection_uses_private_copy_and_rejects_unknown_filename(self):
+        with tempfile.TemporaryDirectory() as d:
+            bundle = Path(d) / 'snapshot'
+            directory = bundle / 'rootfs/srv/devcourse-finder/secrets'
+            directory.mkdir(parents=True, mode=0o700)
+            secret = directory / 'auth-smtp.json'
+            secret.write_text('synthetic'); secret.chmod(0o600)
+            target = Path(d) / 'runtime/auth-smtp.json'
+            with patch.object(r, 'run', side_effect=[b'1000', b'1001']), patch.object(r.os, 'fchown'):
+                r.password_runtime_file(bundle, 'sha256:pinned', target, 'auth-smtp.json')
+            self.assertEqual(target.read_text(), 'synthetic')
+            self.assertEqual(target.stat().st_mode & 0o777, 0o400)
+            with self.assertRaises(RuntimeError):
+                r.password_runtime_file(bundle, 'sha256:pinned', target, '../auth-smtp.json')
+
     def test_database_password_key_coverage_handles_legacy_and_rejects_missing_keys(self):
         with tempfile.TemporaryDirectory() as d:
             bundle = Path(d)

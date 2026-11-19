@@ -342,7 +342,8 @@ Links use a configured HTTPS origin and fixed paths with `#token=...`. Request
 Host headers never select the origin. SMTP revalidates the exact origin, path,
 purpose and token encoding. The future page must scrub the fragment before
 analytics, set `Referrer-Policy: no-referrer`, and require an explicit CSRF-protected
-POST. GET/prefetch must never confirm or reset an account. No such routes exist yet.
+POST. GET/prefetch must never confirm or reset an account. The opt-in routes below
+implement this boundary and remain disabled in ordinary deployments.
 
 ### Password policy and SMTP
 
@@ -368,7 +369,8 @@ The SMTP adapter requires verified TLS 1.2+, implicit TLS on 465 or mandatory
 STARTTLS on 587 before AUTH. Certificates/hostnames are checked; errors are fixed
 and omit provider responses, recipients, credentials and links. Tests use local
 TLS mail doubles only. A non-root production worker needs a reviewed private
-projection of this config; its deployment/activation is still pending.
+projection of this config; the opt-in profile below supplies it. Live activation
+is still pending.
 
 ### Recovery and replay prevention
 
@@ -385,3 +387,72 @@ new links after recovery. The actual pg_dump/pg_restore CI test verifies that a
 saved synthetic bearer is rejected after this recovery step and that queued mail
 cannot replay. Password/keyring verification still succeeds for old/current keys.
 Future sessions must receive equivalent recovery invalidation when implemented.
+
+### Opt-in HTTP forms and mail worker (v0.48)
+
+The implementation now includes `/account/confirm-email` and
+`/account/reset-password`, and five `/api/v1/account/*` endpoints. They remain
+404 in the ordinary production stack. There is no registration, login or session
+implementation in this release. `GET` only displays a form or obtains a CSRF
+challenge; changing an account requires an explicit POST.
+
+The document head removes the query/fragment before hydration. A strictly parsed
+bearer stays in memory only and is cleared after completion/expiry. Account pages
+exclude analytics (including the no-JavaScript pixel), disallow indexing and
+external connections, and send no-store/no-referrer headers. Passwords support
+paste, password managers and visibility controls. Request-email responses are
+uniform; this reduces enumeration but does not promise constant-time database or
+SMTP behavior.
+
+The Node route signs method, canonical path, timestamp, nonce, client IP, origin,
+CSRF header/cookie and body with a separate random 32-byte gateway secret. The Go
+handler verifies the signature and rejects replay, unknown fields, oversized
+bodies, cross-origin actions and invalid CSRF. Direct calls through the generic
+API rewrite cannot bypass authentication. In-memory limits are global 60/min,
+per-IP 12/min (IPv6 /64), and email-request 20/min; they reset on restart and must
+be supplemented at ingress for a multi-instance deployment. The ingress must
+append/replace the real client IP; the Node proxy uses the rightmost forwarded
+address only with `AUTH_TRUSTED_INGRESS=true`. Keep frontend bound to loopback and
+API/DB unexposed. Never enable this flag behind an unreviewed proxy.
+
+`compose.account-actions.yaml` supplies the explicitly enabled API/frontend and a
+non-root, network-capable mail worker with read-only private projections. The
+worker has no public ports, persists retries in the existing outbox and exposes
+only a local heartbeat/database health command. Delivery failures emit sanitized
+codes, never provider responses or recipients. Monitor outbox failures separately
+from process health. The normal release excludes this file.
+
+Preparation after deploying a supporting release:
+
+```sh
+sudo python3 /opt/devcourse-backup/prepare-account-actions.py
+```
+
+Provide a separate Yandex Mail application password through protected environment
+`AUTH_SMTP_USER` / `AUTH_SMTP_PASSWORD`, or the script's hidden terminal prompt.
+Do not put it in command arguments or chat. Preparation validates the SMTP config
+and pepper offline, creates the gateway key in root-private `.env`, projects
+secrets as mode 0400 for the pinned image UID, and refreshes the independent
+recovery kit. It does not log in to SMTP, send mail, enable routes or change the
+running deployment. An error may leave prepared private configuration; rerunning
+is safe while actions are disabled.
+
+Before activation, verify real SMTP delivery with an operator-controlled recipient,
+complete a fresh encrypted full backup and isolated restore, export the refreshed
+recovery kit independently of the VDS, verify ingress client-IP handling, and
+accept the account/session activation scope. Backup-failure email is a separate
+configuration and must also be tested. No marker is created automatically.
+
+Only after those gates are met, root can write the literal `enabled` followed by a
+newline to `/srv/devcourse-finder/.account-actions-enabled` (regular root-owned
+0600 file). Dispatch the published release through **Deploy release**; the deploy
+script then includes the optional Compose file and rejects malformed markers or
+unsupported releases. To disable, remove the marker and redeploy through the same
+workflow; orphan removal stops the mail worker. Do not roll back to a release
+without the profile while the marker exists.
+
+Full backups include the profile, canonical secrets and activation marker when
+present. Full recovery recreates private worker/API projections. Isolated drills
+always exclude the worker, disable HTTP actions and remove the gateway secret
+from runtime configuration; they cannot deliver mail. Restored action tokens and
+pending mail are invalidated before startup as described above.

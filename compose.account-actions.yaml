@@ -1,0 +1,71 @@
+# Opt-in only. Keep out of normal deployment until the activation checklist passes.
+services:
+  api:
+    environment:
+      AUTH_ACTIONS_ENABLED: "true"
+      AUTH_PUBLIC_ORIGIN: ${AUTH_PUBLIC_ORIGIN:?Trusted HTTPS origin required}
+      AUTH_GATEWAY_SECRET: ${AUTH_GATEWAY_SECRET:?Separate random gateway key required}
+      PASSWORD_KEYRING_FILE: /run/secrets/password-keyring.json
+      GOMEMLIMIT: 256MiB
+    volumes:
+      - type: bind
+        source: /srv/devcourse-finder/secrets/runtime/password-keyring.json
+        target: /run/secrets/password-keyring.json
+        read_only: true
+        bind:
+          create_host_path: false
+    mem_limit: 384m
+  frontend:
+    environment:
+      AUTH_ACTIONS_ENABLED: "true"
+      AUTH_PUBLIC_ORIGIN: ${AUTH_PUBLIC_ORIGIN:?Trusted HTTPS origin required}
+      AUTH_GATEWAY_SECRET: ${AUTH_GATEWAY_SECRET:?Separate random gateway key required}
+      # Enable only behind an ingress that replaces/appends the real client IP.
+      AUTH_TRUSTED_INGRESS: "true"
+    ports: !override
+      - "127.0.0.1:3000:3000"
+  auth-mail:
+    image: devcourse-finder-auth-mail:local
+    build:
+      context: ./backend
+    command: ["auth-mail", "serve"]
+    environment:
+      APP_ENV: production
+      AUTH_MAIL_ENABLED: "true"
+      AUTH_SMTP_FILE: /run/secrets/auth-smtp.json
+      PASSWORD_KEYRING_FILE: /run/secrets/password-keyring.json
+      GOMEMLIMIT: 64MiB
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-devcourse}
+      PGUSER: ${POSTGRES_USER:-devcourse}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?required}
+      PGSSLMODE: disable
+    volumes:
+      - type: bind
+        source: /srv/devcourse-finder/secrets/runtime/password-keyring.json
+        target: /run/secrets/password-keyring.json
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /srv/devcourse-finder/secrets/runtime/auth-smtp.json
+        target: /run/secrets/auth-smtp.json
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "devcourse-finder", "auth-mail", "health"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m

@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.48.0] - 2026-11-19
+
+- Add opt-in email confirmation and password reset forms with authenticated same-origin API, private mail worker, and isolated recovery safeguards.
+
 ## [0.47.0] - 2026-11-19
 
 - Add private account-action tokens, transactional email confirmation/password reset, and a leased mail-intent outbox that stores no raw bearer tokens.

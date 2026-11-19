@@ -1,0 +1,21 @@
+.accountFlow {max-width:36rem;min-height:58vh;padding-block:clamp(2rem,6vw,4rem);}
+.accountFlow h1 {font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;text-wrap:balance;}
+.accountIntro,.accountHint {color:var(--muted);}
+.accountFlow form {margin-block:2rem;}
+.accountFlow label {display:block;margin-block:1.25rem .5rem;font-size:.95rem;font-weight:600;}
+.accountFlow input {margin-top:.5rem;font-size:1rem;}
+.accountPassword {position:relative;}
+.accountPassword input {padding-right:7rem;}
+.accountPassword button {position:absolute;right:.35rem;top:.7rem;min-height:44px;}
+.accountHint {font-size:.875rem;line-height:1.6;margin:.65rem 0 1.5rem;}
+.accountSubmit {margin-top:1rem;min-height:48px;width:100%;background:var(--accent);color:var(--accent-text);border-color:transparent;}
+.accountNotice {margin-top:1.5rem;padding-block:.25rem;}
+.accountNotice p {margin:0;}
+.accountError {color:#a3152e;line-height:1.6;}
+:root[data-theme=dark] .accountError {color:#ffb4bd;}
+.accountBack {margin-top:2rem;font-size:.95rem;}
+.accountBack a {text-decoration:underline;text-underline-offset:.2em;}
+.accountFlow [aria-invalid=true] {border-color:currentColor;outline-color:#a3152e;}
+:root[data-theme=dark] .accountFlow [aria-invalid=true] {outline-color:#ffb4bd;}
+.accountFlow [role=status]:focus {outline:2px solid var(--accent);outline-offset:.5rem;}
+@media (forced-colors:active) {.accountSubmit {background:ButtonFace;color:ButtonText;border:1px solid ButtonText;}.accountError {color:CanvasText;}}

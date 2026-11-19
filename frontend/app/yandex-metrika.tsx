@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect} from 'react';
+import {isAccountPath} from '../lib/account-privacy';
 import {usePathname,useSearchParams} from 'next/navigation';
 import {metrikaHost,metrikaId,metrikaTagURL} from '../lib/metrika';
 
@@ -14,13 +15,15 @@ let lastURL:string|undefined;
 export default function YandexMetrika(){
  const pathname=usePathname(),searchParams=useSearchParams();
  useEffect(()=>{
+  if(isAccountPath(pathname)||isAccountPath(location.pathname)){if(lastURL!==undefined){try{window.ym?.(metrikaId,'destruct')}catch{}lastURL=undefined;}return;}
+  delete window.__dcfAccountEntry;
   if(location.hostname.replace(/^www\./,'')!==metrikaHost)return;
   try{
    if(!window.ym){
     const queue:Metrika=(...args)=>{(queue.a??=[]).push(args)};
     queue.l=Date.now();window.ym=queue;
    }
-   const url=location.href;
+   const url=location.origin+location.pathname+location.search;
    if(lastURL===undefined){
     window.ym(metrikaId,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:'dataLayer',referrer:document.referrer,url,accurateTrackBounce:true,trackLinks:true});
     lastURL=url;

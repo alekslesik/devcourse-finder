@@ -22,8 +22,11 @@ type catalogRepository interface {
 }
 
 // newHandler is shared by the real server and HTTP tests.
-func newHandler(db catalogRepository) http.Handler {
+func newHandler(db catalogRepository, actions ...http.Handler) http.Handler {
 	mux := http.NewServeMux()
+	if len(actions) > 0 && actions[0] != nil {
+		mux.Handle("/api/v1/account/", actions[0])
+	}
 	mux.HandleFunc("GET /health/live", func(w http.ResponseWriter, r *http.Request) { write(w, 200, map[string]bool{"ok": true}) })
 	mux.HandleFunc("GET /health/ready", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
