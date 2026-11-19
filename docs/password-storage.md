@@ -156,8 +156,9 @@ When false no key is required. When true, API startup validates
 `PASSWORD_KEYRING_FILE` before opening the database and fails closed on an error.
 This is a configuration preflight, **not registration/login activation**. No
 public authentication routes exist yet. Future API integration must retain the
-shared hasher, mount a key file readable by the non-root service account, and
-remap that mount to restored snapshot files in the isolated application drill.
+shared hasher and configure its non-root production mount. Phase 3 recovery tools
+prepare a private projection and remap the mount to restored snapshot files in
+the isolated application drill.
 Do not enable the production flag before that integration is accepted.
 
 ### Rotation
@@ -217,3 +218,75 @@ the old recovery kit alone does not contain newly created pepper keys. Access to
 Yandex, restic encryption credentials and this instruction must remain available
 independently of the VDS. SMTP notification setup and confirmation of independent
 secret storage are still requirements before public registration is activated.
+
+## Private user persistence (phase 3)
+
+`auth_users` stores a random UUID, canonical email, creation time and nullable
+email-confirmation time. `auth_credentials` has one row per user: scheme, PHC,
+pepper ID, credential `revision`, `password_version` and `password_changed_at`.
+Deleting a user cascades to credentials. The additive/idempotent migration does
+not enable registration, create production accounts or alter catalog data.
+
+Account identifiers accept bare ASCII dot-atom email addresses, at most 254
+bytes total and 64 bytes before `@`, with DNS-style domain labels up to 63 bytes.
+Surrounding whitespace is trimmed and ASCII case is folded for the whole address.
+Display names, quoted local parts and Unicode addresses are rejected; international
+domains must already be IDNA ASCII. Plus tags and dots are preserved, without
+provider-specific alias collapsing. PostgreSQL enforces the canonical format and
+unique address. This is an account-identity policy, not a claim that all mail
+providers consider local parts case-insensitive. Ownership still requires a
+confirmation email; new rows are always unconfirmed.
+
+`DB.Users()` exposes only private repository operations. `Create` inserts the user
+and validated credential together, with no partial user on failure. `ByEmail` and
+`ByID` return private records whose default formatting and JSON omit sensitive
+fields. Database errors are mapped to fixed errors; SQL details/arguments, PHC,
+email and keyring values must not be logged. Request handlers must translate
+internal not-found/conflict errors to enumeration-resistant public behaviour.
+No new HTTP endpoints or public account DTOs are provided by this phase.
+
+After a correct password check, persist `Verification.Replacement` using
+`Upgrade(observed, replacement)`. Its compare-and-swap matches the user ID,
+revision, password version and original scheme/PHC/key ID. A stale observation
+returns false and cannot overwrite a concurrent reset. Upgrade increases only
+the credential revision; it preserves password age and password version.
+`ChangePassword` also uses compare-and-swap, increases both counters and advances
+the password-change time. It does not itself authorize a reset or revoke sessions:
+those flows belong to the future authentication service.
+
+Use `DB.WithUsers` to combine future token consumption and password replacement in
+one transaction. Nested creation uses a savepoint and remains subject to outer
+rollback. Never issue a session based only on a stale successful hash check:
+recheck the password version atomically when creating it, and handle concurrent
+credential changes explicitly. Session validation/revocation must use the password
+version, not the hash revision, so harmless rehashing does not invalidate sessions.
+
+### Database and secret recovery checks
+
+`./scripts/test-user-recovery.sh` runs against the disposable integration-test
+PostgreSQL service. It creates synthetic accounts with old/current pepper keys,
+produces an actual custom-format `pg_dump`, restores into a second empty database,
+copies the protected keyring/probe, verifies both passwords and upgrades the
+historical credential. It is part of backend CI and never uses real accounts.
+
+The isolated VDS drill now creates a separate projection of the restored keyring,
+owned by the pinned image's actual non-root UID/GID, mode 0400. The canonical
+root-owned 0600 pair stays unchanged. The API receives only that temporary file
+through a read-only bind at `/run/secrets/password-keyring.json`, with storage
+preflight enabled. The drill never mounts production keys or publishes ports.
+This checks the real non-root container's ability to read the recovered keyring.
+Temporary projections are deleted during drill cleanup.
+
+Before application startup, restored credential key IDs must all exist in the
+restored keyring. The all-key probe verifies the key material itself. Legacy
+snapshots without the credential tables remain supported. Database-only restore
+checks the current canonical keyring and leaves writers stopped on a missing-key
+failure, retaining the pre-restore safety dump.
+
+For future production activation, the only reviewed runtime bind source is
+`/srv/devcourse-finder/secrets/runtime/password-keyring.json`, with the fixed target
+above, read-only, and the corresponding `PASSWORD_KEYRING_FILE`. Runtime projections
+are regenerated from canonical restored keys for the image UID/GID; they are not
+copied as root-owned files from a backup. Registration, mail confirmation, reset
+tokens, rate limits, sessions and 2FA remain subsequent epic tasks. SMTP backup
+notifications and independent recovery-kit storage remain activation gates.

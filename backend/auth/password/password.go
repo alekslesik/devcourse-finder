@@ -262,3 +262,13 @@ func (h *Hasher) Verify(ctx context.Context, value string, c Credential) (Verifi
 	}
 	return result, nil
 }
+
+// ValidateCredential checks the complete bounded format without computing a KDF.
+// Storage callers must validate before persisting and after reading credentials.
+func ValidateCredential(c Credential) error {
+	if c.Scheme != Scheme || !validKeyID(c.PepperKeyID) {
+		return ErrCredential
+	}
+	_, _, _, err := parse(c.PHC)
+	return err
+}

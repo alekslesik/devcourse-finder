@@ -93,6 +93,67 @@ class RecoverySafetyTests(unittest.TestCase):
                 self.assertEqual(archive.read(str((directory / 'password-keyring.json').relative_to('/'))), b'synthetic-pepper')
                 self.assertNotIn('recovery-kit.zip', archive.namelist())
 
+    def test_restored_password_runtime_projection_uses_image_uid_and_private_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            bundle = Path(d) / 'snapshot'
+            directory = bundle / 'rootfs/srv/devcourse-finder/secrets'
+            directory.mkdir(parents=True, mode=0o700)
+            for name in ['password-keyring.json', 'password-recovery.json']:
+                p = directory / name; p.write_text('synthetic'); p.chmod(0o600)
+            target = Path(d) / 'runtime/password-keyring.json'
+            with patch.object(r, 'run', side_effect=[b'1000', b'1001']) as run, patch.object(r.os, 'fchown') as chown:
+                self.assertEqual(r.password_runtime_file(bundle, 'sha256:pinned', target), target)
+                self.assertEqual(chown.call_args.args[1:], (1000, 1001))
+                self.assertTrue(all('--network' in x.args[0] and 'none' in x.args[0] for x in run.call_args_list))
+            self.assertEqual(target.read_text(), 'synthetic')
+            self.assertEqual(target.stat().st_mode & 0o777, 0o400)
+            self.assertEqual((directory / 'password-keyring.json').stat().st_mode & 0o777, 0o600)
+            with patch.object(r, 'run', return_value=b'0'):
+                with self.assertRaisesRegex(RuntimeError, 'non-root'):
+                    r.password_runtime_file(bundle, 'sha256:pinned', target)
+
+    def test_isolated_password_mount_is_remapped_and_never_uses_production_path(self):
+        original = {'services': {name: {'image': 'sha256:pinned'} for name in ['db', 'api', 'frontend']}}
+        original['services']['api']['environment'] = {'PASSWORD_STORAGE_ENABLED': 'true', 'PASSWORD_KEYRING_FILE': '/production/key'}
+        original['services']['api']['volumes'] = [{'source': str(r.BASE / 'secrets/runtime/password-keyring.json'), 'target': '/production/key'}]
+        with self.assertRaisesRegex(RuntimeError, 'restored'):
+            r.isolated_config(original)
+        with self.assertRaisesRegex(RuntimeError, 'production'):
+            r.isolated_config(original, r.BASE / 'secrets/password-keyring.json')
+        result = r.isolated_config(original, Path('/isolated/runtime/password-keyring.json'))
+        mount = result['services']['api']['volumes'][0]
+        self.assertEqual(mount['source'], '/isolated/runtime/password-keyring.json')
+        self.assertTrue(mount['read_only'])
+        self.assertFalse(mount['bind']['create_host_path'])
+        self.assertEqual(result['services']['api']['environment']['PASSWORD_KEYRING_FILE'], mount['target'])
+        self.assertEqual(original['services']['api']['environment']['PASSWORD_KEYRING_FILE'], '/production/key')
+
+    def test_database_password_key_coverage_handles_legacy_and_rejects_missing_keys(self):
+        with tempfile.TemporaryDirectory() as d:
+            bundle = Path(d)
+            directory = bundle / 'rootfs/srv/devcourse-finder/secrets'
+            directory.mkdir(parents=True, mode=0o700)
+            for name in ['password-keyring.json', 'password-recovery.json']:
+                path = directory / name; path.write_text(json.dumps({'keys': {'old': 'synthetic'}})); path.chmod(0o600)
+            for replies in [[b'f'], [b't', b''], [b't', b'old\n']]:
+                with patch.object(r, 'dbexec', side_effect=replies):
+                    r.verify_database_password_keys('fixture-db', bundle)
+            with patch.object(r, 'dbexec', side_effect=[b't', b'missing\n']):
+                with self.assertRaisesRegex(RuntimeError, 'unavailable pepper'):
+                    r.verify_database_password_keys('fixture-db', bundle)
+            with patch.object(r, 'dbexec', return_value=b'unknown'):
+                with self.assertRaisesRegex(RuntimeError, 'schema'):
+                    r.verify_database_password_keys('fixture-db', bundle)
+
+    def test_isolated_drill_serializes_image_loading_with_production_deployment(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d) / 'app'; state = Path(d) / 'state'; base.mkdir()
+            with patch.object(r, 'BASE', base), patch.object(r, 'STATE', state), patch.object(r.sys, 'argv', ['recovery', 'drill', 'latest']), patch.object(r.os, 'geteuid', return_value=0), patch.object(r.fcntl, 'flock') as lock, patch.object(r, 'drill') as drill:
+                r.main()
+                self.assertEqual(lock.call_args_list[-1].args[0].name, str(base / '.deploy.lock'))
+                self.assertEqual(lock.call_args_list[-1].args[1], r.fcntl.LOCK_EX)
+                drill.assert_called_once_with('latest')
+
     @patch.object(r, 'password_secret_paths', return_value={Path('/fixture')})
     @patch.object(r, 'run')
     def test_password_recovery_verifies_only_snapshot_keys_in_isolated_container(self, run, paths):
