@@ -237,3 +237,35 @@ CREATE TABLE IF NOT EXISTS auth_credentials (
  password_changed_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
 CREATE INDEX IF NOT EXISTS auth_credentials_pepper ON auth_credentials(pepper_key_id);
+
+-- Only delivery intents and token digests persist; never bearer links/passwords.
+CREATE TABLE IF NOT EXISTS auth_mail_jobs (
+ id uuid PRIMARY KEY,
+ user_id uuid NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
+ email text NOT NULL,
+ purpose text NOT NULL CHECK(purpose IN ('confirm_email','reset_password')),
+ password_version bigint NOT NULL CHECK(password_version>0),
+ status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','sending','sent','failed','superseded')),
+ attempts integer NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 5),
+ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ available_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ expires_at timestamptz NOT NULL CHECK(expires_at>created_at),
+ lease_id uuid, lease_until timestamptz,
+ token_digest bytea CHECK(token_digest IS NULL OR octet_length(token_digest)=32),
+ CHECK((status='sending' AND lease_id IS NOT NULL AND lease_until IS NOT NULL) OR (status<>'sending' AND lease_id IS NULL AND lease_until IS NULL))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS auth_mail_jobs_active ON auth_mail_jobs(user_id,purpose) WHERE status IN ('pending','sending');
+CREATE INDEX IF NOT EXISTS auth_mail_jobs_due ON auth_mail_jobs(status,available_at,created_at);
+CREATE INDEX IF NOT EXISTS auth_mail_jobs_limits ON auth_mail_jobs(user_id,purpose,created_at);
+CREATE TABLE IF NOT EXISTS auth_action_tokens (
+ digest bytea PRIMARY KEY CHECK(octet_length(digest)=32),
+ user_id uuid NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
+ email text NOT NULL,
+ purpose text NOT NULL CHECK(purpose IN ('confirm_email','reset_password')),
+ password_version bigint NOT NULL CHECK(password_version>0),
+ mail_job_id uuid NOT NULL REFERENCES auth_mail_jobs(id) ON DELETE CASCADE,
+ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ expires_at timestamptz NOT NULL, consumed_at timestamptz,
+ CHECK(expires_at>created_at AND expires_at<=created_at+interval '25 hours')
+);
+CREATE UNIQUE INDEX IF NOT EXISTS auth_action_tokens_active ON auth_action_tokens(user_id,purpose) WHERE consumed_at IS NULL;

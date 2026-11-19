@@ -3,6 +3,11 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.47.0] - 2026-11-19
+
+- Add private account-action tokens, transactional email confirmation/password reset, and a leased mail-intent outbox that stores no raw bearer tokens.
+- Add a TLS-only Yandex SMTP adapter, pinned offline common-password policy and recovery invalidation of restored tokens and pending mail; public auth stays disabled.
+
 ## [0.46.0] - 2026-11-18
 
 - Add private PostgreSQL user and credential storage with canonical email uniqueness, transactional creation and compare-and-swap password/hash updates.

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"devcourse-finder/auth/actiontoken"
 	"devcourse-finder/auth/password"
 )
 
@@ -60,6 +61,37 @@ func TestPostgresCredentialRecovery(t *testing.T) {
 			if _, err = db.Users().Create(ctx, fixture.email, c); err != nil {
 				t.Fatal("fixture create failed")
 			}
+		}
+	}
+
+	if stage == "seed" {
+		if err := db.Users().RequestAction(ctx, "old-recovery@example.test", actiontoken.ConfirmEmail); err != nil {
+			t.Fatal(err)
+		}
+		delivery, err := db.Users().ClaimDelivery(ctx)
+		if err != nil || delivery == nil {
+			t.Fatal("action recovery fixture failed")
+		}
+		if err := os.WriteFile(filepath.Join(directory, "action-token.fixture"), []byte(delivery.Secret.Encoded()), 0600); err != nil {
+			t.Fatal("private fixture write failed")
+		}
+		if ok, err := db.Users().FinishDelivery(ctx, *delivery, true); err != nil || !ok {
+			t.Fatal("fixture delivery completion failed")
+		}
+		if err := db.Users().RequestAction(ctx, "current-recovery@example.test", actiontoken.ConfirmEmail); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		raw, err := os.ReadFile(filepath.Join(directory, "action-token.fixture"))
+		if err != nil {
+			t.Fatal("missing synthetic replay fixture")
+		}
+		if err := db.Users().ConfirmEmail(ctx, string(raw)); err != ErrActionToken {
+			t.Fatal("database restore revived an action token")
+		}
+		var active int
+		if err := db.Pool.QueryRow(ctx, "SELECT count(*) FROM auth_mail_jobs WHERE status IN ('pending','sending')").Scan(&active); err != nil || active != 0 {
+			t.Fatal("restore replayed queued account mail")
 		}
 	}
 	if err := password.VerifyRecoveryProbe(ctx, keyring, probe); err != nil {

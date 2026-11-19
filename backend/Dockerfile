@@ -18,6 +18,9 @@ RUN addgroup -S app && adduser -S -G app app
 
 COPY --from=build /out/devcourse-finder /usr/local/bin/devcourse-finder
 
+COPY auth/password/blocklist/LICENSE /usr/share/licenses/devcourse-finder/common-passwords-LICENSE
+COPY auth/password/blocklist/README.md /usr/share/licenses/devcourse-finder/common-passwords-README.md
+
 USER app
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/devcourse-finder"]

@@ -212,6 +212,47 @@ def verify_password_secrets(bundle, image):
          '/run/password-secrets/password-keyring.json', '/run/password-secrets/password-recovery.json'])
 
 
+def account_mail_secret_path(base=None):
+    base = BASE if base is None else base
+    path = base / 'secrets/auth-smtp.json'
+    if not path.exists() and not path.is_symlink():
+        return None
+    directory = path.parent
+    info = path.lstat()
+    if directory.is_symlink() or directory.stat().st_mode & 0o077 or directory.stat().st_uid != os.geteuid() or not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077 or info.st_uid != os.geteuid() or info.st_size > 16384:
+        raise RuntimeError('Account mail secret file is unsafe')
+    return path
+
+
+def verify_account_mail_secret(bundle, image):
+    directory = bundle / 'rootfs/srv/devcourse-finder/secrets'
+    if not directory.resolve().is_relative_to(bundle.resolve()) or account_mail_secret_path(directory.parent) is None:
+        raise RuntimeError('Snapshot account mail configuration missing')
+    run(['docker', 'run', '--rm', '--network', 'none', '--read-only', '--cap-drop', 'ALL',
+         '--security-opt', 'no-new-privileges:true', '--user', '0:0',
+         '--mount', f'type=bind,source={directory},target=/run/account-secrets,readonly',
+         image, 'auth-mail', 'check-config', '/run/account-secrets/auth-smtp.json'])
+
+
+def invalidate_restored_account_actions(container, database=None):
+    # A database rollback must never revive a consumed bearer token or replay a
+    # queued account email. This applies to drills and both real restore modes.
+    args = ['docker', 'exec', '-i']
+    if database is not None:
+        if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,63}', database):
+            raise RuntimeError('Invalid recovery database')
+        args += ['-e', 'POSTGRES_DB=' + database]
+    args += [container, 'sh', '-c', 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -At']
+    run(args, data=b"""DO $$ BEGIN
+      IF to_regclass('public.auth_action_tokens') IS NOT NULL THEN
+        UPDATE auth_action_tokens SET consumed_at=clock_timestamp() WHERE consumed_at IS NULL;
+      END IF;
+      IF to_regclass('public.auth_mail_jobs') IS NOT NULL THEN
+        UPDATE auth_mail_jobs SET status='superseded',lease_id=NULL,lease_until=NULL WHERE status IN ('pending','sending');
+      END IF;
+    END $$;""")
+
+
 def password_runtime_file(bundle, image, destination):
     # Canonical root-only keys remain untouched. Project a read-only copy for
     # the image's actual non-root UID/GID; host parent directories stay 0700.
@@ -285,7 +326,10 @@ def backup():
                 raise RuntimeError('Production database is not running')
             # Never recursively copy the base directory: it contains old dumps.
             password_paths = password_secret_paths()
+            mail_path = account_mail_secret_path()
             paths = source_paths(release) | {BASE / '.env', BASE / 'DEPLOYED_VERSION', BASE / 'ingress'} | password_paths
+            if mail_path is not None:
+                paths.add(mail_path)
             for c in records:
                 wd = Path(c['Config']['Labels']['com.docker.compose.project.working_dir'])
                 paths |= source_paths(wd)
@@ -322,6 +366,8 @@ def backup():
             shutil.copytree(Path(__file__).parent, bundle / 'tools')
             if password_paths:
                 verify_password_secrets(bundle, app['api']['Image'])
+            if mail_path is not None:
+                verify_account_mail_secret(bundle, app['api']['Image'])
             verify_database_password_keys(app['db']['Name'].lstrip('/'), bundle)
             print('Creating consistent PostgreSQL dump', flush=True)
             dump(app['db']['Name'].lstrip('/'), bundle / 'database.dump')
@@ -351,6 +397,7 @@ def backup():
             metadata = {'format': 1, 'created_at': dt.datetime.now(dt.timezone.utc).isoformat(),
                         'deployment': (BASE / 'DEPLOYED_VERSION').read_text(), 'postgres': dbversion,
                         'images': images, 'active_services': active, 'root_paths': [str(p) for p in roots],
+                        'account_mail': mail_path is not None,
                         'password_storage': {'format': 1, 'files': sorted(str(p.relative_to('/')) for p in password_paths)} if password_paths else None,
                         'volumes': list(volumes), 'consistency': 'pg_dump MVCC; deployment lock; application binds read-only; Caddy volumes copied separately',
                         'symlinks': {str(p.relative_to(bundle)): os.readlink(p) for p in bundle.rglob('*') if p.is_symlink()},
@@ -498,6 +545,8 @@ def drill(snapshot):
         manifest = check_bundle(bundle)
         run(['docker', 'image', 'load', '-i', bundle / 'images.tar'])
         saved_config = json.loads((bundle / 'devcourse-finder.json').read_text())
+        if manifest.get('account_mail'):
+            verify_account_mail_secret(bundle, saved_config['services']['api']['image'])
         if manifest.get('password_storage'):
             verify_password_secrets(bundle, saved_config['services']['api']['image'])
         password_file = None
@@ -512,6 +561,7 @@ def drill(snapshot):
         wait_db(name)
         print('Restoring database in an isolated volume', flush=True)
         restore_dump(name, bundle / 'database.dump')
+        invalidate_restored_account_actions(name)
         credential_schema = verify_database_password_keys(name, bundle)
         compose(bundle, project, 'up', '-d', '--no-build', '--pull', 'never', '--no-deps', 'api', 'frontend', file=file)
         rows = verify(bundle, project, file)
@@ -529,6 +579,9 @@ def refresh_recovery_kit():
     # Contains repository access/encryption credentials: NEVER include this kit
     # in the restic snapshot. It is an independent password-manager export.
     paths = password_secret_paths()
+    mail_path = account_mail_secret_path()
+    if mail_path is not None:
+        paths.add(mail_path)
     descriptor, temporary = tempfile.mkstemp(prefix='recovery-kit-', suffix='.zip', dir=STATE)
     temporary = Path(temporary)
     try:
@@ -618,6 +671,7 @@ def restore_db(source, confirmation):
     dump(db['Id'], safety)
     dbexec(db['Id'], 'dropdb --force -U "$POSTGRES_USER" "$POSTGRES_DB"; createdb -U "$POSTGRES_USER" -O "$POSTGRES_USER" "$POSTGRES_DB"')
     restore_dump(db['Id'], source)
+    invalidate_restored_account_actions(db['Id'])
     verify_database_password_keys(db['Id'])
     if others:
         run(['docker', 'start', *others])
@@ -636,6 +690,9 @@ def restore(bundle):
     if manifest.get('password_storage'):
         config = json.loads((bundle / 'devcourse-finder.json').read_text())
         verify_password_secrets(bundle, config['services']['api']['image'])
+    if manifest.get('account_mail'):
+        config = json.loads((bundle / 'devcourse-finder.json').read_text())
+        verify_account_mail_secret(bundle, config['services']['api']['image'])
     rootfs = bundle / 'rootfs'
     if not (rootfs / 'srv/devcourse-finder/.env').is_file():
         raise RuntimeError('Missing production configuration')
@@ -666,6 +723,7 @@ def restore(bundle):
     name = compose(bundle, 'devcourse-finder', 'ps', '-q', 'db', file=appfile).decode().strip()
     wait_db(name)
     restore_dump(name, bundle / 'database.dump')
+    invalidate_restored_account_actions(name)
     verify_database_password_keys(name, bundle)
     active = [n for n in manifest['active_services']['devcourse-finder'] if n != 'db']
     compose(bundle, 'devcourse-finder', 'up', '-d', '--no-build', '--pull', 'never', '--no-deps', *active, file=appfile)

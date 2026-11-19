@@ -6,3 +6,5 @@ profile.cov
 secrets
 **/password-keyring*.json
 **/password-recovery*.json
+
+**/auth-smtp*.json
