@@ -59,7 +59,7 @@ func run() error {
 		fmt.Print(password.BlocklistLicense())
 		return nil
 	}
-	if len(args) > 0 && args[0] == "auth-mail" {
+	if len(args) > 0 && args[0] == "auth-mail" && !(len(args) == 2 && (args[1] == "serve" || args[1] == "once" || args[1] == "health")) {
 		if len(args) != 3 || args[1] != "check-config" {
 			return commandFailure("auth_mail", "invalid_arguments", "Usage: auth-mail check-config PATH", nil)
 		}
@@ -114,6 +114,8 @@ func run() error {
 	defer db.Pool.Close()
 	if len(args) > 0 {
 		switch args[0] {
+		case "auth-mail":
+			return accountWorker(ctx, db, args[1])
 		case "catalog-ai":
 			if len(args) == 3 && args[1] == "sources" {
 				bounded, done := context.WithTimeout(ctx, 15*time.Minute)
@@ -344,7 +346,11 @@ func run() error {
 			}
 		}
 	}()
-	server := &http.Server{Addr: ":8080", Handler: newHandler(store.NewCached(db)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
+	actions, err := accountHTTP(db)
+	if err != nil {
+		return commandFailure("account_http", "invalid_account_configuration", "Account action configuration unavailable; values hidden", nil)
+	}
+	server := &http.Server{Addr: ":8080", Handler: newHandler(store.NewCached(db), actions), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		<-stop.Done()
 		c, done := context.WithTimeout(context.Background(), 5*time.Second)

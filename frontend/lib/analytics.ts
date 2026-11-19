@@ -1,3 +1,4 @@
+import {isAccountPath} from './account-privacy';
 // Analytics must never change the outcome of a successful catalog request.
 function eventId(): string | undefined {
   const crypto = globalThis.crypto;
@@ -11,6 +12,7 @@ function eventId(): string | undefined {
 }
 
 export function recordEvent(kind: string, extra: Record<string, unknown> = {}): void {
+  if(typeof location!=='undefined'&&isAccountPath(location.pathname))return;
   try {
     const id = eventId();
     if (!id) return;

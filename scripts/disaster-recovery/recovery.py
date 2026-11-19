@@ -253,12 +253,16 @@ def invalidate_restored_account_actions(container, database=None):
     END $$;""")
 
 
-def password_runtime_file(bundle, image, destination):
+def password_runtime_file(bundle, image, destination, filename="password-keyring.json"):
+    if filename not in ("password-keyring.json", "auth-smtp.json"):
+        raise RuntimeError("Unreviewed runtime secret")
     # Canonical root-only keys remain untouched. Project a read-only copy for
     # the image's actual non-root UID/GID; host parent directories stay 0700.
-    source = bundle / 'rootfs/srv/devcourse-finder/secrets/password-keyring.json'
-    if not password_secret_paths(source.parent.parent):
+    source = bundle / 'rootfs/srv/devcourse-finder/secrets' / filename
+    if filename == 'password-keyring.json' and not password_secret_paths(source.parent.parent):
         raise RuntimeError('Snapshot password key pair unavailable')
+    if filename == 'auth-smtp.json' and account_mail_secret_path(source.parent.parent) is None:
+        raise RuntimeError('Snapshot mail configuration unavailable')
     ids = []
     for option in ['-u', '-g']:
         value = run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
@@ -328,6 +332,8 @@ def backup():
             password_paths = password_secret_paths()
             mail_path = account_mail_secret_path()
             paths = source_paths(release) | {BASE / '.env', BASE / 'DEPLOYED_VERSION', BASE / 'ingress'} | password_paths
+            if (BASE / '.account-actions-enabled').is_file():
+                paths.add(BASE / '.account-actions-enabled')
             if mail_path is not None:
                 paths.add(mail_path)
             for c in records:
@@ -342,7 +348,9 @@ def backup():
                         if source == BASE or not source.is_relative_to(BASE) or source.is_relative_to(BASE / 'backups') or m['RW']:
                             raise RuntimeError('Unreviewed writable or external bind mount')
                         if source.is_relative_to(BASE / 'secrets/runtime'):
-                            if not password_paths or source != BASE / 'secrets/runtime/password-keyring.json' or c['Id'] != app['api']['Id'] or m['Destination'] != '/run/secrets/password-keyring.json':
+                            allowed_password = source == BASE / 'secrets/runtime/password-keyring.json' and password_paths and c['Id'] in [app[name]['Id'] for name in ('api', 'auth-mail') if name in app] and m['Destination'] == '/run/secrets/password-keyring.json'
+                            allowed_mail = source == BASE / 'secrets/runtime/auth-smtp.json' and mail_path is not None and 'auth-mail' in app and c['Id'] == app['auth-mail']['Id'] and m['Destination'] == '/run/secrets/auth-smtp.json'
+                            if not (allowed_password or allowed_mail):
                                 raise RuntimeError('Unreviewed runtime password mount')
                             continue
                         binds.add(source)
@@ -386,6 +394,8 @@ def backup():
             for project, services in by_project.items():
                 # App Compose must be from the current release; containers may predate it.
                 files = [release / 'compose.yaml', release / 'compose.production.yaml'] if project == 'devcourse-finder' else [BASE / 'ingress/compose.yaml']
+                if project == 'devcourse-finder' and app['api']['Config']['Env'] and any(e == 'AUTH_ACTIONS_ENABLED=true' for e in app['api']['Config']['Env']):
+                    files.append(release / 'compose.account-actions.yaml')
                 cmd = ['docker', 'compose', '--profile', '*', '--project-name', project]
                 if project == 'devcourse-finder':
                     cmd += ['--env-file', BASE / '.env']
@@ -517,8 +527,12 @@ def isolated_config(config, password_file=None):
         if name == 'db':
             svc['mem_limit'] = '512m'
             svc['volumes'] = [{'type': 'volume', 'source': 'postgres-data', 'target': '/var/lib/postgresql/data'}]
-        if name == 'api':
+        if name in ('api', 'frontend'):
             environment = svc.setdefault('environment', {})
+            environment['AUTH_ACTIONS_ENABLED'] = 'false'
+            environment.pop('AUTH_GATEWAY_SECRET', None)
+        if name == 'api':
+            environment = svc['environment']
             if password_file is not None:
                 if Path(password_file).resolve().is_relative_to(BASE.resolve()):
                     raise RuntimeError('Isolated password mount cannot use production files')
@@ -713,12 +727,22 @@ def restore(bundle):
     appfile = recovery / 'devcourse-finder.json'
     appconfig = json.loads(appfile.read_text())
     api = appconfig['services']['api']
-    if api.get('environment', {}).get('PASSWORD_STORAGE_ENABLED') == 'true':
+    if api.get('environment', {}).get('PASSWORD_STORAGE_ENABLED') == 'true' or api.get('environment', {}).get('AUTH_ACTIONS_ENABLED') == 'true':
         target = str(BASE / 'secrets/runtime/password-keyring.json')
         matches = [v for v in api.get('volumes', []) if v.get('type') == 'bind' and v.get('source') == target and v.get('target') == '/run/secrets/password-keyring.json' and v.get('read_only') is True]
         if len(matches) != 1 or api['environment'].get('PASSWORD_KEYRING_FILE') != '/run/secrets/password-keyring.json':
             raise RuntimeError('Unsupported production password mount')
         password_runtime_file(bundle, api['image'], Path(target))
+    if 'auth-mail' in appconfig['services']:
+        worker = appconfig['services']['auth-mail']
+        if worker.get('environment', {}).get('AUTH_MAIL_ENABLED') != 'true':
+            raise RuntimeError('Unsupported account mail worker configuration')
+        for filename in ('password-keyring.json', 'auth-smtp.json'):
+            target = BASE / 'secrets/runtime' / filename
+            matches = [v for v in worker.get('volumes', []) if v.get('type') == 'bind' and v.get('source') == str(target) and v.get('target') == '/run/secrets/' + filename and v.get('read_only') is True]
+            if len(matches) != 1:
+                raise RuntimeError('Unsupported account mail secret mount')
+            password_runtime_file(bundle, worker['image'], target, filename)
     compose(bundle, 'devcourse-finder', 'up', '-d', '--no-build', '--pull', 'never', 'db', file=appfile)
     name = compose(bundle, 'devcourse-finder', 'ps', '-q', 'db', file=appfile).decode().strip()
     wait_db(name)

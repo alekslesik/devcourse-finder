@@ -725,6 +725,604 @@
         },
         "summary": "outbound"
       }
+    },
+    "/api/v1/account/request-confirmation": {
+      "post": {
+        "operationId": "accountRequestConfirmation",
+        "description": "Opt-in account action through the same-origin frontend proxy. Disabled by default. No GET action or public registration.",
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 46
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "format": "email"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Uniform accepted response; does not disclose account eligibility",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired link/input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Feature disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Password policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Temporarily limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request an email confirmation link"
+      }
+    },
+    "/api/v1/account/request-reset": {
+      "post": {
+        "operationId": "accountRequestReset",
+        "description": "Opt-in account action through the same-origin frontend proxy. Disabled by default. No GET action or public registration.",
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 46
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "format": "email"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Uniform accepted response; does not disclose account eligibility",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired link/input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Feature disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Password policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Temporarily limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request a password reset link"
+      }
+    },
+    "/api/v1/account/confirm-email": {
+      "post": {
+        "operationId": "accountConfirmEmail",
+        "description": "Opt-in account action through the same-origin frontend proxy. Disabled by default. No GET action or public registration.",
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 46
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "maxLength": 46
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Uniform accepted response; does not disclose account eligibility",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired link/input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Feature disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Password policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Temporarily limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm an email with a one-time token"
+      }
+    },
+    "/api/v1/account/reset-password": {
+      "post": {
+        "operationId": "accountResetPassword",
+        "description": "Opt-in account action through the same-origin frontend proxy. Disabled by default. No GET action or public registration.",
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 46
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token",
+                  "password"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "maxLength": 46
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 1024,
+                    "format": "password",
+                    "writeOnly": true,
+                    "minLength": 15
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Uniform accepted response; does not disclose account eligibility",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired link/input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Feature disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Body too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Password policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Temporarily limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionReply"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reset a password with a one-time token"
+      }
+    },
+    "/api/v1/account/csrf": {
+      "get": {
+        "operationId": "accountCsrf",
+        "description": "Same-origin, no-store CSRF challenge. Sets an HttpOnly Secure SameSite=Strict __Host cookie. Disabled by default.",
+        "responses": {
+          "200": {
+            "description": "Challenge; not an authentication token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountCsrf"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Feature disabled"
+          },
+          "429": {
+            "description": "Temporarily limited"
+          },
+          "503": {
+            "description": "Unavailable"
+          }
+        },
+        "summary": "Obtain an account action CSRF challenge"
+      }
     }
   },
   "components": {
@@ -1712,6 +2310,35 @@
           "unit",
           "evidence"
         ]
+      },
+      "AccountActionReply": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AccountCsrf": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^v1\\.[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "additionalProperties": false
       }
     }
   },

@@ -103,7 +103,7 @@ jobs:
       - name: Verify touch, keyboard, navigation and dialog behaviour in WebKit
         env:
           E2E_BROWSER: webkit
-        run: ../scripts/run-browser-tests.sh catalog-ux.spec.ts dialog.spec.ts device-acceptance.spec.ts course-passport.spec.ts site-quality.spec.ts --output=test-results/webkit
+        run: ../scripts/run-browser-tests.sh catalog-ux.spec.ts dialog.spec.ts device-acceptance.spec.ts course-passport.spec.ts site-quality.spec.ts account-actions.spec.ts --output=test-results/webkit
       - name: Save frontend visual checks and failure traces
         if: always()
         uses: actions/upload-artifact@v4
@@ -126,6 +126,15 @@ jobs:
           SITE_URL: https://example.com
           WEB_PORT: 127.0.0.1:3000
         run: docker compose -f compose.yaml -f compose.production.yaml config --quiet
+      - name: Validate explicitly enabled account profile with throwaway gateway key
+        env:
+          POSTGRES_PASSWORD: compose-validation-only
+          CATALOG_OPERATOR: compose-validation
+          AUTH_PUBLIC_ORIGIN: https://example.com
+          SITE_URL: https://example.com
+        run: |
+          export AUTH_GATEWAY_SECRET=$(openssl rand -base64 32)
+          docker compose -f compose.yaml -f compose.production.yaml -f compose.account-actions.yaml config --quiet
       - name: Verify rollback removes services absent from an older release
         env:
           RUN_DOCKER_DEPLOY_TESTS: "1"
