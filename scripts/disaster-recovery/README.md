@@ -227,3 +227,27 @@ from the legacy host. The Deploy release workflow accepts an optional
 `target_host` override so an explicitly selected, pinned host can be deployed
 without silently relying on legacy repository variables. Both public host keys
 are retained; never associate one server's key with another address.
+
+
+## Hosting-provider domain mailbox SMTP
+
+Yandex remains the default for `configure-email.py`. For a hosting-provider
+mailbox set `BACKUP_SMTP_HOST` and `BACKUP_SMTP_PORT` (465 for implicit TLS, 587
+for mandatory STARTTLS), along with the protected `BACKUP_SMTP_USER` and
+`BACKUP_SMTP_PASSWORD`. The hostname must be a canonical lowercase DNS name;
+URLs, IP literals and other ports are rejected. All connections verify TLS.
+The test sends one technical notification to the explicit `--to` recipient and
+preserves the previous configuration if SMTP rejects it; inbox receipt and
+SPF/DKIM/DMARC still need verification.
+
+Account mail uses the separate `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`,
+`AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD` preparation variables and private file.
+See PASSWORD-STORAGE.md (repository: docs/password-storage.md). Both helpers
+retain `smtp.yandex.ru:465` when endpoint variables are omitted. Domain DNS and
+mailbox service must be configured at the selected provider; a VDS/DNS service
+does not imply a hosted mailbox. Preserve the website A record. If outgoing
+SMTP is blocked by the VDS provider, request access to the selected service
+before testing. A local mail package does not bypass an upstream block.
+
+Make a new full encrypted backup and isolated restore after provisioning the
+mailbox configuration. Keep recovery credentials independent of the VDS.

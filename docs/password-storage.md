@@ -359,9 +359,11 @@ The optional canonical config is `/srv/devcourse-finder/secrets/auth-smtp.json`,
 owned by root, mode 0600, outside Git/build contexts. It has exactly these JSON
 fields (the password is added through secrets/local hidden input, never chat):
 
-- `version`: 1; `host`: `smtp.yandex.ru`; `port`: 465 or 587.
-- `username` and `from`: the same canonical Yandex sender email.
-- `password`: a distinct mail-scoped application password, never the Disk password.
+- `version`: 1; `host`: the operator-selected canonical lowercase SMTP DNS name;
+  `port`: 465 or 587. Yandex remains supported as `smtp.yandex.ru`.
+- `username` and `from`: the same canonical mailbox email, e.g. `noreply@devcoursefinder.ru`.
+- `password`: the mailbox SMTP credential (for Yandex, a mail-scoped application
+  password), separate from the Disk password.
 - `public_origin`: the trusted HTTPS site origin, normally `https://devcoursefinder.ru`.
 
 `devcourse-finder auth-mail check-config PATH` validates offline and sends nothing.
@@ -428,8 +430,11 @@ Preparation after deploying a supporting release:
 sudo python3 /opt/devcourse-backup/prepare-account-actions.py
 ```
 
-Provide a separate Yandex Mail application password through protected environment
+Provide the mailbox address and SMTP credential through protected environment
 `AUTH_SMTP_USER` / `AUTH_SMTP_PASSWORD`, or the script's hidden terminal prompt.
+For a hosting provider set `AUTH_SMTP_HOST` and `AUTH_SMTP_PORT` to its documented
+SMTP endpoint; omitted values retain `smtp.yandex.ru:465`. Existing canonical
+configuration takes precedence over these preparation variables.
 Do not put it in command arguments or chat. Preparation validates the SMTP config
 and pepper offline, creates the gateway key in root-private `.env`, projects
 secrets as mode 0400 for the pinned image UID, and refreshes the independent
@@ -456,3 +461,34 @@ present. Full recovery recreates private worker/API projections. Isolated drills
 always exclude the worker, disable HTTP actions and remove the gateway secret
 from runtime configuration; they cannot deliver mail. Restored action tokens and
 pending mail are invalidated before startup as described above.
+
+
+### Domain mailbox SMTP (v0.49)
+
+A hosting-provider mailbox can use the same TLS adapter as Yandex. The selected
+SMTP hostname is trusted operator configuration, loaded exclusively from the
+private file; public HTTP requests cannot override the server, sender or origin.
+The canonical DNS hostname pins SNI and certificate verification. URLs, IP
+literals, whitespace, uppercase/trailing-dot names and plaintext ports are
+rejected. There is no option to disable TLS verification. The username must be
+the full mailbox address and must match From; providers requiring a separate
+opaque authentication ID need a separately reviewed integration.
+
+Choose the actual managed mailbox service before changing DNS. Obtain its MX,
+SPF, DKIM and DMARC instructions and authenticated SMTP endpoint. Keep the site A
+record; create the provider's exact records, maintaining a single SPF policy.
+DNS hosting alone does not provide a mailbox. Do not invent MX targets or DKIM
+keys. DNS/mailbox credentials and recovery access belong in independent protected
+storage, with the existing backup recovery material.
+
+The VDS must reach the provider's port 465 or 587. Check provider network policy
+when HTTPS works but SMTP connections time out; configuring a mailbox or installing
+a local MTA does not remove an upstream SMTP block. For HOSTKEY see
+https://hostkey.ru/documentation/faq/network_settings/ and request the documented
+SMTP access through the account's support channel as needed.
+
+After mailbox/DNS/network configuration, prepare credentials, verify one technical
+message and its SPF/DKIM/DMARC results at the operator's inbox, configure backup
+alerts, then make and restore a fresh encrypted copy containing the new mail
+configuration. Preparation and release deployment alone do not enable account
+routes or send messages. All existing activation gates still apply.
