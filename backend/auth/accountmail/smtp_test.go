@@ -34,9 +34,12 @@ func smtpFixtureSecret(t *testing.T) string {
 	return hex.EncodeToString(bytes[:])
 }
 func smtpFixture(t *testing.T, failAuth bool) (*SMTP, <-chan string) {
+	return smtpFixtureHost(t, failAuth, "smtp.yandex.ru")
+}
+func smtpFixtureHost(t *testing.T, failAuth bool, host string) (*SMTP, <-chan string) {
 	t.Helper()
 	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	template := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "smtp.yandex.ru"}, DNSNames: []string{"smtp.yandex.ru"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}
+	template := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: host}, DNSNames: []string{host}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour), KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}
 	der, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
 	if err != nil {
 		t.Fatal(err)
@@ -61,7 +64,7 @@ func smtpFixture(t *testing.T, failAuth bool) (*SMTP, <-chan string) {
 		defer conn.Close()
 		conn.SetDeadline(time.Now().Add(5 * time.Second))
 		c := textproto.NewConn(conn)
-		c.PrintfLine("220 smtp.yandex.ru fixture")
+		c.PrintfLine("220 %s fixture", host)
 		for {
 			line, err := c.ReadLine()
 			if err != nil {
@@ -69,7 +72,7 @@ func smtpFixture(t *testing.T, failAuth bool) (*SMTP, <-chan string) {
 			}
 			switch {
 			case strings.HasPrefix(line, "EHLO"):
-				c.PrintfLine("250-smtp.yandex.ru")
+				c.PrintfLine("250-%s", host)
 				c.PrintfLine("250 AUTH PLAIN")
 			case strings.HasPrefix(line, "AUTH"):
 				if failAuth {
@@ -99,7 +102,7 @@ func smtpFixture(t *testing.T, failAuth bool) (*SMTP, <-chan string) {
 	parsed, _ := x509.ParseCertificate(der)
 	roots.AddCert(parsed)
 	origin, _ := actiontoken.NewOrigin("https://example.test")
-	sender := &SMTP{origin: origin, settings: smtpSettings{Version: 1, Host: "smtp.yandex.ru", Port: 465, Username: "sender@example.test", From: "sender@example.test", Password: smtpFixtureSecret(t)}, tlsConfig: &tls.Config{MinVersion: tls.VersionTLS12, ServerName: "smtp.yandex.ru", RootCAs: roots}, dial: func(ctx context.Context, _ string) (net.Conn, error) {
+	sender := &SMTP{origin: origin, settings: smtpSettings{Version: 1, Host: host, Port: 465, Username: "sender@example.test", From: "sender@example.test", Password: smtpFixtureSecret(t)}, tlsConfig: &tls.Config{MinVersion: tls.VersionTLS12, ServerName: host, RootCAs: roots}, dial: func(ctx context.Context, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, "tcp", listener.Addr().String())
 	}}
 	return sender, messages
@@ -162,7 +165,7 @@ func TestPrivateSMTPConfiguration(t *testing.T) {
 		t.Fatal("fixture encode failed")
 	}
 	valid := string(encodedFixture)
-	for _, bad := range []string{strings.Replace(valid, `"version":1`, `"version":1,"version":1`, 1), strings.Replace(valid, `"port":465`, `"port":25`, 1), strings.Replace(valid, "smtp.yandex.ru", "attacker.test", 1), strings.Replace(valid, "https://example.test", "http://example.test", 1), valid + "{}"} {
+	for _, bad := range []string{strings.Replace(valid, `"version":1`, `"version":1,"version":1`, 1), strings.Replace(valid, `"port":465`, `"port":25`, 1), strings.Replace(valid, "smtp.yandex.ru", "https://smtp.example.test", 1), strings.Replace(valid, "https://example.test", "http://example.test", 1), valid + "{}"} {
 		os.WriteFile(path, []byte(bad), 0600)
 		if _, err := LoadSMTP(path); err != ErrConfiguration {
 			t.Fatal("unsafe mail configuration accepted")
@@ -221,5 +224,63 @@ func TestSMTPStartTLSCannotDowngradeToPlaintextAuth(t *testing.T) {
 	}
 	if <-auth {
 		t.Fatal("password sent before TLS")
+	}
+}
+
+func TestConfiguredDomainSMTPUsesVerifiedHostname(t *testing.T) {
+	for _, mismatch := range []bool{false, true} {
+		t.Run(fmt.Sprint(mismatch), func(t *testing.T) {
+			fixture, messages := smtpFixtureHost(t, false, "smtp.hosting.example")
+			fixture.settings.PublicOrigin = "https://example.test"
+			data, _ := json.Marshal(fixture.settings)
+			path := filepath.Join(t.TempDir(), "mail.json")
+			if os.WriteFile(path, data, 0600) != nil {
+				t.Fatal("fixture write failed")
+			}
+			sender, err := LoadSMTP(path)
+			if err != nil {
+				t.Fatal("domain SMTP configuration rejected")
+			}
+			if sender.tlsConfig.ServerName != "smtp.hosting.example" || sender.tlsConfig.InsecureSkipVerify || sender.tlsConfig.MinVersion != tls.VersionTLS12 {
+				t.Fatal("TLS endpoint not pinned")
+			}
+			sender.tlsConfig.RootCAs = fixture.tlsConfig.RootCAs
+			sender.dial = func(ctx context.Context, address string) (net.Conn, error) {
+				if address != "smtp.hosting.example:465" {
+					t.Error("unexpected endpoint")
+				}
+				return fixture.dial(ctx, address)
+			}
+			if mismatch {
+				sender.tlsConfig.ServerName = "other.hosting.example"
+			}
+			secret, _ := actiontoken.Generate()
+			link, _ := sender.origin.Link(actiontoken.ConfirmEmail, secret)
+			err = sender.Send(context.Background(), Message{To: "recipient@example.test", Purpose: actiontoken.ConfirmEmail, Link: link})
+			if mismatch {
+				if err != ErrTransport {
+					t.Fatal("hostname mismatch accepted")
+				}
+			} else {
+				if err != nil {
+					t.Fatal("configured domain SMTP delivery failed")
+				}
+				if data := <-messages; !strings.Contains(data, "Content-Transfer-Encoding: base64") {
+					t.Fatal("message not delivered")
+				}
+			}
+		})
+	}
+}
+func TestSMTPHostnameSyntax(t *testing.T) {
+	for _, host := range []string{"smtp.yandex.ru", "smtp.hosting.example", "mail.xn--e1afmkfd.xn--p1ai"} {
+		if !validSMTPHost(host) {
+			t.Fatal("valid DNS endpoint rejected")
+		}
+	}
+	for _, host := range []string{"", "localhost", "127.0.0.1", "::1", "https://mail.example", "mail.example:465", "mail.example/", "MAIL.example", "mail.example.", "mail..example", "-mail.example", "mail-.example", "mail.example\r\n", strings.Repeat("a", 64) + ".example"} {
+		if validSMTPHost(host) {
+			t.Fatal("noncanonical SMTP endpoint accepted")
+		}
 	}
 }

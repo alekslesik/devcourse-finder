@@ -51,7 +51,7 @@ func LoadSMTP(path string) (*SMTP, error) {
 		return nil, ErrConfiguration
 	}
 	user, err := store.NormalizeEmail(c.Username)
-	if err != nil || user != c.Username || c.From != user || c.Version != 1 || c.Host != "smtp.yandex.ru" || (c.Port != 465 && c.Port != 587) || len(c.Password) < 1 || len(c.Password) > 512 || strings.ContainsAny(c.Password, "\r\n\x00") {
+	if err != nil || user != c.Username || c.From != user || c.Version != 1 || !validSMTPHost(c.Host) || (c.Port != 465 && c.Port != 587) || len(c.Password) < 1 || len(c.Password) > 512 || strings.ContainsAny(c.Password, "\r\n\x00") {
 		return nil, ErrConfiguration
 	}
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
@@ -59,6 +59,27 @@ func LoadSMTP(path string) (*SMTP, error) {
 		return dialer.DialContext(ctx, "tcp", address)
 	}, tlsConfig: &tls.Config{MinVersion: tls.VersionTLS12, ServerName: c.Host}}, nil
 }
+
+// SMTP endpoints are chosen only in an operator-owned private configuration.
+// A canonical DNS name pins TLS SNI and certificate verification; URL/IP/port
+// syntax and plaintext SMTP ports are not accepted here.
+func validSMTPHost(host string) bool {
+	if len(host) > 253 || !strings.Contains(host, ".") || net.ParseIP(host) != nil {
+		return false
+	}
+	for _, label := range strings.Split(host, ".") {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+		for _, char := range label {
+			if !(char >= 'a' && char <= 'z' || char >= '0' && char <= '9' || char == '-') {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (s *SMTP) Send(ctx context.Context, m Message) error {
 	to, err := store.NormalizeEmail(m.To)
 	if err != nil || to != m.To || !m.Purpose.Valid() {

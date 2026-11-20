@@ -12,6 +12,7 @@ import sys
 import tempfile
 from urllib.parse import urlsplit
 import recovery as r
+from smtp_endpoint import endpoint_from_environment
 
 
 def main():
@@ -53,11 +54,12 @@ def main():
             else:
                 sender=os.environ.get('AUTH_SMTP_USER')
                 password=os.environ.get('AUTH_SMTP_PASSWORD')
-                if not sender and sys.stdin.isatty():sender=input('Yandex sender email: ').strip()
-                if not password and sys.stdin.isatty():password=getpass.getpass('Mail application password (hidden): ')
+                if not sender and sys.stdin.isatty():sender=input('SMTP sender email: ').strip()
+                if not password and sys.stdin.isatty():password=getpass.getpass('SMTP password (hidden): ')
                 if not sender or not password:
                     raise RuntimeError('Add mail-scoped SMTP credentials through protected environment or hidden terminal input')
-                config={'version':1,'host':'smtp.yandex.ru','port':465,'username':sender,'from':sender,'password':password,'public_origin':os.environ.get('AUTH_PUBLIC_ORIGIN','https://devcoursefinder.ru')}
+                host,port=endpoint_from_environment('AUTH_SMTP')
+                config={'version':1,'host':host,'port':port,'username':sender,'from':sender,'password':password,'public_origin':os.environ.get('AUTH_PUBLIC_ORIGIN','https://devcoursefinder.ru')}
             api=r.run(['docker','ps','-q','--filter','label=com.docker.compose.project=devcourse-finder','--filter','label=com.docker.compose.service=api']).decode().strip()
             if not api or '\n' in api:raise RuntimeError('Expected one API container')
             image=r.run(['docker','inspect','--format','{{.Image}}',api]).decode().strip()

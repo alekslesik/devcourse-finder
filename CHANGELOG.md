@@ -3,6 +3,10 @@
 Every pull request increments `VERSION` and adds an entry here before merging.
 Merged pull requests receive the matching Git tag and GitHub Release.
 
+## [0.49.0] - 2026-11-20
+
+- Support operator-configured domain mailbox SMTP with verified TLS, private account preparation, and rollback-safe backup email setup.
+
 ## [0.48.0] - 2026-11-19
 
 - Add opt-in email confirmation and password reset forms with authenticated same-origin API, private mail worker, and isolated recovery safeguards.
